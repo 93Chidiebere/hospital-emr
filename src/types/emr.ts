@@ -26,6 +26,17 @@ export interface RoleConfig {
   badge: string;
 }
 
+export interface UserAccount {
+  id: string;
+  fullName: string;
+  studentId: string;
+  assignedRole: RoleId;
+  institution?: string;
+  password?: string;
+  createdAt: string;
+}
+
+
 export interface VitalsRecord {
   id: string;
   timestamp: string;

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useEMR } from "@/context/EMRContext";
+import { useAuth } from "@/context/AuthContext";
 import { Patient, RoleId, HOSPITAL_ROLES } from "@/types/emr";
 import { Navbar } from "@/components/layout/Navbar";
 import { HospitalPipelineBar } from "@/components/pipeline/HospitalPipelineBar";
@@ -15,6 +16,7 @@ import { MasterDirectoryWorkstation } from "@/components/workstations/MasterDire
 import { NewPatientModal } from "@/components/intake/NewPatientModal";
 import { PatientDossierModal } from "@/components/dossier/PatientDossierModal";
 import { TransferModal } from "@/components/shared/TransferModal";
+import { AuthModal } from "@/components/auth/AuthModal";
 import {
   FileText,
   Activity,
@@ -27,11 +29,20 @@ import {
 } from "lucide-react";
 
 export default function Home() {
-  const { activeRole, setActiveRole } = useEMR();
+  const { activeRole, setActiveRole, setActiveStaffName } = useEMR();
+  const { currentUser } = useAuth();
 
   const [intakeOpen, setIntakeOpen] = useState(false);
   const [dossierPatient, setDossierPatient] = useState<Patient | null>(null);
   const [transferPatient, setTransferPatient] = useState<Patient | null>(null);
+
+  // Sync role & staff name whenever student logs in
+  useEffect(() => {
+    if (currentUser) {
+      setActiveRole(currentUser.assignedRole);
+      setActiveStaffName(`${currentUser.fullName} (${currentUser.studentId})`);
+    }
+  }, [currentUser, setActiveRole, setActiveStaffName]);
 
   return (
     <div className="min-h-screen flex flex-col bg-cream text-charcoal">
@@ -141,12 +152,9 @@ export default function Home() {
       {/* 5. Editorial Footer */}
       <footer className="bg-white border-t border-cream-border py-6 mt-12 text-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-4">
-          <div className="space-y-1">
-            <p className="font-serif font-bold text-charcoal">
-              Trinity Point Hospital &bull; Department of Clinical Informatics
-            </p>
-            <p className="text-charcoal-muted text-[11px]">
-              Classroom EMR Simulation Platform for Nursing & Health Sciences Faculty
+          <div>
+            <p className="font-serif font-bold text-charcoal text-sm">
+              Trinity Point Hospital
             </p>
           </div>
 
@@ -182,6 +190,8 @@ export default function Home() {
           onClose={() => setTransferPatient(null)}
         />
       )}
+
+      <AuthModal />
     </div>
   );
 }

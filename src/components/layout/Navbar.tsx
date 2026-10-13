@@ -2,15 +2,18 @@
 
 import React, { useState } from "react";
 import { useEMR } from "@/context/EMRContext";
-import { HOSPITAL_ROLES, RoleId } from "@/types/emr";
+import { useAuth } from "@/context/AuthContext";
+import { HOSPITAL_ROLES } from "@/types/emr";
 import {
-  Building2,
   UserCheck,
   RotateCcw,
   Plus,
   Clock,
   ChevronDown,
   ShieldAlert,
+  LogIn,
+  LogOut,
+  User,
 } from "lucide-react";
 
 interface NavbarProps {
@@ -26,6 +29,8 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
     resetToDemoCases,
     patients,
   } = useEMR();
+
+  const { currentUser, setAuthModalOpen, setAuthMode, logout } = useAuth();
 
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
@@ -46,24 +51,54 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
               <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-charcoal">
                 Trinity Point Hospital
               </span>
-              <span className="text-[10px] tracking-widest uppercase font-mono px-1.5 py-0.5 bg-cream-warm border border-cream-border text-charcoal-muted">
-                EMR System
-              </span>
             </div>
-            <p className="text-[11px] text-charcoal-muted tracking-wide uppercase font-sans">
-              Clinical Data Flow & Hospital Training Directorate
+            <p className="text-[11px] text-charcoal-muted tracking-wide font-sans">
+              Clinical/Hospital Data Flow
             </p>
           </div>
         </div>
 
         {/* Global Classroom Status & Actions */}
-        <div className="flex items-center gap-2 sm:gap-4">
-          <div className="hidden md:flex items-center gap-2 text-xs text-charcoal-muted border-r border-cream-border pr-4">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="hidden lg:flex items-center gap-2 text-xs text-charcoal-muted border-r border-cream-border pr-3">
             <Clock className="w-3.5 h-3.5 text-sage" />
             <span className="font-mono">
               Live Registry: <strong className="text-charcoal font-semibold">{activeCount}</strong> In-Clinic
             </span>
           </div>
+
+          {/* Student Auth Button / Profile Badge */}
+          {currentUser ? (
+            <div className="flex items-center gap-2 px-2.5 py-1 bg-cream-warm border border-cream-border text-xs">
+              <User className="w-3.5 h-3.5 text-sage" />
+              <div className="text-left font-sans">
+                <span className="font-serif font-bold text-charcoal text-xs block leading-tight">
+                  {currentUser.fullName}
+                </span>
+                <span className="text-[10px] text-charcoal-muted font-mono">
+                  {currentUser.studentId}
+                </span>
+              </div>
+              <button
+                onClick={logout}
+                title="Sign out of student account"
+                className="ml-2 text-charcoal-muted hover:text-terracotta transition-colors p-1"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                setAuthMode("signin");
+                setAuthModalOpen(true);
+              }}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-charcoal bg-white hover:bg-cream-warm border border-cream-border transition-colors font-mono"
+            >
+              <LogIn className="w-3.5 h-3.5 text-sage" />
+              <span>Student Sign In / Sign Up</span>
+            </button>
+          )}
 
           <button
             onClick={() => setResetConfirmOpen(true)}
@@ -156,7 +191,7 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
             value={activeStaffName}
             onChange={(e) => setActiveStaffName(e.target.value)}
             title="Type student name or ID for clinical log entries"
-            className="px-2 py-0.5 text-xs bg-white border border-cream-border focus:border-sage text-charcoal w-44 sm:w-60 font-sans"
+            className="px-2 py-0.5 text-xs bg-white border border-cream-border focus:border-sage text-charcoal w-48 sm:w-64 font-sans"
             placeholder="Student Name / Staff ID"
           />
         </div>

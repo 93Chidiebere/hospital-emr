@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/context/AuthContext";
 import { EMRProvider } from "@/context/EMRContext";
 
 export const metadata: Metadata = {
-  title: "Trinity Point Hospital — EMR Clinical Workflow Simulator",
+  title: "Trinity Point Hospital — Clinical Data Flow Simulator",
   description:
-    "An editorial, human-centered Electronic Medical Record (EMR) simulator designed for Nursing and Health Faculty students to master clinical data flow and hospital department workflows.",
+    "Clinical/Hospital Data Flow simulator for university undergraduates and healthcare simulation training.",
 };
 
 export default function RootLayout({
@@ -16,8 +17,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-cream text-charcoal flex flex-col font-sans">
-        <EMRProvider>{children}</EMRProvider>
+        <AuthProvider>
+          <EMRProvider>{children}</EMRProvider>
+        </AuthProvider>
       </body>
     </html>
   );
 }
+
