@@ -57,7 +57,7 @@ export default function Home() {
   const activeRoleTitle = HOSPITAL_ROLES.find((r) => r.id === activeRole)?.title;
 
   return (
-    <div className="min-h-screen flex flex-col bg-cream text-charcoal">
+    <div className="min-h-screen flex flex-col bg-paper text-charcoal">
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
@@ -72,7 +72,7 @@ export default function Home() {
       <HospitalPipelineBar />
 
       {/* 3. Station Switcher Strip */}
-      <div className="bg-cream-warm border-b border-cream-border">
+      <div className="bg-paper-warm border-b border-paper-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-2">
             <span className="font-mono text-[10px] uppercase tracking-wider text-charcoal-muted">
@@ -113,11 +113,11 @@ export default function Home() {
                   onClick={() => setActiveRole(tab.id)}
                   className={`px-3 py-2.5 sm:px-2.5 sm:py-1 shrink-0 snap-start flex items-center gap-1.5 transition-colors font-mono text-[11px] border whitespace-nowrap ${
                     isCurrent
-                      ? "bg-charcoal text-cream border-charcoal font-bold"
-                      : "bg-white text-charcoal-muted border-cream-border hover:bg-cream hover:border-charcoal hover:text-charcoal"
+                      ? "bg-brand text-paper border-brand font-bold"
+                      : "bg-white text-charcoal-muted border-paper-border hover:bg-paper hover:border-brand hover:text-charcoal"
                   }`}
                 >
-                  <Icon aria-hidden="true" className={`w-3 h-3 ${isCurrent ? "text-sage-light" : ""}`} />
+                  <Icon aria-hidden="true" className={`w-3 h-3 ${isCurrent ? "text-brand-light" : ""}`} />
                   <span>{tab.label}</span>
                 </button>
               );
@@ -181,7 +181,7 @@ export default function Home() {
       </main>
 
       {/* 5. Editorial Footer */}
-      <footer className="bg-white border-t border-cream-border py-6 mt-12 text-xs">
+      <footer className="bg-white border-t border-paper-border py-6 mt-12 text-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="font-serif font-bold text-charcoal text-sm">
@@ -198,7 +198,7 @@ export default function Home() {
                 <li key={step} className="flex items-center gap-2">
                   <span>{step}</span>
                   {i < arr.length - 1 && (
-                    <ArrowRight aria-hidden="true" className="w-2.5 h-2.5 text-sage" />
+                    <ArrowRight aria-hidden="true" className="w-2.5 h-2.5 text-brand" />
                   )}
                 </li>
               )

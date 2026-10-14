@@ -66,12 +66,12 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
         aria-modal="true"
         aria-labelledby="intake-dialog-title"
         tabIndex={-1}
-        className="bg-white border border-charcoal max-w-2xl w-full p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto outline-none"
+        className="bg-white border border-brand max-w-2xl w-full p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto outline-none"
       >
-        <div className="flex items-start justify-between border-b border-cream-border pb-3">
+        <div className="flex items-start justify-between border-b border-paper-border pb-3">
           <div>
             <div className="flex items-center gap-2">
-              <UserPlus className="w-4 h-4 text-sage" />
+              <UserPlus className="w-4 h-4 text-brand" />
               <h3 id="intake-dialog-title" className="font-serif text-lg font-bold text-charcoal">
                 Trinity Point Hospital — Patient Intake
               </h3>
@@ -93,7 +93,7 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           {/* Personal Information */}
           <div className="space-y-3">
-            <h4 className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold border-b border-cream-border pb-1">
+            <h4 className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold border-b border-paper-border pb-1">
               1. Patient Demographics
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -107,7 +107,7 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="e.g. Maryam Olatunji"
-                  className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-sans"
+                  className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-sans"
                 />
               </div>
 
@@ -118,7 +118,7 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
                 <select
                   value={gender}
                   onChange={(e) => setGender(e.target.value as any)}
-                  className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal"
+                  className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal"
                 >
                   <option value="Female">Female</option>
                   <option value="Male">Male</option>
@@ -138,7 +138,7 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
                   value={age}
                   onChange={(e) => setAge(e.target.value)}
                   placeholder="e.g. 29"
-                  className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal"
+                  className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal"
                 />
               </div>
 
@@ -150,7 +150,7 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
                   type="date"
                   value={dateOfBirth}
                   onChange={(e) => setDateOfBirth(e.target.value)}
-                  className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal"
+                  className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal"
                 />
               </div>
 
@@ -161,7 +161,7 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
                 <select
                   value={paymentType}
                   onChange={(e) => setPaymentType(e.target.value as any)}
-                  className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal"
+                  className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal"
                 >
                   <option value="Out-of-Pocket / Cash">Out-of-Pocket / Cash</option>
                   <option value="NHIS / Health Insurance">NHIS / Health Insurance</option>
@@ -178,7 +178,7 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="e.g. 18 Bishop Oluwole, VI, Lagos"
-                  className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal"
+                  className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal"
                 />
               </div>
 
@@ -191,7 +191,7 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="e.g. 0802 345 6789"
-                  className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal"
+                  className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal"
                 />
               </div>
             </div>
@@ -199,7 +199,7 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
 
           {/* Next of Kin */}
           <div className="space-y-3 pt-2">
-            <h4 className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold border-b border-cream-border pb-1">
+            <h4 className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold border-b border-paper-border pb-1">
               2. Emergency Contact / Next of Kin
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -212,7 +212,7 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
                   value={kinName}
                   onChange={(e) => setKinName(e.target.value)}
                   placeholder="Contact Name"
-                  className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal"
+                  className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal"
                 />
               </div>
               <div>
@@ -224,7 +224,7 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
                   value={kinRelation}
                   onChange={(e) => setKinRelation(e.target.value)}
                   placeholder="e.g. Mother, Spouse, Sister"
-                  className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal"
+                  className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal"
                 />
               </div>
               <div>
@@ -236,7 +236,7 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
                   value={kinPhone}
                   onChange={(e) => setKinPhone(e.target.value)}
                   placeholder="e.g. 0803 111 2222"
-                  className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal"
+                  className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal"
                 />
               </div>
             </div>
@@ -244,7 +244,7 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
 
           {/* Flexible Initial Routing */}
           <div className="space-y-3 pt-2">
-            <h4 className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold border-b border-cream-border pb-1">
+            <h4 className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold border-b border-paper-border pb-1">
               3. Flexible Initial Routing Destination
             </h4>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -287,8 +287,8 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
                   }}
                   className={`p-2.5 text-left border transition-colors flex flex-col justify-between ${
                     initialRoute === r.dept
-                      ? "bg-sage text-cream border-sage font-medium"
-                      : "bg-white border-cream-border hover:bg-cream-warm text-charcoal"
+                      ? "bg-brand text-paper border-brand font-medium"
+                      : "bg-white border-paper-border hover:bg-paper-warm text-charcoal"
                   }`}
                 >
                   <span className="font-serif font-bold text-xs">{r.label}</span>
@@ -305,25 +305,25 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
                 type="text"
                 value={routingReason}
                 onChange={(e) => setRoutingReason(e.target.value)}
-                className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-sans"
+                className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-sans"
               />
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4 border-t border-cream-border">
+          <div className="flex justify-end gap-2 pt-4 border-t border-paper-border">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs border border-cream-border text-charcoal hover:bg-cream-warm"
+              className="px-4 py-2 text-xs border border-paper-border text-charcoal hover:bg-paper-warm"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2 text-xs bg-charcoal text-cream hover:bg-charcoal/90 flex items-center gap-1.5"
+              className="px-5 py-2 text-xs bg-brand text-paper hover:bg-brand-hover flex items-center gap-1.5"
             >
-              <Check className="w-3.5 h-3.5 text-sage-light" />
+              <Check className="w-3.5 h-3.5 text-brand-light" />
               <span>{submitting ? "Enrolling..." : "Enroll & Route Patient"}</span>
             </button>
           </div>

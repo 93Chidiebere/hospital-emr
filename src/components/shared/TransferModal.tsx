@@ -60,13 +60,13 @@ export function TransferModal({ patient, onClose }: TransferModalProps) {
         aria-modal="true"
         aria-labelledby="transfer-dialog-title"
         tabIndex={-1}
-        className="bg-white border border-charcoal max-w-xl w-full max-h-[92vh] overflow-y-auto p-5 sm:p-6 space-y-5 outline-none"
+        className="bg-white border border-brand max-w-xl w-full max-h-[92vh] overflow-y-auto p-5 sm:p-6 space-y-5 outline-none"
       >
         {/* Header */}
-        <div className="flex items-start justify-between border-b border-cream-border pb-3">
+        <div className="flex items-start justify-between border-b border-paper-border pb-3">
           <div>
             <div className="flex items-center gap-2">
-              <ArrowRightLeft className="w-4 h-4 text-sage" />
+              <ArrowRightLeft className="w-4 h-4 text-brand" />
               <h3 id="transfer-dialog-title" className="font-serif text-lg font-bold text-charcoal">
                 Transfer / Route Patient
               </h3>
@@ -87,7 +87,7 @@ export function TransferModal({ patient, onClose }: TransferModalProps) {
 
         <form onSubmit={handleTransfer} className="space-y-4">
           {/* Current vs Target */}
-          <div className="p-3 bg-cream-warm border border-cream-border grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+          <div className="p-3 bg-paper-warm border border-paper-border grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div>
               <span className="text-[10px] uppercase font-mono text-charcoal-muted">
                 Current Location:
@@ -97,7 +97,7 @@ export function TransferModal({ patient, onClose }: TransferModalProps) {
               </p>
             </div>
             <div>
-              <span className="text-[10px] uppercase font-mono text-sage font-bold">
+              <span className="text-[10px] uppercase font-mono text-brand font-bold">
                 Authorizing Officer:
               </span>
               <p className="font-mono text-charcoal text-xs mt-0.5 truncate">
@@ -125,10 +125,10 @@ export function TransferModal({ patient, onClose }: TransferModalProps) {
                     onClick={() => setTargetDept(dept)}
                     className={`p-2 text-left border text-xs transition-colors flex flex-col justify-between ${
                       isCurrent
-                        ? "opacity-40 bg-cream border-cream-border cursor-not-allowed"
+                        ? "opacity-40 bg-paper border-paper-border cursor-not-allowed"
                         : isSelected
-                        ? "bg-sage text-cream border-sage font-semibold"
-                        : "bg-white border-cream-border hover:bg-cream-warm text-charcoal"
+                        ? "bg-brand text-paper border-brand font-semibold"
+                        : "bg-white border-paper-border hover:bg-paper-warm text-charcoal"
                     }`}
                   >
                     <span className="font-mono text-[10px] opacity-80">
@@ -154,7 +154,7 @@ export function TransferModal({ patient, onClose }: TransferModalProps) {
                   key={i}
                   type="button"
                   onClick={() => setReason(r)}
-                  className="text-[10px] px-2 py-0.5 bg-cream border border-cream-border hover:border-charcoal text-charcoal-muted text-left"
+                  className="text-[10px] px-2 py-0.5 bg-paper border border-paper-border hover:border-brand text-charcoal-muted text-left"
                 >
                   {r.length > 55 ? r.slice(0, 55) + "..." : r}
                 </button>
@@ -165,26 +165,26 @@ export function TransferModal({ patient, onClose }: TransferModalProps) {
               rows={3}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full p-2.5 text-xs bg-white border border-cream-border focus:border-sage text-charcoal font-sans"
+              className="w-full p-2.5 text-xs bg-white border border-paper-border focus:border-brand text-charcoal font-sans"
               placeholder="e.g. Patient returned after 2 hours with lab results; routed directly to Doctor consultation."
             />
           </div>
 
           {/* Footer Actions */}
-          <div className="flex justify-end gap-2 pt-3 border-t border-cream-border">
+          <div className="flex justify-end gap-2 pt-3 border-t border-paper-border">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs border border-cream-border text-charcoal hover:bg-cream-warm"
+              className="px-4 py-2 text-xs border border-paper-border text-charcoal hover:bg-paper-warm"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2 text-xs bg-charcoal text-cream hover:bg-charcoal/90 flex items-center gap-1.5"
+              className="px-5 py-2 text-xs bg-brand text-paper hover:bg-brand-hover flex items-center gap-1.5"
             >
-              <Check className="w-3.5 h-3.5 text-sage-light" />
+              <Check className="w-3.5 h-3.5 text-brand-light" />
               <span>{submitting ? "Routing..." : "Confirm & Transfer Patient"}</span>
             </button>
           </div>

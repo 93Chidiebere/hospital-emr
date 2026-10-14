@@ -41,20 +41,20 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
         aria-modal="true"
         aria-labelledby="dossier-dialog-title"
         tabIndex={-1}
-        className="bg-white border border-charcoal max-w-4xl w-full h-[92dvh] max-h-[92vh] flex flex-col shadow-lg overflow-hidden outline-none"
+        className="bg-white border border-brand max-w-4xl w-full h-[92dvh] max-h-[92vh] flex flex-col shadow-lg overflow-hidden outline-none"
       >
         {/* Dossier Header / Docket Jacket */}
-        <div className="p-4 sm:p-5 bg-cream border-b border-cream-border flex flex-wrap items-start justify-between gap-3">
+        <div className="p-4 sm:p-5 bg-paper border-b border-paper-border flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="font-mono text-xs font-bold px-2 py-0.5 bg-charcoal text-cream">
+              <span className="font-mono text-xs font-bold px-2 py-0.5 bg-brand text-paper">
                 {patient.hospitalNumber}
               </span>
               <span
                 className={`text-[10px] font-mono uppercase px-2 py-0.5 border ${
                   patient.status === "Discharged"
-                    ? "bg-cream-warm border-cream-border text-charcoal-muted"
-                    : "bg-sage text-cream border-sage"
+                    ? "bg-paper-warm border-paper-border text-charcoal-muted"
+                    : "bg-brand text-paper border-brand"
                 }`}
               >
                 {patient.status}
@@ -80,16 +80,16 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
           <div className="flex items-center gap-2">
             <button
               onClick={() => setTransferModalOpen(true)}
-              className="px-3 py-1.5 text-xs font-medium bg-charcoal hover:bg-charcoal/90 text-cream flex items-center gap-1.5 transition-colors"
+              className="px-3 py-1.5 text-xs font-medium bg-brand hover:bg-brand-hover text-paper flex items-center gap-1.5 transition-colors"
             >
-              <ArrowRightLeft className="w-3.5 h-3.5 text-sage-light" />
+              <ArrowRightLeft className="w-3.5 h-3.5 text-brand-light" />
               <span>Route / Transfer</span>
             </button>
             <button
               type="button"
               onClick={onClose}
               aria-label="Close patient chart"
-              className="p-2 text-charcoal-muted hover:text-charcoal border border-cream-border hover:bg-cream-warm"
+              className="p-2 text-charcoal-muted hover:text-charcoal border border-paper-border hover:bg-paper-warm"
             >
               <X className="w-4 h-4" />
             </button>
@@ -97,7 +97,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
         </div>
 
         {/* Current Location Strip */}
-        <div className="px-5 py-2.5 bg-cream-warm/70 border-b border-cream-border flex flex-wrap items-center justify-between text-xs gap-2">
+        <div className="px-5 py-2.5 bg-paper-warm/70 border-b border-paper-border flex flex-wrap items-center justify-between text-xs gap-2">
           <div className="flex items-center gap-2">
             <span className="font-mono text-charcoal-muted uppercase text-[10px]">
               Current Hospital Station:
@@ -105,7 +105,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
             <span className="font-serif font-bold text-charcoal text-sm">
               {currentDeptMeta.name}
             </span>
-            <span className="font-mono px-1 py-0.2 text-[10px] bg-white border border-cream-border text-charcoal">
+            <span className="font-mono px-1 py-0.2 text-[10px] bg-white border border-paper-border text-charcoal">
               {currentDeptMeta.code}
             </span>
           </div>
@@ -118,7 +118,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
         </div>
 
         {/* Tabs */}
-        <div role="group" aria-label="Chart sections" className="flex border-b border-cream-border bg-white px-2 sm:px-5 overflow-x-auto text-xs font-mono">
+        <div role="group" aria-label="Chart sections" className="flex border-b border-paper-border bg-white px-2 sm:px-5 overflow-x-auto text-xs font-mono">
           {[
             { id: "journey", label: `Clinical Journey (${patient.routingHistory.length})`, icon: Clock },
             { id: "vitals", label: `Vital Signs (${patient.vitalsHistory.length})`, icon: Activity },
@@ -137,11 +137,11 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                 onClick={() => setActiveTab(t.id as any)}
                 className={`py-3 px-3.5 flex items-center gap-2 border-b-2 whitespace-nowrap transition-colors ${
                   isCurrent
-                    ? "border-charcoal text-charcoal font-bold"
-                    : "border-transparent text-charcoal-muted hover:text-charcoal hover:border-cream-border"
+                    ? "border-brand text-charcoal font-bold"
+                    : "border-transparent text-charcoal-muted hover:text-charcoal hover:border-paper-border"
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${isCurrent ? "text-sage" : ""}`} />
+                <Icon className={`w-3.5 h-3.5 ${isCurrent ? "text-brand" : ""}`} />
                 <span>{t.label}</span>
               </button>
             );
@@ -162,7 +162,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                 </p>
               </div>
 
-              <div className="border-l-2 border-cream-border ml-3 pl-4 space-y-5">
+              <div className="border-l-2 border-paper-border ml-3 pl-4 space-y-5">
                 {patient.routingHistory.map((event, idx) => {
                   const fromMeta = DEPARTMENTS_METADATA[event.fromDepartment];
                   const toMeta = DEPARTMENTS_METADATA[event.toDepartment];
@@ -174,14 +174,14 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                   return (
                     <div key={event.id || idx} className="relative group">
                       {/* Timeline dot */}
-                      <div className="absolute -left-[23px] top-1 w-3 h-3 bg-white border-2 border-charcoal" />
+                      <div className="absolute -left-[23px] top-1 w-3 h-3 bg-white border-2 border-brand" />
 
-                      <div className="bg-cream-warm/40 border border-cream-border p-3 space-y-1.5">
+                      <div className="bg-paper-warm/40 border border-paper-border p-3 space-y-1.5">
                         <div className="flex items-center justify-between text-[11px]">
                           <div className="flex items-center gap-1.5 font-mono">
                             <span className="font-semibold text-charcoal">{fromMeta.code}</span>
-                            <span className="text-sage font-bold">&rarr;</span>
-                            <span className="font-bold text-charcoal bg-white px-1.5 py-0.5 border border-cream-border">
+                            <span className="text-brand font-bold">&rarr;</span>
+                            <span className="font-bold text-charcoal bg-white px-1.5 py-0.5 border border-paper-border">
                               {toMeta.name}
                             </span>
                           </div>
@@ -192,7 +192,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                           {event.reason}
                         </p>
 
-                        <div className="text-[10px] text-charcoal-subtle font-mono pt-1 border-t border-cream-border/50">
+                        <div className="text-[10px] text-charcoal-subtle font-mono pt-1 border-t border-paper-border/50">
                           Authorized by: <strong className="text-charcoal">{event.authorizedBy}</strong>
                         </div>
                       </div>
@@ -218,7 +218,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
               </div>
 
               {patient.vitalsHistory.length === 0 ? (
-                <div className="p-8 text-center text-charcoal-muted bg-cream-warm border border-dashed border-cream-border">
+                <div className="p-8 text-center text-charcoal-muted bg-paper-warm border border-dashed border-paper-border">
                   No vital signs recorded yet. Route patient to Triage to capture vitals.
                 </div>
               ) : (
@@ -226,17 +226,17 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                   {patient.vitalsHistory.map((v) => (
                     <div
                       key={v.id}
-                      className="border border-cream-border p-4 bg-cream/40 space-y-3"
+                      className="border border-paper-border p-4 bg-paper/40 space-y-3"
                     >
-                      <div className="flex items-center justify-between border-b border-cream-border pb-2 text-xs">
+                      <div className="flex items-center justify-between border-b border-paper-border pb-2 text-xs">
                         <div className="flex items-center gap-2">
                           <span
                             className={`font-mono text-[10px] uppercase px-2 py-0.5 border ${
                               v.urgency === "emergency"
-                                ? "bg-terracotta text-cream border-terracotta font-bold"
+                                ? "bg-terracotta text-paper border-terracotta font-bold"
                                 : v.urgency === "urgent"
                                 ? "bg-amber-light text-amber-alert border-amber-border font-semibold"
-                                : "bg-white border-cream-border text-charcoal"
+                                : "bg-white border-paper-border text-charcoal"
                             }`}
                           >
                             Priority: {v.urgency}
@@ -252,7 +252,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
 
                       {/* Vitals Grid */}
                       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2">
-                        <div className="p-2 bg-white border border-cream-border">
+                        <div className="p-2 bg-white border border-paper-border">
                           <span className="text-[10px] font-mono text-charcoal-muted uppercase block">Blood Pressure</span>
                           <span className="font-serif text-base font-bold text-charcoal">
                             {v.bloodPressureSystolic}/{v.bloodPressureDiastolic}
@@ -260,33 +260,33 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                           <span className="text-[10px] text-charcoal-subtle ml-1">mmHg</span>
                         </div>
 
-                        <div className="p-2 bg-white border border-cream-border">
+                        <div className="p-2 bg-white border border-paper-border">
                           <span className="text-[10px] font-mono text-charcoal-muted uppercase block">Pulse / HR</span>
                           <span className="font-serif text-base font-bold text-charcoal">{v.pulseRate}</span>
                           <span className="text-[10px] text-charcoal-subtle ml-1">bpm</span>
                         </div>
 
-                        <div className="p-2 bg-white border border-cream-border">
+                        <div className="p-2 bg-white border border-paper-border">
                           <span className="text-[10px] font-mono text-charcoal-muted uppercase block">Temperature</span>
                           <span className={`font-serif text-base font-bold ${v.temperature >= 38.0 ? "text-terracotta" : "text-charcoal"}`}>
                             {v.temperature}&deg;C
                           </span>
                         </div>
 
-                        <div className="p-2 bg-white border border-cream-border">
+                        <div className="p-2 bg-white border border-paper-border">
                           <span className="text-[10px] font-mono text-charcoal-muted uppercase block">SpO2</span>
                           <span className={`font-serif text-base font-bold ${v.spO2 < 95 ? "text-terracotta" : "text-charcoal"}`}>
                             {v.spO2}%
                           </span>
                         </div>
 
-                        <div className="p-2 bg-white border border-cream-border">
+                        <div className="p-2 bg-white border border-paper-border">
                           <span className="text-[10px] font-mono text-charcoal-muted uppercase block">Resp Rate</span>
                           <span className="font-serif text-base font-bold text-charcoal">{v.respiratoryRate}</span>
                           <span className="text-[10px] text-charcoal-subtle ml-1">cpm</span>
                         </div>
 
-                        <div className="p-2 bg-white border border-cream-border">
+                        <div className="p-2 bg-white border border-paper-border">
                           <span className="text-[10px] font-mono text-charcoal-muted uppercase block">BMI</span>
                           <span className="font-serif text-base font-bold text-charcoal">{v.bmi}</span>
                           <span className="text-[10px] text-charcoal-subtle block">
@@ -296,7 +296,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                       </div>
 
                       {v.chiefComplaint && (
-                        <div className="p-2.5 bg-cream-warm border border-cream-border">
+                        <div className="p-2.5 bg-paper-warm border border-paper-border">
                           <strong className="font-mono text-[10px] uppercase text-charcoal block mb-0.5">
                             Chief Complaint:
                           </strong>
@@ -318,7 +318,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
               </h3>
 
               {patient.doctorNotes.length === 0 ? (
-                <div className="p-8 text-center text-charcoal-muted bg-cream-warm border border-dashed border-cream-border">
+                <div className="p-8 text-center text-charcoal-muted bg-paper-warm border border-dashed border-paper-border">
                   No doctor consultation documented yet. Route patient to Consultation station.
                 </div>
               ) : (
@@ -326,9 +326,9 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                   {patient.doctorNotes.map((note) => (
                     <div
                       key={note.id}
-                      className="border border-cream-border p-4 bg-white space-y-3"
+                      className="border border-paper-border p-4 bg-white space-y-3"
                     >
-                      <div className="flex items-center justify-between border-b border-cream-border pb-2">
+                      <div className="flex items-center justify-between border-b border-paper-border pb-2">
                         <span className="font-serif font-bold text-charcoal text-sm">
                           {note.doctorName}
                         </span>
@@ -356,7 +356,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                           </p>
                         </div>
 
-                        <div className="p-2.5 bg-cream-warm border border-cream-border grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="p-2.5 bg-paper-warm border border-paper-border grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
                             <strong className="font-mono text-[10px] uppercase text-charcoal-muted block">
                               Provisional Diagnosis:
@@ -367,7 +367,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                           </div>
                           {note.definitiveDiagnosis && (
                             <div>
-                              <strong className="font-mono text-[10px] uppercase text-sage block font-bold">
+                              <strong className="font-mono text-[10px] uppercase text-brand block font-bold">
                                 Definitive Diagnosis:
                               </strong>
                               <span className="font-serif font-bold text-charcoal text-xs">
@@ -401,7 +401,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
               </h3>
 
               {patient.labOrders.length === 0 ? (
-                <div className="p-8 text-center text-charcoal-muted bg-cream-warm border border-dashed border-cream-border">
+                <div className="p-8 text-center text-charcoal-muted bg-paper-warm border border-dashed border-paper-border">
                   No laboratory tests requested for this patient.
                 </div>
               ) : (
@@ -409,9 +409,9 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                   {patient.labOrders.map((lo) => (
                     <div
                       key={lo.id}
-                      className="border border-cream-border p-4 bg-white space-y-2.5"
+                      className="border border-paper-border p-4 bg-white space-y-2.5"
                     >
-                      <div className="flex items-center justify-between border-b border-cream-border pb-2">
+                      <div className="flex items-center justify-between border-b border-paper-border pb-2">
                         <div>
                           <span className="font-serif text-sm font-bold text-charcoal">
                             {lo.testName}
@@ -423,7 +423,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                         <span
                           className={`font-mono text-[10px] uppercase px-2 py-0.5 border ${
                             lo.status === "completed"
-                              ? "bg-sage-light text-sage border-sage-border font-semibold"
+                              ? "bg-brand-light text-brand border-brand-border font-semibold"
                               : "bg-amber-light text-amber-alert border-amber-border font-medium"
                           }`}
                         >
@@ -436,7 +436,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                       </div>
 
                       {lo.status === "completed" ? (
-                        <div className="p-3 bg-cream-warm border border-cream-border space-y-2">
+                        <div className="p-3 bg-paper-warm border border-paper-border space-y-2">
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <div>
                               <span className="text-[10px] font-mono uppercase text-charcoal-muted block">
@@ -463,11 +463,11 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                             </div>
                           )}
                           {lo.scientistComments && (
-                            <div className="text-[11px] text-charcoal border-t border-cream-border pt-1 mt-1">
+                            <div className="text-[11px] text-charcoal border-t border-paper-border pt-1 mt-1">
                               Scientist Note: {lo.scientistComments}
                             </div>
                           )}
-                          <div className="text-[10px] font-mono text-charcoal-subtle pt-1 border-t border-cream-border">
+                          <div className="text-[10px] font-mono text-charcoal-subtle pt-1 border-t border-paper-border">
                             Validated by: <strong>{lo.scientistName}</strong> &bull;{" "}
                             {new Date(lo.timestampCompleted || "").toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                           </div>
@@ -492,7 +492,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
               </h3>
 
               {patient.radiologyOrders.length === 0 ? (
-                <div className="p-8 text-center text-charcoal-muted bg-cream-warm border border-dashed border-cream-border">
+                <div className="p-8 text-center text-charcoal-muted bg-paper-warm border border-dashed border-paper-border">
                   No imaging studies requested for this patient.
                 </div>
               ) : (
@@ -500,16 +500,16 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                   {patient.radiologyOrders.map((ro) => (
                     <div
                       key={ro.id}
-                      className="border border-cream-border p-4 bg-white space-y-2.5"
+                      className="border border-paper-border p-4 bg-white space-y-2.5"
                     >
-                      <div className="flex items-center justify-between border-b border-cream-border pb-2">
+                      <div className="flex items-center justify-between border-b border-paper-border pb-2">
                         <span className="font-serif text-sm font-bold text-charcoal">
                           {ro.studyType}
                         </span>
                         <span
                           className={`font-mono text-[10px] uppercase px-2 py-0.5 border ${
                             ro.status === "completed"
-                              ? "bg-sage-light text-sage border-sage-border font-semibold"
+                              ? "bg-brand-light text-brand border-brand-border font-semibold"
                               : "bg-amber-light text-amber-alert border-amber-border"
                           }`}
                         >
@@ -522,7 +522,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                       </div>
 
                       {ro.status === "completed" ? (
-                        <div className="p-3 bg-cream-warm border border-cream-border space-y-2">
+                        <div className="p-3 bg-paper-warm border border-paper-border space-y-2">
                           <div>
                             <span className="text-[10px] font-mono uppercase text-charcoal-muted block">
                               Report Findings:
@@ -539,7 +539,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                               {ro.impression}
                             </p>
                           </div>
-                          <div className="text-[10px] font-mono text-charcoal-subtle pt-1 border-t border-cream-border">
+                          <div className="text-[10px] font-mono text-charcoal-subtle pt-1 border-t border-paper-border">
                             Radiographer: <strong>{ro.radiographerName}</strong>
                           </div>
                         </div>
@@ -563,7 +563,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
               </h3>
 
               {patient.medications.length === 0 ? (
-                <div className="p-8 text-center text-charcoal-muted bg-cream-warm border border-dashed border-cream-border">
+                <div className="p-8 text-center text-charcoal-muted bg-paper-warm border border-dashed border-paper-border">
                   No medications or injections prescribed for this patient.
                 </div>
               ) : (
@@ -571,21 +571,21 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                   {patient.medications.map((m) => (
                     <div
                       key={m.id}
-                      className="border border-cream-border p-4 bg-white space-y-2.5"
+                      className="border border-paper-border p-4 bg-white space-y-2.5"
                     >
-                      <div className="flex items-center justify-between border-b border-cream-border pb-2">
+                      <div className="flex items-center justify-between border-b border-paper-border pb-2">
                         <div>
                           <span className="font-serif text-sm font-bold text-charcoal">
                             {m.drugName} ({m.dosage})
                           </span>
-                          <span className="font-mono text-xs px-1.5 py-0.2 bg-cream border border-cream-border ml-2 text-charcoal">
+                          <span className="font-mono text-xs px-1.5 py-0.2 bg-paper border border-paper-border ml-2 text-charcoal">
                             Route: {m.route}
                           </span>
                         </div>
                         <span
                           className={`font-mono text-[10px] uppercase px-2 py-0.5 border ${
                             m.status === "administered"
-                              ? "bg-sage-light text-sage border-sage-border font-bold"
+                              ? "bg-brand-light text-brand border-brand-border font-bold"
                               : "bg-terracotta-light text-terracotta border-terracotta-border font-semibold"
                           }`}
                         >
@@ -604,9 +604,9 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                       )}
 
                       {m.status === "administered" && (
-                        <div className="p-3 bg-cream-warm border border-cream-border space-y-1">
+                        <div className="p-3 bg-paper-warm border border-paper-border space-y-1">
                           <div className="flex items-center justify-between text-xs">
-                            <span className="font-mono text-[10px] uppercase text-sage font-bold">
+                            <span className="font-mono text-[10px] uppercase text-brand font-bold">
                               Nursing Administration Verified
                             </span>
                             <span className="font-mono text-[10px] text-charcoal-subtle">
@@ -617,7 +617,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                             Site: <strong>{m.injectionSite}</strong> &bull; Administered by Nurse: <strong>{m.nurseName}</strong>
                           </div>
                           {m.nurseNotes && (
-                            <div className="text-[11px] text-charcoal-muted pt-1 border-t border-cream-border">
+                            <div className="text-[11px] text-charcoal-muted pt-1 border-t border-paper-border">
                               Progress Note: {m.nurseNotes}
                             </div>
                           )}
@@ -632,10 +632,10 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
         </div>
 
         {/* Footer */}
-        <div className="p-3 bg-cream border-t border-cream-border flex justify-end">
+        <div className="p-3 bg-paper border-t border-paper-border flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-1.5 text-xs border border-charcoal bg-charcoal text-cream hover:bg-charcoal/90"
+            className="px-4 py-1.5 text-xs border border-brand bg-brand text-paper hover:bg-brand-hover"
           >
             Close Docket
           </button>

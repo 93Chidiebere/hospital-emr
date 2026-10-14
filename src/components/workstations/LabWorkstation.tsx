@@ -97,10 +97,10 @@ export function LabWorkstation({
   return (
     <div className="space-y-6">
       {/* Title */}
-      <div className="bg-white border border-cream-border p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-white border border-paper-border p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <FlaskConical className="w-5 h-5 text-sage" />
+            <FlaskConical className="w-5 h-5 text-brand" />
             <h2 className="font-serif text-lg sm:text-xl font-bold text-charcoal">
               Medical Laboratory Services (MLS) Workbench
             </h2>
@@ -109,7 +109,7 @@ export function LabWorkstation({
             Process specimen requisitions, enter qualitative & quantitative diagnostic parameters, and transmit validated reports.
           </p>
         </div>
-        <div className="font-mono text-xs px-2.5 py-1 bg-cream-warm border border-cream-border text-charcoal">
+        <div className="font-mono text-xs px-2.5 py-1 bg-paper-warm border border-paper-border text-charcoal">
           Lab Station Queue: <strong>{labQueue.length}</strong> patient(s) active
         </div>
       </div>
@@ -117,14 +117,14 @@ export function LabWorkstation({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Queue */}
         <div className="lg:col-span-4 space-y-3">
-          <div className="flex items-center justify-between border-b border-cream-border pb-1">
+          <div className="flex items-center justify-between border-b border-paper-border pb-1">
             <span className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold">
               Laboratory Patients ({labQueue.length})
             </span>
           </div>
 
           {labQueue.length === 0 ? (
-            <div className="p-8 text-center text-charcoal-muted bg-white border border-cream-border text-xs">
+            <div className="p-8 text-center text-charcoal-muted bg-white border border-paper-border text-xs">
               No pending laboratory orders or specimen requests.
             </div>
           ) : (
@@ -144,8 +144,8 @@ export function LabWorkstation({
                     }}
                     className={`p-3.5 border cursor-pointer transition-colors text-xs ${
                       isSelected
-                        ? "bg-sage-light border-sage"
-                        : "bg-white border-cream-border hover:bg-cream-warm"
+                        ? "bg-brand-light border-brand"
+                        : "bg-white border-paper-border hover:bg-paper-warm"
                     }`}
                   >
                     <div className="flex items-start justify-between">
@@ -157,23 +157,23 @@ export function LabWorkstation({
                           {pat.fullName}
                         </span>
                       </div>
-                      <span className="text-[10px] font-mono px-1.5 py-0.2 bg-cream border border-cream-border text-charcoal">
+                      <span className="text-[10px] font-mono px-1.5 py-0.2 bg-paper border border-paper-border text-charcoal">
                         {pat.age}y &bull; {pat.gender[0]}
                       </span>
                     </div>
 
                     <div className="mt-2 text-[11px] font-mono flex items-center gap-2">
-                      <span className={`px-1.5 py-0.2 border ${pending > 0 ? "bg-amber-light text-amber-alert border-amber-border font-bold" : "bg-white border-cream-border text-charcoal-muted"}`}>
+                      <span className={`px-1.5 py-0.2 border ${pending > 0 ? "bg-amber-light text-amber-alert border-amber-border font-bold" : "bg-white border-paper-border text-charcoal-muted"}`}>
                         {pending} Pending Order(s)
                       </span>
                       {completed > 0 && (
-                        <span className="text-sage font-medium">
+                        <span className="text-brand font-medium">
                           &bull; {completed} Done
                         </span>
                       )}
                     </div>
 
-                    <div className="mt-2.5 pt-2 border-t border-cream-border/60 flex items-center justify-between">
+                    <div className="mt-2.5 pt-2 border-t border-paper-border/60 flex items-center justify-between">
                       <span className="text-[10px] text-charcoal-subtle">
                         Current Loc: {pat.currentDepartment}
                       </span>
@@ -183,7 +183,7 @@ export function LabWorkstation({
                           e.stopPropagation();
                           onOpenDossier(pat);
                         }}
-                        className="text-[10px] font-mono underline text-charcoal hover:text-sage"
+                        className="text-[10px] font-mono underline text-charcoal hover:text-brand"
                       >
                         Chart &rarr;
                       </button>
@@ -198,10 +198,10 @@ export function LabWorkstation({
         {/* Right: Active Test Processing */}
         <div className="lg:col-span-8">
           {selectedPatient ? (
-            <div className="bg-white border border-cream-border p-5 sm:p-6 space-y-5">
-              <div className="flex flex-wrap items-start justify-between border-b border-cream-border pb-3 gap-2">
+            <div className="bg-white border border-paper-border p-5 sm:p-6 space-y-5">
+              <div className="flex flex-wrap items-start justify-between border-b border-paper-border pb-3 gap-2">
                 <div>
-                  <span className="font-mono text-[10px] uppercase text-sage font-bold block">
+                  <span className="font-mono text-[10px] uppercase text-brand font-bold block">
                     Diagnostic Pathology Specimen Accession:
                   </span>
                   <h3 className="font-serif text-lg font-bold text-charcoal">
@@ -216,15 +216,15 @@ export function LabWorkstation({
                   <button
                     type="button"
                     onClick={() => onOpenTransfer(selectedPatient)}
-                    className="px-2.5 py-1 text-xs border border-cream-border hover:border-charcoal bg-cream flex items-center gap-1"
+                    className="px-2.5 py-1 text-xs border border-paper-border hover:border-brand bg-paper flex items-center gap-1"
                   >
-                    <ArrowRightLeft className="w-3.5 h-3.5 text-sage" />
+                    <ArrowRightLeft className="w-3.5 h-3.5 text-brand" />
                     <span>Transfer Patient</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => onOpenDossier(selectedPatient)}
-                    className="px-2.5 py-1 text-xs border border-cream-border hover:border-charcoal bg-cream"
+                    className="px-2.5 py-1 text-xs border border-paper-border hover:border-brand bg-paper"
                   >
                     Chart
                   </button>
@@ -246,8 +246,8 @@ export function LabWorkstation({
                         onClick={() => handleSelectOrder(lo)}
                         className={`p-3 text-left border transition-colors flex flex-col justify-between ${
                           isSelected
-                            ? "bg-sage-light border-sage"
-                            : "bg-white border-cream-border hover:bg-cream-warm"
+                            ? "bg-brand-light border-brand"
+                            : "bg-white border-paper-border hover:bg-paper-warm"
                         }`}
                       >
                         <div className="flex items-center justify-between">
@@ -255,7 +255,7 @@ export function LabWorkstation({
                             {lo.testName}
                           </span>
                           <span className={`text-[10px] font-mono px-1.5 py-0.2 border ${
-                            lo.status === "completed" ? "bg-white text-sage border-sage font-bold" : "bg-amber-light text-amber-alert border-amber-border"
+                            lo.status === "completed" ? "bg-white text-brand border-brand font-bold" : "bg-amber-light text-amber-alert border-amber-border"
                           }`}>
                             {lo.status === "completed" ? "Done" : "Pending"}
                           </span>
@@ -270,8 +270,8 @@ export function LabWorkstation({
               </div>
 
               {activeOrder && activeOrder.status !== "completed" ? (
-                <form onSubmit={handleCompleteLab} className="space-y-4 text-xs pt-2 border-t border-cream-border">
-                  <div className="p-3 bg-cream-warm border border-cream-border space-y-1">
+                <form onSubmit={handleCompleteLab} className="space-y-4 text-xs pt-2 border-t border-paper-border">
+                  <div className="p-3 bg-paper-warm border border-paper-border space-y-1">
                     <span className="font-mono text-[10px] uppercase font-bold text-charcoal block">
                       Investigation in Progress: {activeOrder.testName}
                     </span>
@@ -291,7 +291,7 @@ export function LabWorkstation({
                         value={findings}
                         onChange={(e) => setFindings(e.target.value)}
                         placeholder="e.g. POSITIVE (+++). Ring-form trophozoites of Plasmodium falciparum seen in RBCs..."
-                        className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-sans"
+                        className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-sans"
                       />
                     </div>
 
@@ -304,7 +304,7 @@ export function LabWorkstation({
                         value={quantitative}
                         onChange={(e) => setQuantitative(e.target.value)}
                         placeholder="e.g. 3+ (~25,000 parasites/uL) or PCV: 33%"
-                        className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-mono font-bold"
+                        className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-mono font-bold"
                       />
                     </div>
 
@@ -317,7 +317,7 @@ export function LabWorkstation({
                         value={refRange}
                         onChange={(e) => setRefRange(e.target.value)}
                         placeholder="e.g. Negative or 40 - 52%"
-                        className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-mono"
+                        className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-mono"
                       />
                     </div>
 
@@ -330,13 +330,13 @@ export function LabWorkstation({
                         value={comments}
                         onChange={(e) => setComments(e.target.value)}
                         placeholder="e.g. Critical high parasitemia alert communicated to physician."
-                        className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-sans"
+                        className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-sans"
                       />
                     </div>
                   </div>
 
                   {/* Flexible Routing after Lab Results */}
-                  <div className="p-3.5 bg-cream border border-cream-border space-y-2">
+                  <div className="p-3.5 bg-paper border border-paper-border space-y-2">
                     <label className="block font-mono text-[10px] uppercase text-charcoal font-semibold">
                       Route Patient Upon Lab Validation:
                     </label>
@@ -356,8 +356,8 @@ export function LabWorkstation({
                           }}
                           className={`p-2 text-left border text-xs ${
                             routeToDept === d.dept
-                              ? "bg-charcoal text-cream border-charcoal font-bold"
-                              : "bg-white border-cream-border hover:bg-cream-warm text-charcoal"
+                              ? "bg-brand text-paper border-brand font-bold"
+                              : "bg-white border-paper-border hover:bg-paper-warm text-charcoal"
                           }`}
                         >
                           <span className="font-serif text-xs block">{d.name}</span>
@@ -369,15 +369,15 @@ export function LabWorkstation({
                       type="text"
                       value={routingReason}
                       onChange={(e) => setRoutingReason(e.target.value)}
-                      className="w-full p-2 bg-white border border-cream-border text-xs text-charcoal"
+                      className="w-full p-2 bg-white border border-paper-border text-xs text-charcoal"
                     />
                   </div>
 
-                  <div className="flex justify-end pt-2 border-t border-cream-border">
+                  <div className="flex justify-end pt-2 border-t border-paper-border">
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="px-6 py-2.5 bg-sage hover:bg-sage-hover text-cream text-xs font-semibold flex items-center gap-2 border border-sage transition-colors"
+                      className="px-6 py-2.5 bg-brand hover:bg-brand-hover text-paper text-xs font-semibold flex items-center gap-2 border border-brand transition-colors"
                     >
                       <Check className="w-4 h-4" />
                       <span>{submitting ? "Validating Report..." : "Validate Lab Result & Route Patient"}</span>
@@ -385,8 +385,8 @@ export function LabWorkstation({
                   </div>
                 </form>
               ) : activeOrder && activeOrder.status === "completed" ? (
-                <div className="p-4 bg-sage-light border border-sage text-xs space-y-2">
-                  <div className="flex items-center gap-2 text-sage font-bold">
+                <div className="p-4 bg-brand-light border border-brand text-xs space-y-2">
+                  <div className="flex items-center gap-2 text-brand font-bold">
                     <Check className="w-4 h-4" />
                     <span>Report already validated and published on patient chart.</span>
                   </div>
@@ -398,13 +398,13 @@ export function LabWorkstation({
                   </p>
                 </div>
               ) : (
-                <div className="p-8 text-center text-charcoal-muted bg-cream-warm border border-cream-border text-xs">
+                <div className="p-8 text-center text-charcoal-muted bg-paper-warm border border-paper-border text-xs">
                   Please select an investigation from the list above to input results.
                 </div>
               )}
             </div>
           ) : (
-            <div className="p-12 text-center text-charcoal-muted bg-white border border-cream-border text-xs">
+            <div className="p-12 text-center text-charcoal-muted bg-white border border-paper-border text-xs">
               Select a patient from the left queue to conduct diagnostic lab specimen analysis.
             </div>
           )}

@@ -5,21 +5,21 @@
 @tailwind utilities;
 
 :root {
-  --bg-cream: #FDFBF7;
-  --bg-warm: #F6F3EB;
+  --bg-paper: #FFFFFF;
+  --bg-warm: #F4F6F9;
   --bg-surface: #FFFFFF;
-  --border-subtle: #E6E1D8;
-  --border-strong: #D5CEBF;
+  --border-subtle: #DCE3EA;
+  --border-strong: #C3CDD8;
   --text-charcoal: #1A1A1A;
   --text-muted: #555555;
-  --text-subtle: #828282;
-  --accent-sage: #3D5245;
-  --accent-sage-hover: #2F4035;
-  --accent-sage-light: #F1F4F1;
+  --text-subtle: #666666;
+  --accent-brand: #1F4E79;
+  --accent-brand-hover: #173B5C;
+  --accent-brand-light: #EAF1F8;
 }
 
 body {
-  background-color: var(--bg-cream);
+  background-color: var(--bg-paper);
   color: var(--text-charcoal);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -40,7 +40,7 @@ button, input, select, textarea, .card-box {
 
 /* High-contrast, clean focus outline */
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
-  outline: 1.5px solid var(--accent-sage);
+  outline: 1.5px solid var(--accent-brand);
   outline-offset: 1px;
 }
 
@@ -50,30 +50,30 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #F6F3EB;
+  background: #F4F6F9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #D5CEBF;
+  background: #C3CDD8;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #B8B0A0;
+  background: #9FAEC0;
 }
 
 /* Tactile Docket Borders */
 .docket-border {
-  border: 1px solid #E6E1D8;
+  border: 1px solid #DCE3EA;
 }
 
 .docket-border-b {
-  border-bottom: 1px solid #E6E1D8;
+  border-bottom: 1px solid #DCE3EA;
 }
 
 .docket-border-t {
-  border-top: 1px solid #E6E1D8;
+  border-top: 1px solid #DCE3EA;
 }
 
 .docket-border-r {
-  border-right: 1px solid #E6E1D8;
+  border-right: 1px solid #DCE3EA;
 }
 
 /* ---------- Accessibility & responsive helpers ---------- */
@@ -90,8 +90,8 @@ html {
   top: -100px;
   z-index: 100;
   padding: 0.6rem 1rem;
-  background: var(--text-charcoal);
-  color: #FDFBF7;
+  background: var(--accent-brand);
+  color: #FFFFFF;
   font-size: 0.8rem;
   font-family: 'JetBrains Mono', Consolas, monospace;
 }
@@ -154,9 +154,9 @@ body {
     flex: 0 0 34%;
     padding-top: 2px;
     font-family: 'JetBrains Mono', Consolas, monospace;
-    font-size: 10px;
+    font-size: 12px;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
     color: var(--text-muted);
   }
   .responsive-table td[colspan] {
@@ -166,4 +166,15 @@ body {
   .responsive-table td[colspan]::before {
     content: none;
   }
+}
+
+/* ---------- Larger text on phones ----------
+   The app uses many 10-12px sizes that are hard to read on small screens.
+   Below 640px these are bumped up; tablets/desktop are unchanged. */
+@media (max-width: 639px) {
+  .text-\[10px\] { font-size: 12px !important; line-height: 1.4 !important; }
+  .text-\[11px\] { font-size: 13px !important; line-height: 1.4 !important; }
+  .text-xs       { font-size: 14px !important; line-height: 1.5 !important; }
+  .text-sm       { font-size: 15px !important; line-height: 1.5 !important; }
+  .text-lg       { font-size: 19px !important; line-height: 1.35 !important; }
 }

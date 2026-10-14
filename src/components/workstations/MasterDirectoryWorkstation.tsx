@@ -31,10 +31,10 @@ export function MasterDirectoryWorkstation({
   return (
     <div className="space-y-6">
       {/* Title */}
-      <div className="bg-white border border-cream-border p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-white border border-paper-border p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <FileSpreadsheet className="w-5 h-5 text-sage" />
+            <FileSpreadsheet className="w-5 h-5 text-brand" />
             <h2 className="font-serif text-lg sm:text-xl font-bold text-charcoal">
               Trinity Point Hospital — Master Clinical Directory
             </h2>
@@ -50,7 +50,7 @@ export function MasterDirectoryWorkstation({
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white border border-cream-border p-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-white border border-paper-border p-4 flex flex-wrap items-center justify-between gap-3">
         <div className="relative w-full md:flex-1 md:max-w-md">
           <label htmlFor={searchId} className="sr-only">
             Search patients by name, hospital number, or station
@@ -62,7 +62,7 @@ export function MasterDirectoryWorkstation({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by patient name, hospital number, or condition..."
-            className="w-full pl-9 pr-3 py-2 text-xs bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-sans"
+            className="w-full pl-9 pr-3 py-2 text-xs bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-sans"
           />
         </div>
 
@@ -76,8 +76,8 @@ export function MasterDirectoryWorkstation({
             onClick={() => setFilterDepartment("ALL")}
             className={`px-2.5 py-2 md:px-2 md:py-1 text-xs font-mono border ${
               filterDepartment === "ALL"
-                ? "bg-charcoal text-cream border-charcoal font-bold"
-                : "bg-cream-warm text-charcoal-muted border-cream-border hover:border-charcoal"
+                ? "bg-brand text-paper border-brand font-bold"
+                : "bg-paper-warm text-charcoal-muted border-paper-border hover:border-brand"
             }`}
           >
             All ({patients.length})
@@ -94,8 +94,8 @@ export function MasterDirectoryWorkstation({
                 onClick={() => setFilterDepartment(key as Department)}
                 className={`px-2.5 py-2 md:px-2 md:py-1 text-xs font-mono border ${
                   isSelected
-                    ? "bg-sage text-cream border-sage font-bold"
-                    : "bg-cream-warm text-charcoal-muted border-cream-border hover:border-charcoal"
+                    ? "bg-brand text-paper border-brand font-bold"
+                    : "bg-paper-warm text-charcoal-muted border-paper-border hover:border-brand"
                 }`}
               >
                 {meta.code} ({count})
@@ -106,12 +106,12 @@ export function MasterDirectoryWorkstation({
       </div>
 
       {/* Master Table */}
-      <div className="bg-white border border-cream-border overflow-hidden">
+      <div className="bg-white border border-paper-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="responsive-table w-full text-left text-xs border-collapse">
             <caption className="sr-only">Master clinical directory of all registered patients</caption>
             <thead>
-              <tr className="bg-cream-warm border-b border-cream-border text-charcoal font-mono uppercase tracking-wider text-[10px]">
+              <tr className="bg-paper-warm border-b border-paper-border text-charcoal font-mono uppercase tracking-wider text-[10px]">
                 <th scope="col" className="p-3.5">Hospital Record No.</th>
                 <th scope="col" className="p-3.5">Patient Details</th>
                 <th scope="col" className="p-3.5">Current Station</th>
@@ -121,7 +121,7 @@ export function MasterDirectoryWorkstation({
                 <th scope="col" className="p-3.5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-cream-border">
+            <tbody className="divide-y divide-paper-border">
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-charcoal-muted">
@@ -138,7 +138,7 @@ export function MasterDirectoryWorkstation({
                   return (
                     <tr
                       key={pat.id}
-                      className="hover:bg-cream/40 transition-colors cursor-pointer"
+                      className="hover:bg-paper/40 transition-colors cursor-pointer"
                       onClick={() => onOpenDossier(pat)}
                     >
                       <td data-label="Record No." className="p-3.5 font-mono font-bold text-charcoal">
@@ -155,7 +155,7 @@ export function MasterDirectoryWorkstation({
                       </td>
 
                       <td data-label="Station" className="p-3.5">
-                        <span className="font-mono text-xs px-2 py-0.5 bg-cream-warm border border-cream-border text-charcoal font-medium">
+                        <span className="font-mono text-xs px-2 py-0.5 bg-paper-warm border border-paper-border text-charcoal font-medium">
                           {deptMeta.name}
                         </span>
                       </td>
@@ -195,8 +195,8 @@ export function MasterDirectoryWorkstation({
                         <span
                           className={`font-mono text-[10px] uppercase px-2 py-0.5 border ${
                             pat.status === "Discharged"
-                              ? "bg-cream-warm text-charcoal-muted border-cream-border"
-                              : "bg-sage-light text-sage border-sage-border font-bold"
+                              ? "bg-paper-warm text-charcoal-muted border-paper-border"
+                              : "bg-brand-light text-brand border-brand-border font-bold"
                           }`}
                         >
                           {pat.status}
@@ -212,9 +212,9 @@ export function MasterDirectoryWorkstation({
                             type="button"
                             onClick={() => onOpenTransfer(pat)}
                             aria-label={`Route ${pat.fullName}`}
-                            className="px-2.5 py-2 md:py-1 text-xs bg-charcoal hover:bg-charcoal/90 text-cream flex items-center gap-1 font-mono"
+                            className="px-2.5 py-2 md:py-1 text-xs bg-brand hover:bg-brand-hover text-paper flex items-center gap-1 font-mono"
                           >
-                            <ArrowRightLeft className="w-3 h-3 text-sage-light" />
+                            <ArrowRightLeft className="w-3 h-3 text-brand-light" />
                             <span>Route</span>
                           </button>
 
@@ -222,7 +222,7 @@ export function MasterDirectoryWorkstation({
                             type="button"
                             onClick={() => onOpenDossier(pat)}
                             aria-label={`Open chart for ${pat.fullName}`}
-                            className="px-2.5 py-2 md:py-1 text-xs border border-cream-border hover:border-charcoal bg-white font-mono"
+                            className="px-2.5 py-2 md:py-1 text-xs border border-paper-border hover:border-brand bg-white font-mono"
                           >
                             Chart
                           </button>

@@ -80,10 +80,10 @@ export function TriageWorkstation({
   return (
     <div className="space-y-6">
       {/* Station Title Banner */}
-      <div className="bg-white border border-cream-border p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-white border border-paper-border p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <Activity className="w-5 h-5 text-sage" />
+            <Activity className="w-5 h-5 text-brand" />
             <h2 className="font-serif text-lg sm:text-xl font-bold text-charcoal">
               Nurse Triage & Vital Signs Station
             </h2>
@@ -92,7 +92,7 @@ export function TriageWorkstation({
             Measure physiological parameters, calculate BMI, classify clinical urgency, and route to destination.
           </p>
         </div>
-        <div className="font-mono text-xs px-2.5 py-1 bg-cream-warm border border-cream-border text-charcoal">
+        <div className="font-mono text-xs px-2.5 py-1 bg-paper-warm border border-paper-border text-charcoal">
           Triage Queue: <strong>{triageQueue.length}</strong> patient(s) waiting
         </div>
       </div>
@@ -100,14 +100,14 @@ export function TriageWorkstation({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Triage Waiting Queue */}
         <div className="lg:col-span-4 space-y-3">
-          <div className="flex items-center justify-between border-b border-cream-border pb-1">
+          <div className="flex items-center justify-between border-b border-paper-border pb-1">
             <span className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold">
               Waiting in Triage Queue ({triageQueue.length})
             </span>
           </div>
 
           {triageQueue.length === 0 ? (
-            <div className="p-8 text-center text-charcoal-muted bg-white border border-cream-border text-xs">
+            <div className="p-8 text-center text-charcoal-muted bg-white border border-paper-border text-xs">
               No patients currently waiting at Triage. All patients have had vitals taken or were routed elsewhere.
             </div>
           ) : (
@@ -120,8 +120,8 @@ export function TriageWorkstation({
                     onClick={() => setSelectedPatientId(pat.id)}
                     className={`p-3.5 border cursor-pointer transition-colors text-xs ${
                       isSelected
-                        ? "bg-sage-light border-sage"
-                        : "bg-white border-cream-border hover:bg-cream-warm"
+                        ? "bg-brand-light border-brand"
+                        : "bg-white border-paper-border hover:bg-paper-warm"
                     }`}
                   >
                     <div className="flex items-start justify-between">
@@ -133,7 +133,7 @@ export function TriageWorkstation({
                           {pat.fullName}
                         </span>
                       </div>
-                      <span className="text-[10px] font-mono px-1.5 py-0.2 bg-cream border border-cream-border text-charcoal">
+                      <span className="text-[10px] font-mono px-1.5 py-0.2 bg-paper border border-paper-border text-charcoal">
                         {pat.age}y &bull; {pat.gender[0]}
                       </span>
                     </div>
@@ -142,7 +142,7 @@ export function TriageWorkstation({
                       Billing: {pat.paymentType}
                     </p>
 
-                    <div className="mt-2.5 pt-2 border-t border-cream-border/60 flex items-center justify-between">
+                    <div className="mt-2.5 pt-2 border-t border-paper-border/60 flex items-center justify-between">
                       <span className="text-[10px] font-mono text-charcoal-subtle">
                         Arrived: {new Date(pat.registeredAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                       </span>
@@ -152,7 +152,7 @@ export function TriageWorkstation({
                           e.stopPropagation();
                           onOpenDossier(pat);
                         }}
-                        className="text-[10px] font-mono underline text-charcoal hover:text-sage"
+                        className="text-[10px] font-mono underline text-charcoal hover:text-brand"
                       >
                         View Chart &rarr;
                       </button>
@@ -167,10 +167,10 @@ export function TriageWorkstation({
         {/* Right Column: Active Vitals Recording Form */}
         <div className="lg:col-span-8">
           {selectedPatient ? (
-            <div className="bg-white border border-cream-border p-5 sm:p-6 space-y-5">
-              <div className="flex flex-wrap items-center justify-between border-b border-cream-border pb-3 gap-2">
+            <div className="bg-white border border-paper-border p-5 sm:p-6 space-y-5">
+              <div className="flex flex-wrap items-center justify-between border-b border-paper-border pb-3 gap-2">
                 <div>
-                  <span className="font-mono text-[10px] uppercase text-sage font-bold block">
+                  <span className="font-mono text-[10px] uppercase text-brand font-bold block">
                     Now Assessing Patient:
                   </span>
                   <h3 className="font-serif text-lg font-bold text-charcoal">
@@ -187,15 +187,15 @@ export function TriageWorkstation({
                   <button
                     type="button"
                     onClick={() => onOpenTransfer(selectedPatient)}
-                    className="px-2.5 py-1 text-xs border border-cream-border hover:border-charcoal bg-cream flex items-center gap-1"
+                    className="px-2.5 py-1 text-xs border border-paper-border hover:border-brand bg-paper flex items-center gap-1"
                   >
-                    <ArrowRightLeft className="w-3.5 h-3.5 text-sage" />
+                    <ArrowRightLeft className="w-3.5 h-3.5 text-brand" />
                     <span>Skip to Another Station</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => onOpenDossier(selectedPatient)}
-                    className="px-2.5 py-1 text-xs border border-cream-border hover:border-charcoal bg-cream"
+                    className="px-2.5 py-1 text-xs border border-paper-border hover:border-brand bg-paper"
                   >
                     Full Chart
                   </button>
@@ -206,7 +206,7 @@ export function TriageWorkstation({
                 {/* Vitals Form Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {/* Blood Pressure */}
-                  <div className="col-span-2 p-3 bg-cream-warm border border-cream-border space-y-1.5">
+                  <div className="col-span-2 p-3 bg-paper-warm border border-paper-border space-y-1.5">
                     <label className="block font-mono text-[10px] uppercase text-charcoal font-semibold">
                       Blood Pressure (mmHg) *
                     </label>
@@ -217,7 +217,7 @@ export function TriageWorkstation({
                         placeholder="Sys (120)"
                         value={systolic}
                         onChange={(e) => setSystolic(e.target.value)}
-                        className="w-full p-2 bg-white border border-cream-border focus:border-sage text-charcoal text-center font-mono font-bold text-sm"
+                        className="w-full p-2 bg-white border border-paper-border focus:border-brand text-charcoal text-center font-mono font-bold text-sm"
                       />
                       <span className="font-serif text-lg text-charcoal-muted">/</span>
                       <input
@@ -226,7 +226,7 @@ export function TriageWorkstation({
                         placeholder="Dia (80)"
                         value={diastolic}
                         onChange={(e) => setDiastolic(e.target.value)}
-                        className="w-full p-2 bg-white border border-cream-border focus:border-sage text-charcoal text-center font-mono font-bold text-sm"
+                        className="w-full p-2 bg-white border border-paper-border focus:border-brand text-charcoal text-center font-mono font-bold text-sm"
                       />
                     </div>
                     {Number(systolic) >= 160 || Number(diastolic) >= 100 ? (
@@ -237,7 +237,7 @@ export function TriageWorkstation({
                   </div>
 
                   {/* Pulse */}
-                  <div className="p-3 bg-cream-warm border border-cream-border space-y-1.5">
+                  <div className="p-3 bg-paper-warm border border-paper-border space-y-1.5">
                     <label className="block font-mono text-[10px] uppercase text-charcoal font-semibold">
                       Pulse Rate (bpm) *
                     </label>
@@ -246,13 +246,13 @@ export function TriageWorkstation({
                       type="number"
                       value={pulse}
                       onChange={(e) => setPulse(e.target.value)}
-                      className="w-full p-2 bg-white border border-cream-border focus:border-sage text-charcoal text-center font-mono font-bold text-sm"
+                      className="w-full p-2 bg-white border border-paper-border focus:border-brand text-charcoal text-center font-mono font-bold text-sm"
                     />
                     <span className="text-[10px] text-charcoal-subtle block text-center">Norm: 60-100</span>
                   </div>
 
                   {/* Temperature */}
-                  <div className="p-3 bg-cream-warm border border-cream-border space-y-1.5">
+                  <div className="p-3 bg-paper-warm border border-paper-border space-y-1.5">
                     <label className="block font-mono text-[10px] uppercase text-charcoal font-semibold">
                       Temperature (&deg;C) *
                     </label>
@@ -262,7 +262,7 @@ export function TriageWorkstation({
                       step="0.1"
                       value={temp}
                       onChange={(e) => setTemp(e.target.value)}
-                      className="w-full p-2 bg-white border border-cream-border focus:border-sage text-charcoal text-center font-mono font-bold text-sm"
+                      className="w-full p-2 bg-white border border-paper-border focus:border-brand text-charcoal text-center font-mono font-bold text-sm"
                     />
                     <span className={`text-[10px] block text-center font-mono ${Number(temp) >= 38.0 ? "text-terracotta font-bold" : "text-charcoal-subtle"}`}>
                       {Number(temp) >= 38.0 ? "Pyrexia / Fever" : "Norm: 36.5-37.5"}
@@ -270,7 +270,7 @@ export function TriageWorkstation({
                   </div>
 
                   {/* SpO2 */}
-                  <div className="p-3 bg-cream-warm border border-cream-border space-y-1.5">
+                  <div className="p-3 bg-paper-warm border border-paper-border space-y-1.5">
                     <label className="block font-mono text-[10px] uppercase text-charcoal font-semibold">
                       SpO2 Oxygen (%) *
                     </label>
@@ -279,7 +279,7 @@ export function TriageWorkstation({
                       type="number"
                       value={spO2}
                       onChange={(e) => setSpO2(e.target.value)}
-                      className="w-full p-2 bg-white border border-cream-border focus:border-sage text-charcoal text-center font-mono font-bold text-sm"
+                      className="w-full p-2 bg-white border border-paper-border focus:border-brand text-charcoal text-center font-mono font-bold text-sm"
                     />
                     <span className={`text-[10px] block text-center font-mono ${Number(spO2) < 95 ? "text-terracotta font-bold" : "text-charcoal-subtle"}`}>
                       {Number(spO2) < 95 ? "Hypoxia Alert" : "Norm: 95-100%"}
@@ -287,7 +287,7 @@ export function TriageWorkstation({
                   </div>
 
                   {/* Resp Rate */}
-                  <div className="p-3 bg-cream-warm border border-cream-border space-y-1.5">
+                  <div className="p-3 bg-paper-warm border border-paper-border space-y-1.5">
                     <label className="block font-mono text-[10px] uppercase text-charcoal font-semibold">
                       Resp Rate (cpm)
                     </label>
@@ -295,18 +295,18 @@ export function TriageWorkstation({
                       type="number"
                       value={respRate}
                       onChange={(e) => setRespRate(e.target.value)}
-                      className="w-full p-2 bg-white border border-cream-border focus:border-sage text-charcoal text-center font-mono text-sm"
+                      className="w-full p-2 bg-white border border-paper-border focus:border-brand text-charcoal text-center font-mono text-sm"
                     />
                     <span className="text-[10px] text-charcoal-subtle block text-center">Norm: 12-20</span>
                   </div>
 
                   {/* Weight & Height -> BMI */}
-                  <div className="col-span-2 p-3 bg-cream-warm border border-cream-border space-y-1.5">
+                  <div className="col-span-2 p-3 bg-paper-warm border border-paper-border space-y-1.5">
                     <div className="flex items-center justify-between">
                       <label className="block font-mono text-[10px] uppercase text-charcoal font-semibold">
                         Anthropometry (Weight & Height)
                       </label>
-                      <span className="font-mono text-xs text-sage font-bold">
+                      <span className="font-mono text-xs text-brand font-bold">
                         Calculated BMI: {bmiComputed}
                       </span>
                     </div>
@@ -316,14 +316,14 @@ export function TriageWorkstation({
                         placeholder="Weight (kg)"
                         value={weight}
                         onChange={(e) => setWeight(e.target.value)}
-                        className="w-full p-2 bg-white border border-cream-border text-center font-mono text-sm"
+                        className="w-full p-2 bg-white border border-paper-border text-center font-mono text-sm"
                       />
                       <input
                         type="number"
                         placeholder="Height (cm)"
                         value={height}
                         onChange={(e) => setHeight(e.target.value)}
-                        className="w-full p-2 bg-white border border-cream-border text-center font-mono text-sm"
+                        className="w-full p-2 bg-white border border-paper-border text-center font-mono text-sm"
                       />
                     </div>
                   </div>
@@ -347,11 +347,11 @@ export function TriageWorkstation({
                         className={`p-2.5 text-left border transition-colors ${
                           urgency === u.id
                             ? u.id === "emergency"
-                              ? "bg-terracotta text-cream border-terracotta font-bold"
+                              ? "bg-terracotta text-paper border-terracotta font-bold"
                               : u.id === "urgent"
                               ? "bg-amber-light text-amber-alert border-amber-border font-bold"
-                              : "bg-sage text-cream border-sage font-bold"
-                            : "bg-white border-cream-border text-charcoal hover:bg-cream-warm"
+                              : "bg-brand text-paper border-brand font-bold"
+                            : "bg-white border-paper-border text-charcoal hover:bg-paper-warm"
                         }`}
                       >
                         <span className="font-serif text-xs block">{u.label}</span>
@@ -372,12 +372,12 @@ export function TriageWorkstation({
                     value={chiefComplaint}
                     onChange={(e) => setChiefComplaint(e.target.value)}
                     placeholder="e.g. Complains of sudden onset headache, chills and nausea since yesterday night..."
-                    className="w-full p-2.5 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-sans"
+                    className="w-full p-2.5 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-sans"
                   />
                 </div>
 
                 {/* Flexible Next Routing Post-Triage */}
-                <div className="p-3.5 bg-cream border border-cream-border space-y-2">
+                <div className="p-3.5 bg-paper border border-paper-border space-y-2">
                   <label className="block font-mono text-[10px] uppercase text-charcoal font-semibold">
                     Flexible Routing After Vitals:
                   </label>
@@ -403,8 +403,8 @@ export function TriageWorkstation({
                         }}
                         className={`p-2 text-left border text-xs ${
                           nextStation === d.dept
-                            ? "bg-charcoal text-cream border-charcoal font-bold"
-                            : "bg-white border-cream-border hover:bg-cream-warm text-charcoal"
+                            ? "bg-brand text-paper border-brand font-bold"
+                            : "bg-white border-paper-border hover:bg-paper-warm text-charcoal"
                         }`}
                       >
                         <span className="font-serif text-xs block">{d.name}</span>
@@ -416,17 +416,17 @@ export function TriageWorkstation({
                     type="text"
                     value={routingReason}
                     onChange={(e) => setRoutingReason(e.target.value)}
-                    className="w-full p-2 bg-white border border-cream-border text-xs text-charcoal"
+                    className="w-full p-2 bg-white border border-paper-border text-xs text-charcoal"
                     placeholder="Routing note..."
                   />
                 </div>
 
                 {/* Submit Button */}
-                <div className="flex justify-end pt-2 border-t border-cream-border">
+                <div className="flex justify-end pt-2 border-t border-paper-border">
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-6 py-2.5 bg-sage hover:bg-sage-hover text-cream text-xs font-semibold flex items-center gap-2 border border-sage transition-colors"
+                    className="px-6 py-2.5 bg-brand hover:bg-brand-hover text-paper text-xs font-semibold flex items-center gap-2 border border-brand transition-colors"
                   >
                     <Check className="w-4 h-4" />
                     <span>{submitting ? "Logging Vitals..." : "Save Vitals & Route Patient"}</span>
@@ -435,7 +435,7 @@ export function TriageWorkstation({
               </form>
             </div>
           ) : (
-            <div className="p-12 text-center text-charcoal-muted bg-white border border-cream-border text-xs">
+            <div className="p-12 text-center text-charcoal-muted bg-white border border-paper-border text-xs">
               Select a patient from the left queue to record their vitals.
             </div>
           )}

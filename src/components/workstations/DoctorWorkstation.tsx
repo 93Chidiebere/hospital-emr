@@ -149,10 +149,10 @@ export function DoctorWorkstation({
   return (
     <div className="space-y-6">
       {/* Title */}
-      <div className="bg-white border border-cream-border p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-white border border-paper-border p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <Stethoscope className="w-5 h-5 text-sage" />
+            <Stethoscope className="w-5 h-5 text-brand" />
             <h2 className="font-serif text-lg sm:text-xl font-bold text-charcoal">
               Physician Consultation & Clinical Decision Station
             </h2>
@@ -161,7 +161,7 @@ export function DoctorWorkstation({
             Evaluate triage vitals, review laboratory & imaging results, document diagnoses, and order treatment.
           </p>
         </div>
-        <div className="font-mono text-xs px-2.5 py-1 bg-cream-warm border border-cream-border text-charcoal">
+        <div className="font-mono text-xs px-2.5 py-1 bg-paper-warm border border-paper-border text-charcoal">
           Doctor Queue: <strong>{consultQueue.length}</strong> patient(s) waiting
         </div>
       </div>
@@ -169,14 +169,14 @@ export function DoctorWorkstation({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Queue */}
         <div className="lg:col-span-4 space-y-3">
-          <div className="flex items-center justify-between border-b border-cream-border pb-1">
+          <div className="flex items-center justify-between border-b border-paper-border pb-1">
             <span className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold">
               Waiting for Doctor ({consultQueue.length})
             </span>
           </div>
 
           {consultQueue.length === 0 ? (
-            <div className="p-8 text-center text-charcoal-muted bg-white border border-cream-border text-xs">
+            <div className="p-8 text-center text-charcoal-muted bg-white border border-paper-border text-xs">
               No patients currently waiting for physician consultation.
             </div>
           ) : (
@@ -192,8 +192,8 @@ export function DoctorWorkstation({
                     onClick={() => setSelectedPatientId(pat.id)}
                     className={`p-3.5 border cursor-pointer transition-colors text-xs ${
                       isSelected
-                        ? "bg-sage-light border-sage"
-                        : "bg-white border-cream-border hover:bg-cream-warm"
+                        ? "bg-brand-light border-brand"
+                        : "bg-white border-paper-border hover:bg-paper-warm"
                     }`}
                   >
                     <div className="flex items-start justify-between">
@@ -205,14 +205,14 @@ export function DoctorWorkstation({
                           {pat.fullName}
                         </span>
                       </div>
-                      <span className="text-[10px] font-mono px-1.5 py-0.2 bg-cream border border-cream-border text-charcoal">
+                      <span className="text-[10px] font-mono px-1.5 py-0.2 bg-paper border border-paper-border text-charcoal">
                         {pat.age}y &bull; {pat.gender[0]}
                       </span>
                     </div>
 
                     {/* Vitals Summary Pill */}
                     {vit && (
-                      <div className="mt-2 text-[11px] font-mono p-1.5 bg-cream-warm border border-cream-border flex items-center justify-between">
+                      <div className="mt-2 text-[11px] font-mono p-1.5 bg-paper-warm border border-paper-border flex items-center justify-between">
                         <span>BP: {vit.bloodPressureSystolic}/{vit.bloodPressureDiastolic}</span>
                         <span className={vit.temperature >= 38.0 ? "text-terracotta font-bold" : ""}>
                           T: {vit.temperature}&deg;C
@@ -222,12 +222,12 @@ export function DoctorWorkstation({
                     )}
 
                     {hasCompletedLabs && (
-                      <div className="mt-1.5 text-[10px] font-mono text-sage font-bold flex items-center gap-1">
+                      <div className="mt-1.5 text-[10px] font-mono text-brand font-bold flex items-center gap-1">
                         &bull; Completed Lab Results Ready in Chart!
                       </div>
                     )}
 
-                    <div className="mt-2.5 pt-2 border-t border-cream-border/60 flex items-center justify-between">
+                    <div className="mt-2.5 pt-2 border-t border-paper-border/60 flex items-center justify-between">
                       <span className="text-[10px] text-charcoal-muted line-clamp-1 max-w-[170px]">
                         {vit?.chiefComplaint || "Enrolled for doctor review"}
                       </span>
@@ -237,7 +237,7 @@ export function DoctorWorkstation({
                           e.stopPropagation();
                           onOpenDossier(pat);
                         }}
-                        className="text-[10px] font-mono underline text-charcoal hover:text-sage"
+                        className="text-[10px] font-mono underline text-charcoal hover:text-brand"
                       >
                         Chart &rarr;
                       </button>
@@ -252,11 +252,11 @@ export function DoctorWorkstation({
         {/* Right: Consultation Form */}
         <div className="lg:col-span-8">
           {selectedPatient ? (
-            <div className="bg-white border border-cream-border p-5 sm:p-6 space-y-5">
+            <div className="bg-white border border-paper-border p-5 sm:p-6 space-y-5">
               {/* Patient Top Summary Banner */}
-              <div className="flex flex-wrap items-start justify-between border-b border-cream-border pb-3 gap-2">
+              <div className="flex flex-wrap items-start justify-between border-b border-paper-border pb-3 gap-2">
                 <div>
-                  <span className="font-mono text-[10px] uppercase text-sage font-bold block">
+                  <span className="font-mono text-[10px] uppercase text-brand font-bold block">
                     Active Clinical Consultation:
                   </span>
                   <h3 className="font-serif text-lg font-bold text-charcoal">
@@ -271,15 +271,15 @@ export function DoctorWorkstation({
                   <button
                     type="button"
                     onClick={() => onOpenTransfer(selectedPatient)}
-                    className="px-2.5 py-1 text-xs border border-cream-border hover:border-charcoal bg-cream flex items-center gap-1"
+                    className="px-2.5 py-1 text-xs border border-paper-border hover:border-brand bg-paper flex items-center gap-1"
                   >
-                    <ArrowRightLeft className="w-3.5 h-3.5 text-sage" />
+                    <ArrowRightLeft className="w-3.5 h-3.5 text-brand" />
                     <span>Transfer Direct</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => onOpenDossier(selectedPatient)}
-                    className="px-2.5 py-1 text-xs border border-cream-border hover:border-charcoal bg-cream"
+                    className="px-2.5 py-1 text-xs border border-paper-border hover:border-brand bg-paper"
                   >
                     Inspect Full Docket
                   </button>
@@ -288,39 +288,39 @@ export function DoctorWorkstation({
 
               {/* Triage Vitals Preview Strip */}
               {latestVitals ? (
-                <div className="p-3 bg-cream-warm border border-cream-border space-y-1.5 text-xs">
+                <div className="p-3 bg-paper-warm border border-paper-border space-y-1.5 text-xs">
                   <div className="flex items-center justify-between text-[11px] font-mono">
                     <span className="font-semibold text-charcoal">Triage Vitals (Logged by {latestVitals.takenBy}):</span>
                     <span className="text-charcoal-muted">{new Date(latestVitals.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 font-mono text-center">
-                    <div className="bg-white p-1.5 border border-cream-border">
+                    <div className="bg-white p-1.5 border border-paper-border">
                       <span className="text-[10px] text-charcoal-muted block">BP</span>
                       <strong>{latestVitals.bloodPressureSystolic}/{latestVitals.bloodPressureDiastolic}</strong>
                     </div>
-                    <div className="bg-white p-1.5 border border-cream-border">
+                    <div className="bg-white p-1.5 border border-paper-border">
                       <span className="text-[10px] text-charcoal-muted block">Temp</span>
                       <strong className={latestVitals.temperature >= 38 ? "text-terracotta" : ""}>
                         {latestVitals.temperature}&deg;C
                       </strong>
                     </div>
-                    <div className="bg-white p-1.5 border border-cream-border">
+                    <div className="bg-white p-1.5 border border-paper-border">
                       <span className="text-[10px] text-charcoal-muted block">Pulse</span>
                       <strong>{latestVitals.pulseRate} bpm</strong>
                     </div>
-                    <div className="bg-white p-1.5 border border-cream-border">
+                    <div className="bg-white p-1.5 border border-paper-border">
                       <span className="text-[10px] text-charcoal-muted block">SpO2</span>
                       <strong className={latestVitals.spO2 < 95 ? "text-terracotta" : ""}>
                         {latestVitals.spO2}%
                       </strong>
                     </div>
-                    <div className="bg-white p-1.5 border border-cream-border">
+                    <div className="bg-white p-1.5 border border-paper-border">
                       <span className="text-[10px] text-charcoal-muted block">BMI</span>
                       <strong>{latestVitals.bmi}</strong>
                     </div>
                   </div>
                   {latestVitals.chiefComplaint && (
-                    <p className="text-charcoal text-xs pt-1 border-t border-cream-border/60">
+                    <p className="text-charcoal text-xs pt-1 border-t border-paper-border/60">
                       <strong>Chief Complaint:</strong> {latestVitals.chiefComplaint}
                     </p>
                   )}
@@ -333,13 +333,13 @@ export function DoctorWorkstation({
 
               {/* Lab Results Available Notice */}
               {selectedPatient.labOrders.length > 0 && (
-                <div className="p-3 bg-cream border border-cream-border space-y-2 text-xs">
+                <div className="p-3 bg-paper border border-paper-border space-y-2 text-xs">
                   <span className="font-mono text-[10px] uppercase font-bold text-charcoal block">
                     Diagnostic Lab Status ({selectedPatient.labOrders.length} test ordered):
                   </span>
                   <div className="space-y-1.5">
                     {selectedPatient.labOrders.map((lo) => (
-                      <div key={lo.id} className="p-2 bg-white border border-cream-border flex items-start justify-between">
+                      <div key={lo.id} className="p-2 bg-white border border-paper-border flex items-start justify-between">
                         <div>
                           <strong>{lo.testName}</strong>
                           {lo.resultFindings && (
@@ -349,7 +349,7 @@ export function DoctorWorkstation({
                           )}
                         </div>
                         <span className={`text-[10px] font-mono px-1.5 py-0.2 border ${
-                          lo.status === "completed" ? "bg-sage-light text-sage border-sage-border font-bold" : "bg-cream-warm text-charcoal-muted border-cream-border"
+                          lo.status === "completed" ? "bg-brand-light text-brand border-brand-border font-bold" : "bg-paper-warm text-charcoal-muted border-paper-border"
                         }`}>
                           {lo.status === "completed" ? "Validated" : "Pending"}
                         </span>
@@ -362,7 +362,7 @@ export function DoctorWorkstation({
               <form onSubmit={handleSubmitConsult} className="space-y-4 text-xs">
                 {/* Clinical Notes Inputs */}
                 <div className="space-y-3">
-                  <h4 className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold border-b border-cream-border pb-1">
+                  <h4 className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold border-b border-paper-border pb-1">
                     1. Physician Clinical Evaluation
                   </h4>
 
@@ -376,7 +376,7 @@ export function DoctorWorkstation({
                         value={hpi}
                         onChange={(e) => setHpi(e.target.value)}
                         placeholder="e.g. 3-day history of intermittent high-grade fever, chills, vomiting x2, headache..."
-                        className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-sans"
+                        className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-sans"
                       />
                     </div>
 
@@ -389,7 +389,7 @@ export function DoctorWorkstation({
                         value={exam}
                         onChange={(e) => setExam(e.target.value)}
                         placeholder="e.g. Febrile, mild pallor. Chest clear. Abdomen soft, mild splenomegaly..."
-                        className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-sans"
+                        className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-sans"
                       />
                     </div>
                   </div>
@@ -405,12 +405,12 @@ export function DoctorWorkstation({
                         value={provisionalDx}
                         onChange={(e) => setProvisionalDx(e.target.value)}
                         placeholder="e.g. Severe Malaria vs Enteric Fever"
-                        className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-serif font-bold"
+                        className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-serif font-bold"
                       />
                     </div>
 
                     <div>
-                      <label className="block font-mono text-[10px] uppercase text-sage font-bold mb-1">
+                      <label className="block font-mono text-[10px] uppercase text-brand font-bold mb-1">
                         Definitive Diagnosis (Post-Lab / Imaging)
                       </label>
                       <input
@@ -418,7 +418,7 @@ export function DoctorWorkstation({
                         value={definitiveDx}
                         onChange={(e) => setDefinitiveDx(e.target.value)}
                         placeholder="e.g. Acute Plasmodium Falciparum Malaria (confirmed)"
-                        className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-serif font-bold"
+                        className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-serif font-bold"
                       />
                     </div>
                   </div>
@@ -432,14 +432,14 @@ export function DoctorWorkstation({
                       value={clinicalPlan}
                       onChange={(e) => setClinicalPlan(e.target.value)}
                       placeholder="e.g. 1. Order Giemsa MP and FBC. 2. Prescribe stat IV Artesunate. 3. Review post-lab..."
-                      className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-sans"
+                      className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-sans"
                     />
                   </div>
                 </div>
 
                 {/* Investigations Ordering */}
                 <div className="space-y-3 pt-2">
-                  <h4 className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold border-b border-cream-border pb-1 flex items-center justify-between">
+                  <h4 className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold border-b border-paper-border pb-1 flex items-center justify-between">
                     <span>2. Order Laboratory & Radiology Investigations</span>
                     <span className="text-[10px] font-normal text-charcoal-muted">Click panel to append</span>
                   </h4>
@@ -454,9 +454,9 @@ export function DoctorWorkstation({
                           key={t}
                           type="button"
                           onClick={() => handleAddLab(t)}
-                          className="px-2 py-1 bg-cream-warm hover:bg-cream border border-cream-border hover:border-charcoal text-[11px] text-charcoal flex items-center gap-1"
+                          className="px-2 py-1 bg-paper-warm hover:bg-paper border border-paper-border hover:border-brand text-[11px] text-charcoal flex items-center gap-1"
                         >
-                          <Plus className="w-3 h-3 text-sage" />
+                          <Plus className="w-3 h-3 text-brand" />
                           <span>{t}</span>
                         </button>
                       ))}
@@ -465,12 +465,12 @@ export function DoctorWorkstation({
 
                   {/* Active Selected Labs */}
                   {labOrders.length > 0 && (
-                    <div className="p-3 bg-sage-light/60 border border-sage space-y-2">
-                      <span className="font-mono text-[10px] uppercase font-bold text-sage block">
+                    <div className="p-3 bg-brand-light/60 border border-brand space-y-2">
+                      <span className="font-mono text-[10px] uppercase font-bold text-brand block">
                         Pending Tests to be Sent to MLS Lab ({labOrders.length}):
                       </span>
                       {labOrders.map((lo, i) => (
-                        <div key={i} className="flex items-center justify-between bg-white p-2 border border-sage-border text-xs">
+                        <div key={i} className="flex items-center justify-between bg-white p-2 border border-brand-border text-xs">
                           <span>{lo.testName} ({lo.priority.toUpperCase()})</span>
                           <button
                             type="button"
@@ -487,7 +487,7 @@ export function DoctorWorkstation({
 
                 {/* Medications & Injections */}
                 <div className="space-y-3 pt-2">
-                  <h4 className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold border-b border-cream-border pb-1 flex items-center justify-between">
+                  <h4 className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold border-b border-paper-border pb-1 flex items-center justify-between">
                     <span>3. Prescribe Injections & Medications</span>
                     <span className="text-[10px] font-normal text-charcoal-muted">Stat injections route to Treatment Room</span>
                   </h4>
@@ -502,9 +502,9 @@ export function DoctorWorkstation({
                           key={m.name}
                           type="button"
                           onClick={() => handleAddMed(m)}
-                          className="px-2 py-1 bg-cream-warm hover:bg-cream border border-cream-border hover:border-charcoal text-[11px] text-charcoal flex items-center gap-1"
+                          className="px-2 py-1 bg-paper-warm hover:bg-paper border border-paper-border hover:border-brand text-[11px] text-charcoal flex items-center gap-1"
                         >
-                          <Plus className="w-3 h-3 text-sage" />
+                          <Plus className="w-3 h-3 text-brand" />
                           <span>{m.name} ({m.dose}) [{m.route}]</span>
                         </button>
                       ))}
@@ -513,12 +513,12 @@ export function DoctorWorkstation({
 
                   {/* Active Selected Meds */}
                   {medications.length > 0 && (
-                    <div className="p-3 bg-cream-warm border border-cream-border space-y-2">
+                    <div className="p-3 bg-paper-warm border border-paper-border space-y-2">
                       <span className="font-mono text-[10px] uppercase font-bold text-charcoal block">
                         Prescription Orders to Issue ({medications.length}):
                       </span>
                       {medications.map((m, i) => (
-                        <div key={i} className="flex items-center justify-between bg-white p-2 border border-cream-border text-xs">
+                        <div key={i} className="flex items-center justify-between bg-white p-2 border border-paper-border text-xs">
                           <div>
                             <strong>{m.drugName}</strong> ({m.dosage}) &bull; Route: <span className="font-mono">{m.route}</span>
                             <span className="text-[11px] text-charcoal-muted block">{m.frequency}</span>
@@ -537,7 +537,7 @@ export function DoctorWorkstation({
                 </div>
 
                 {/* Flexible Next Destination Routing */}
-                <div className="p-3.5 bg-cream border border-cream-border space-y-2">
+                <div className="p-3.5 bg-paper border border-paper-border space-y-2">
                   <label className="block font-mono text-[10px] uppercase text-charcoal font-semibold">
                     Flexible Patient Routing Post-Consultation:
                   </label>
@@ -558,8 +558,8 @@ export function DoctorWorkstation({
                         }}
                         className={`p-2 text-left border text-xs ${
                           targetDept === d.dept
-                            ? "bg-charcoal text-cream border-charcoal font-bold"
-                            : "bg-white border-cream-border hover:bg-cream-warm text-charcoal"
+                            ? "bg-brand text-paper border-brand font-bold"
+                            : "bg-white border-paper-border hover:bg-paper-warm text-charcoal"
                         }`}
                       >
                         <span className="font-serif text-xs block">{d.name}</span>
@@ -571,17 +571,17 @@ export function DoctorWorkstation({
                     type="text"
                     value={routingReason}
                     onChange={(e) => setRoutingReason(e.target.value)}
-                    className="w-full p-2 bg-white border border-cream-border text-xs text-charcoal font-sans"
+                    className="w-full p-2 bg-white border border-paper-border text-xs text-charcoal font-sans"
                     placeholder="Physician routing justification..."
                   />
                 </div>
 
                 {/* Submit */}
-                <div className="flex justify-end pt-2 border-t border-cream-border">
+                <div className="flex justify-end pt-2 border-t border-paper-border">
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-6 py-2.5 bg-sage hover:bg-sage-hover text-cream text-xs font-semibold flex items-center gap-2 border border-sage transition-colors"
+                    className="px-6 py-2.5 bg-brand hover:bg-brand-hover text-paper text-xs font-semibold flex items-center gap-2 border border-brand transition-colors"
                   >
                     <Check className="w-4 h-4" />
                     <span>{submitting ? "Signing Consultation..." : "Sign Clinical Encounter & Route Patient"}</span>
@@ -590,7 +590,7 @@ export function DoctorWorkstation({
               </form>
             </div>
           ) : (
-            <div className="p-12 text-center text-charcoal-muted bg-white border border-cream-border text-xs">
+            <div className="p-12 text-center text-charcoal-muted bg-white border border-paper-border text-xs">
               Select a patient from the left consultation queue to conduct physician review.
             </div>
           )}

@@ -79,13 +79,13 @@ function AuthModalInner() {
         aria-modal="true"
         aria-labelledby="auth-dialog-title"
         tabIndex={-1}
-        className="bg-white border border-charcoal max-w-lg w-full max-h-[92vh] overflow-y-auto p-5 sm:p-6 space-y-4 shadow-xl outline-none"
+        className="bg-white border border-brand max-w-lg w-full max-h-[92vh] overflow-y-auto p-5 sm:p-6 space-y-4 shadow-xl outline-none"
       >
         {/* Top Header */}
-        <div className="flex items-start justify-between border-b border-cream-border pb-3">
+        <div className="flex items-start justify-between border-b border-paper-border pb-3">
           <div>
             <div className="flex items-center gap-2">
-              <KeyRound className="w-4 h-4 text-sage" />
+              <KeyRound className="w-4 h-4 text-brand" />
               <h3 id="auth-dialog-title" className="font-serif text-lg font-bold text-charcoal">
                 Trinity Point Hospital — Student Portal
               </h3>
@@ -105,7 +105,7 @@ function AuthModalInner() {
         </div>
 
         {/* Tab Selection */}
-        <div className="grid grid-cols-2 border border-cream-border p-1 bg-cream-warm text-xs font-mono">
+        <div className="grid grid-cols-2 border border-paper-border p-1 bg-paper-warm text-xs font-mono">
           <button
             type="button"
             aria-pressed={authMode === "signin"}
@@ -115,7 +115,7 @@ function AuthModalInner() {
             }}
             className={`py-2 text-center transition-colors ${
               authMode === "signin"
-                ? "bg-white text-charcoal font-bold border border-cream-border shadow-sm"
+                ? "bg-white text-charcoal font-bold border border-paper-border shadow-sm"
                 : "text-charcoal-muted hover:text-charcoal"
             }`}
           >
@@ -130,7 +130,7 @@ function AuthModalInner() {
             }}
             className={`py-2 text-center transition-colors ${
               authMode === "signup"
-                ? "bg-white text-charcoal font-bold border border-cream-border shadow-sm"
+                ? "bg-white text-charcoal font-bold border border-paper-border shadow-sm"
                 : "text-charcoal-muted hover:text-charcoal"
             }`}
           >
@@ -160,7 +160,7 @@ function AuthModalInner() {
                   value={loginId}
                   onChange={(e) => setLoginId(e.target.value)}
                   placeholder="e.g. Nurse Mary Okon"
-                  className="w-full p-2.5 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-mono"
+                  className="w-full p-2.5 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-mono"
                 />
               </div>
 
@@ -173,7 +173,7 @@ function AuthModalInner() {
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   placeholder="Password or passkey"
-                  className="w-full p-2.5 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-sans"
+                  className="w-full p-2.5 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-sans"
                 />
               </div>
             </div>
@@ -181,14 +181,14 @@ function AuthModalInner() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-2.5 bg-charcoal hover:bg-charcoal/90 text-cream text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
+              className="w-full py-2.5 bg-brand hover:bg-brand-hover text-paper text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
             >
-              <LogIn className="w-3.5 h-3.5 text-sage-light" />
+              <LogIn className="w-3.5 h-3.5 text-brand-light" />
               <span>{submitting ? "Signing In..." : "Sign In to Hospital Session"}</span>
             </button>
 
             {/* Quick 1-Click Test Accounts */}
-            <div className="pt-3 border-t border-cream-border space-y-2">
+            <div className="pt-3 border-t border-paper-border space-y-2">
               <span className="font-mono text-[10px] uppercase tracking-wider text-charcoal-muted block">
                 Quick 1-Click Simulation Logins:
               </span>
@@ -198,7 +198,7 @@ function AuthModalInner() {
                     key={acc.id}
                     type="button"
                     onClick={() => handleQuickLogin(acc)}
-                    className="p-1.5 text-left border border-cream-border hover:border-charcoal bg-cream/70 text-[10px] flex flex-col"
+                    className="p-1.5 text-left border border-paper-border hover:border-brand bg-paper/70 text-[10px] flex flex-col"
                   >
                     <span className="font-serif font-bold text-charcoal truncate">
                       {acc.fullName}
@@ -225,7 +225,7 @@ function AuthModalInner() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="e.g. Adaeze Nwafor"
-                  className="w-full p-2.5 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-sans"
+                  className="w-full p-2.5 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-sans"
                 />
               </div>
 
@@ -237,7 +237,7 @@ function AuthModalInner() {
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value as RoleId)}
-                  className="w-full p-2.5 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-sans"
+                  className="w-full p-2.5 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-sans"
                 >
                   {HOSPITAL_ROLES.filter((r) => r.id !== "director").map((r) => (
                     <option key={r.id} value={r.id}>
@@ -256,7 +256,7 @@ function AuthModalInner() {
                   value={signupPassword}
                   onChange={(e) => setSignupPassword(e.target.value)}
                   placeholder="Optional PIN or password (default: pass)"
-                  className="w-full p-2.5 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-sans"
+                  className="w-full p-2.5 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-sans"
                 />
               </div>
             </div>
@@ -264,7 +264,7 @@ function AuthModalInner() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-2.5 bg-sage hover:bg-sage-hover text-cream text-xs font-semibold flex items-center justify-center gap-2 border border-sage transition-colors"
+              className="w-full py-2.5 bg-brand hover:bg-brand-hover text-paper text-xs font-semibold flex items-center justify-center gap-2 border border-brand transition-colors"
             >
               <UserPlus className="w-3.5 h-3.5" />
               <span>{submitting ? "Registering..." : "Register & Enter Hospital Station"}</span>

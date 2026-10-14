@@ -9,12 +9,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        cream: {
-          DEFAULT: "#FDFBF7",
-          warm: "#F5F2EA",
+        paper: {
+          DEFAULT: "#FFFFFF",
+          warm: "#F4F6F9",
           surface: "#FFFFFF",
-          border: "#E5E0D8",
-          "border-dark": "#D5CEBF",
+          border: "#DCE3EA",
+          "border-dark": "#C3CDD8",
         },
         charcoal: {
           DEFAULT: "#1A1A1A",
@@ -22,11 +22,12 @@ const config: Config = {
           subtle: "#666666",
           faint: "#767676",
         },
-        sage: {
-          DEFAULT: "#3D5245",
-          hover: "#2F3F35",
-          light: "#F0F4F1",
-          border: "#C2D1C6",
+        // Muted "denim / hospital navy" blue (deliberately not a bright screen blue)
+        brand: {
+          DEFAULT: "#1F4E79",
+          hover: "#173B5C",
+          light: "#EAF1F8",
+          border: "#B7CBE0",
         },
         terracotta: {
           DEFAULT: "#9E4732",

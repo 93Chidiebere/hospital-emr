@@ -33,7 +33,7 @@ export function HospitalPipelineBar() {
     patients.filter((p) => p.currentDepartment === dept).length;
 
   return (
-    <section aria-label="Live clinical flow pipeline" className="bg-white border-b border-cream-border">
+    <section aria-label="Live clinical flow pipeline" className="bg-white border-b border-paper-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-2">
@@ -50,8 +50,8 @@ export function HospitalPipelineBar() {
             onClick={() => setFilterDepartment("ALL")}
             className={`px-3 py-2 sm:px-2 sm:py-0.5 text-xs font-mono transition-colors border ${
               filterDepartment === "ALL"
-                ? "bg-charcoal text-cream border-charcoal font-semibold"
-                : "bg-cream-warm text-charcoal-muted border-cream-border hover:border-charcoal hover:text-charcoal"
+                ? "bg-brand text-paper border-brand font-semibold"
+                : "bg-paper-warm text-charcoal-muted border-paper-border hover:border-brand hover:text-charcoal"
             }`}
           >
             All Stations ({patients.length})
@@ -74,8 +74,8 @@ export function HospitalPipelineBar() {
                 onClick={() => setFilterDepartment(dept)}
                 className={`p-2.5 sm:p-2 min-h-[56px] text-left transition-all border flex flex-col justify-between ${
                   isSelected
-                    ? "bg-sage-light border-sage text-charcoal shadow-sm"
-                    : "bg-cream/60 border-cream-border hover:bg-cream-warm hover:border-cream-border-dark text-charcoal-muted"
+                    ? "bg-brand-light border-brand text-charcoal shadow-sm"
+                    : "bg-paper/60 border-paper-border hover:bg-paper-warm hover:border-paper-border-dark text-charcoal-muted"
                 }`}
               >
                 <div className="flex items-center justify-between gap-1 w-full">
@@ -83,7 +83,7 @@ export function HospitalPipelineBar() {
                     <Icon
                       aria-hidden="true"
                       className={`w-3.5 h-3.5 ${
-                        isSelected ? "text-sage" : "text-charcoal-subtle"
+                        isSelected ? "text-brand" : "text-charcoal-subtle"
                       }`}
                     />
                     <span className="text-[10px] font-mono uppercase tracking-wider">
@@ -95,9 +95,9 @@ export function HospitalPipelineBar() {
                     className={`font-mono text-xs px-1.5 py-0.5 ${
                       count > 0
                         ? isSelected
-                          ? "bg-sage text-cream font-bold"
-                          : "bg-charcoal text-cream font-medium"
-                        : "bg-cream-warm text-charcoal-subtle border border-cream-border"
+                          ? "bg-brand text-paper font-bold"
+                          : "bg-brand text-paper font-medium"
+                        : "bg-paper-warm text-charcoal-subtle border border-paper-border"
                     }`}
                   >
                     {count}

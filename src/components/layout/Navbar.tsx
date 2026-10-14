@@ -116,9 +116,9 @@ function RoleMenu({
             setOpen(true);
           }
         }}
-        className="flex items-center gap-2 px-3 py-1.5 min-h-[44px] sm:min-h-0 bg-white border border-cream-border text-charcoal hover:border-charcoal transition-colors font-medium text-xs"
+        className="flex items-center gap-2 px-3 py-1.5 min-h-[44px] sm:min-h-0 bg-white border border-paper-border text-charcoal hover:border-brand transition-colors font-medium text-xs"
       >
-        <span className="font-mono px-1 bg-sage-light text-sage border border-sage-border text-[10px]">
+        <span className="font-mono px-1 bg-brand-light text-brand border border-brand-border text-[10px]">
           {current.badge}
         </span>
         <span className="font-serif text-sm font-semibold text-left">{current.title}</span>
@@ -136,11 +136,11 @@ function RoleMenu({
           role="menu"
           aria-label="Select your simulated department post"
           onKeyDown={handleMenuKeyDown}
-          className="absolute left-0 mt-1 w-[min(20rem,calc(100vw-2rem))] max-h-[70vh] overflow-y-auto bg-white border border-charcoal shadow-sm z-50 divide-y divide-cream-border"
+          className="absolute left-0 mt-1 w-[min(20rem,calc(100vw-2rem))] max-h-[70vh] overflow-y-auto bg-white border border-brand shadow-sm z-50 divide-y divide-paper-border"
         >
           <div
             aria-hidden="true"
-            className="px-3 py-2 bg-cream-warm text-[11px] text-charcoal-muted uppercase font-mono tracking-wider"
+            className="px-3 py-2 bg-paper-warm text-[11px] text-charcoal-muted uppercase font-mono tracking-wider"
           >
             Select Your Simulated Department Post:
           </div>
@@ -160,11 +160,11 @@ function RoleMenu({
                   onSelect(r.id);
                   closeAndReturnFocus();
                 }}
-                className={`w-full text-left px-3 py-3 sm:py-2.5 hover:bg-cream-warm focus:bg-cream-warm transition-colors flex items-start gap-2.5 ${
-                  selected ? "bg-sage-light/60 font-medium" : ""
+                className={`w-full text-left px-3 py-3 sm:py-2.5 hover:bg-paper-warm focus:bg-paper-warm transition-colors flex items-start gap-2.5 ${
+                  selected ? "bg-brand-light/60 font-medium" : ""
                 }`}
               >
-                <span className="font-mono px-1.5 py-0.5 bg-cream border border-cream-border text-[10px] text-charcoal mt-0.5">
+                <span className="font-mono px-1.5 py-0.5 bg-paper border border-paper-border text-[10px] text-charcoal mt-0.5">
                   {r.badge}
                 </span>
                 <span className="flex-1 min-w-0">
@@ -210,7 +210,7 @@ function ResetConfirmDialog({
         aria-labelledby={titleId}
         aria-describedby={descId}
         tabIndex={-1}
-        className="bg-white border border-charcoal max-w-md w-full max-h-[90vh] overflow-y-auto p-5 sm:p-6 space-y-4 outline-none"
+        className="bg-white border border-brand max-w-md w-full max-h-[90vh] overflow-y-auto p-5 sm:p-6 space-y-4 outline-none"
       >
         <div className="flex items-center gap-2 text-terracotta">
           <ShieldAlert aria-hidden="true" className="w-5 h-5 shrink-0" />
@@ -223,19 +223,19 @@ function ResetConfirmDialog({
           acute malaria in treatment, follow-up lab review, hypertensive urgency, and pediatric
           cases). Any new entries created during this session will be replaced.
         </p>
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2 border-t border-cream-border">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2 border-t border-paper-border">
           <button
             type="button"
             autoFocus
             onClick={onCancel}
-            className="px-3 py-2.5 sm:py-1.5 text-xs border border-cream-border text-charcoal hover:bg-cream-warm"
+            className="px-3 py-2.5 sm:py-1.5 text-xs border border-paper-border text-charcoal hover:bg-paper-warm"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="px-4 py-2.5 sm:py-1.5 text-xs bg-charcoal text-cream hover:bg-charcoal/90"
+            className="px-4 py-2.5 sm:py-1.5 text-xs bg-brand text-paper hover:bg-brand-hover"
           >
             Yes, Restore Demo Cases
           </button>
@@ -269,13 +269,13 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
 
   return (
     <>
-      <header className="bg-cream border-b border-cream-border md:sticky md:top-0 md:z-30">
+      <header className="bg-paper border-b border-paper-border md:sticky md:top-0 md:z-30">
         {/* Topmast Institution Bar */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-cream-border/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-paper-border/60">
           <div className="flex items-center gap-3 min-w-0">
             <div
               aria-hidden="true"
-              className="w-8 h-8 shrink-0 bg-charcoal text-cream flex items-center justify-center font-serif text-lg font-bold border border-charcoal"
+              className="w-8 h-8 shrink-0 bg-brand text-paper flex items-center justify-center font-serif text-lg font-bold border border-brand"
             >
               T
             </div>
@@ -293,9 +293,9 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <div
               role="status"
-              className="hidden sm:flex items-center gap-2 text-xs text-charcoal-muted md:border-r border-cream-border md:pr-3"
+              className="hidden sm:flex items-center gap-2 text-xs text-charcoal-muted md:border-r border-paper-border md:pr-3"
             >
-              <Clock aria-hidden="true" className="w-3.5 h-3.5 text-sage" />
+              <Clock aria-hidden="true" className="w-3.5 h-3.5 text-brand" />
               <span className="font-mono">
                 Live Registry:{" "}
                 <strong className="text-charcoal font-semibold">{activeCount}</strong> In-Clinic
@@ -304,8 +304,8 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
 
             {/* Student Auth Button / Profile Badge */}
             {currentUser ? (
-              <div className="flex items-center gap-2 pl-2.5 pr-1 py-1 bg-cream-warm border border-cream-border text-xs max-w-full">
-                <User aria-hidden="true" className="w-3.5 h-3.5 text-sage shrink-0" />
+              <div className="flex items-center gap-2 pl-2.5 pr-1 py-1 bg-paper-warm border border-paper-border text-xs max-w-full">
+                <User aria-hidden="true" className="w-3.5 h-3.5 text-brand shrink-0" />
                 <div className="text-left font-sans min-w-0">
                   <span className="font-serif font-bold text-charcoal text-xs block leading-tight truncate max-w-[10rem] sm:max-w-[14rem]">
                     {currentUser.fullName}
@@ -331,9 +331,9 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
                   setAuthMode("signin");
                   setAuthModalOpen(true);
                 }}
-                className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] sm:min-h-0 sm:px-2.5 sm:py-1.5 text-xs text-charcoal bg-white hover:bg-cream-warm border border-cream-border transition-colors font-mono"
+                className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] sm:min-h-0 sm:px-2.5 sm:py-1.5 text-xs text-charcoal bg-white hover:bg-paper-warm border border-paper-border transition-colors font-mono"
               >
-                <LogIn aria-hidden="true" className="w-3.5 h-3.5 text-sage" />
+                <LogIn aria-hidden="true" className="w-3.5 h-3.5 text-brand" />
                 <span className="sm:hidden">Sign In</span>
                 <span className="hidden sm:inline">Student Sign In / Sign Up</span>
               </button>
@@ -343,7 +343,7 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
               type="button"
               onClick={() => setResetConfirmOpen(true)}
               title="Reset to 5 pre-configured student clinical cases"
-              className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] sm:min-h-0 sm:px-2.5 sm:py-1.5 text-xs text-charcoal-muted hover:text-charcoal bg-cream hover:bg-cream-warm border border-cream-border transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] sm:min-h-0 sm:px-2.5 sm:py-1.5 text-xs text-charcoal-muted hover:text-charcoal bg-paper hover:bg-paper-warm border border-paper-border transition-colors"
             >
               <RotateCcw aria-hidden="true" className="w-3.5 h-3.5" />
               <span className="sm:hidden">Reset</span>
@@ -353,7 +353,7 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
             <button
               type="button"
               onClick={onOpenIntake}
-              className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] sm:min-h-0 sm:py-1.5 text-xs font-medium text-cream bg-sage hover:bg-sage-hover transition-colors border border-sage"
+              className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] sm:min-h-0 sm:py-1.5 text-xs font-medium text-paper bg-brand hover:bg-brand-hover transition-colors border border-brand"
             >
               <Plus aria-hidden="true" className="w-3.5 h-3.5" />
               <span className="sm:hidden">Enroll</span>
@@ -363,10 +363,10 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
         </div>
 
         {/* Role Selection & Identity Banner */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between text-xs bg-cream-warm/40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between text-xs bg-paper-warm/40">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
             <span className="text-charcoal-muted font-sans uppercase tracking-wider text-[11px] flex items-center gap-1">
-              <UserCheck aria-hidden="true" className="w-3.5 h-3.5 text-sage" />
+              <UserCheck aria-hidden="true" className="w-3.5 h-3.5 text-brand" />
               {roleSwitchAllowed ? "Active Classroom Role:" : "Your Assigned Station:"}
             </span>
 
@@ -375,10 +375,10 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
             ) : (
               <div
                 title="Your station is fixed by the role you registered with. Sign out to use a different account."
-                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-cream-border text-charcoal text-xs w-fit max-w-full"
+                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-paper-border text-charcoal text-xs w-fit max-w-full"
               >
                 <Lock aria-hidden="true" className="w-3.5 h-3.5 text-charcoal-muted shrink-0" />
-                <span className="font-mono px-1 bg-sage-light text-sage border border-sage-border text-[10px]">
+                <span className="font-mono px-1 bg-brand-light text-brand border border-brand-border text-[10px]">
                   {currentRoleMeta.badge}
                 </span>
                 <span className="font-serif text-sm font-semibold">{currentRoleMeta.title}</span>
@@ -405,7 +405,7 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
                   ? "Locked to your signed-in student account"
                   : "Type student name or ID for clinical log entries"
               }
-              className="px-2 py-2 sm:py-0.5 text-xs bg-white border border-cream-border focus:border-sage text-charcoal w-full sm:w-64 font-sans read-only:bg-cream-warm read-only:text-charcoal-muted"
+              className="px-2 py-2 sm:py-0.5 text-xs bg-white border border-paper-border focus:border-brand text-charcoal w-full sm:w-64 font-sans read-only:bg-paper-warm read-only:text-charcoal-muted"
               placeholder="Student Name / Staff ID"
             />
           </div>

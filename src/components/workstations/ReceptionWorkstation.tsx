@@ -30,10 +30,10 @@ export function ReceptionWorkstation({
   return (
     <div className="space-y-6">
       {/* Station Title */}
-      <div className="bg-white border border-cream-border p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-white border border-paper-border p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-sage" />
+            <FileText className="w-5 h-5 text-brand" />
             <h2 className="font-serif text-lg sm:text-xl font-bold text-charcoal">
               Front Desk & Medical Records Station
             </h2>
@@ -46,7 +46,7 @@ export function ReceptionWorkstation({
         <div className="flex items-center gap-2">
           <button
             onClick={onOpenIntake}
-            className="px-4 py-2 bg-sage hover:bg-sage-hover text-cream text-xs font-semibold flex items-center gap-1.5 border border-sage transition-colors"
+            className="px-4 py-2 bg-brand hover:bg-brand-hover text-paper text-xs font-semibold flex items-center gap-1.5 border border-brand transition-colors"
           >
             <UserPlus className="w-3.5 h-3.5" />
             <span>Enroll New Patient Chart</span>
@@ -55,7 +55,7 @@ export function ReceptionWorkstation({
       </div>
 
       {/* Returning Patient Search Bar */}
-      <div className="bg-white border border-cream-border p-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-white border border-paper-border p-4 flex flex-wrap items-center justify-between gap-3">
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 text-charcoal-muted absolute left-3 top-2.5" />
           <input
@@ -63,7 +63,7 @@ export function ReceptionWorkstation({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Lookup returning patient by name or Hospital ID (e.g. TPH-2026-00101)..."
-            className="w-full pl-9 pr-3 py-2 text-xs bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-sans"
+            className="w-full pl-9 pr-3 py-2 text-xs bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-sans"
           />
         </div>
 
@@ -73,12 +73,12 @@ export function ReceptionWorkstation({
       </div>
 
       {/* Patient Dockets Table */}
-      <div className="bg-white border border-cream-border overflow-hidden">
+      <div className="bg-white border border-paper-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="responsive-table w-full text-left text-xs border-collapse">
             <caption className="sr-only">Patient dockets currently at the Front Desk</caption>
             <thead>
-              <tr className="bg-cream-warm border-b border-cream-border text-charcoal font-mono uppercase tracking-wider text-[10px]">
+              <tr className="bg-paper-warm border-b border-paper-border text-charcoal font-mono uppercase tracking-wider text-[10px]">
                 <th scope="col" className="p-3.5">Hospital Record No.</th>
                 <th scope="col" className="p-3.5">Patient Name & Demographics</th>
                 <th scope="col" className="p-3.5">Current Location</th>
@@ -87,7 +87,7 @@ export function ReceptionWorkstation({
                 <th scope="col" className="p-3.5 text-right">Station Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-cream-border">
+            <tbody className="divide-y divide-paper-border">
               {receptionPatients.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="p-8 text-center text-charcoal-muted">
@@ -102,7 +102,7 @@ export function ReceptionWorkstation({
                   return (
                     <tr
                       key={pat.id}
-                      className="hover:bg-cream/40 transition-colors cursor-pointer"
+                      className="hover:bg-paper/40 transition-colors cursor-pointer"
                       onClick={() => onOpenDossier(pat)}
                     >
                       <td data-label="Record No." className="p-3.5 font-mono font-bold text-charcoal">
@@ -119,7 +119,7 @@ export function ReceptionWorkstation({
                       </td>
 
                       <td data-label="Location" className="p-3.5">
-                        <span className="font-mono text-xs px-2 py-0.5 bg-cream-warm border border-cream-border text-charcoal font-medium">
+                        <span className="font-mono text-xs px-2 py-0.5 bg-paper-warm border border-paper-border text-charcoal font-medium">
                           {deptMeta.shortName}
                         </span>
                       </td>
@@ -146,9 +146,9 @@ export function ReceptionWorkstation({
                             type="button"
                             onClick={() => onOpenTransfer(pat)}
                             aria-label={`Route or move ${pat.fullName}`}
-                            className="px-2.5 py-2 md:py-1 text-xs bg-charcoal hover:bg-charcoal/90 text-cream flex items-center gap-1 font-mono"
+                            className="px-2.5 py-2 md:py-1 text-xs bg-brand hover:bg-brand-hover text-paper flex items-center gap-1 font-mono"
                           >
-                            <ArrowRightLeft className="w-3 h-3 text-sage-light" />
+                            <ArrowRightLeft className="w-3 h-3 text-brand-light" />
                             <span>Route / Move</span>
                           </button>
 
@@ -156,7 +156,7 @@ export function ReceptionWorkstation({
                             type="button"
                             onClick={() => onOpenDossier(pat)}
                             aria-label={`Open chart for ${pat.fullName}`}
-                            className="px-2.5 py-2 md:py-1 text-xs border border-cream-border hover:border-charcoal bg-white font-mono"
+                            className="px-2.5 py-2 md:py-1 text-xs border border-paper-border hover:border-brand bg-white font-mono"
                           >
                             Chart
                           </button>

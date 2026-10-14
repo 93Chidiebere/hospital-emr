@@ -81,10 +81,10 @@ export function RadiologyWorkstation({
   return (
     <div className="space-y-6">
       {/* Title */}
-      <div className="bg-white border border-cream-border p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-white border border-paper-border p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <Scan className="w-5 h-5 text-sage" />
+            <Scan className="w-5 h-5 text-brand" />
             <h2 className="font-serif text-lg sm:text-xl font-bold text-charcoal">
               Radiology & Diagnostic Imaging Suite
             </h2>
@@ -93,7 +93,7 @@ export function RadiologyWorkstation({
             Conduct radiographic scans, compile anatomical observations and diagnostic radiological impressions.
           </p>
         </div>
-        <div className="font-mono text-xs px-2.5 py-1 bg-cream-warm border border-cream-border text-charcoal">
+        <div className="font-mono text-xs px-2.5 py-1 bg-paper-warm border border-paper-border text-charcoal">
           Radiology Queue: <strong>{radQueue.length}</strong> patient(s)
         </div>
       </div>
@@ -101,14 +101,14 @@ export function RadiologyWorkstation({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Queue */}
         <div className="lg:col-span-4 space-y-3">
-          <div className="flex items-center justify-between border-b border-cream-border pb-1">
+          <div className="flex items-center justify-between border-b border-paper-border pb-1">
             <span className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold">
               Imaging Requests ({radQueue.length})
             </span>
           </div>
 
           {radQueue.length === 0 ? (
-            <div className="p-8 text-center text-charcoal-muted bg-white border border-cream-border text-xs">
+            <div className="p-8 text-center text-charcoal-muted bg-white border border-paper-border text-xs">
               No pending imaging requests in Radiology.
             </div>
           ) : (
@@ -127,8 +127,8 @@ export function RadiologyWorkstation({
                     }}
                     className={`p-3.5 border cursor-pointer transition-colors text-xs ${
                       isSelected
-                        ? "bg-sage-light border-sage"
-                        : "bg-white border-cream-border hover:bg-cream-warm"
+                        ? "bg-brand-light border-brand"
+                        : "bg-white border-paper-border hover:bg-paper-warm"
                     }`}
                   >
                     <div className="flex items-start justify-between">
@@ -140,7 +140,7 @@ export function RadiologyWorkstation({
                           {pat.fullName}
                         </span>
                       </div>
-                      <span className="text-[10px] font-mono px-1.5 py-0.2 bg-cream border border-cream-border text-charcoal">
+                      <span className="text-[10px] font-mono px-1.5 py-0.2 bg-paper border border-paper-border text-charcoal">
                         {pat.age}y &bull; {pat.gender[0]}
                       </span>
                     </div>
@@ -151,7 +151,7 @@ export function RadiologyWorkstation({
                       </span>
                     </div>
 
-                    <div className="mt-2.5 pt-2 border-t border-cream-border/60 flex items-center justify-between">
+                    <div className="mt-2.5 pt-2 border-t border-paper-border/60 flex items-center justify-between">
                       <span className="text-[10px] text-charcoal-subtle">
                         Location: {pat.currentDepartment}
                       </span>
@@ -161,7 +161,7 @@ export function RadiologyWorkstation({
                           e.stopPropagation();
                           onOpenDossier(pat);
                         }}
-                        className="text-[10px] font-mono underline text-charcoal hover:text-sage"
+                        className="text-[10px] font-mono underline text-charcoal hover:text-brand"
                       >
                         Chart &rarr;
                       </button>
@@ -176,10 +176,10 @@ export function RadiologyWorkstation({
         {/* Right: Imaging Form */}
         <div className="lg:col-span-8">
           {selectedPatient ? (
-            <div className="bg-white border border-cream-border p-5 sm:p-6 space-y-5">
-              <div className="flex flex-wrap items-start justify-between border-b border-cream-border pb-3 gap-2">
+            <div className="bg-white border border-paper-border p-5 sm:p-6 space-y-5">
+              <div className="flex flex-wrap items-start justify-between border-b border-paper-border pb-3 gap-2">
                 <div>
-                  <span className="font-mono text-[10px] uppercase text-sage font-bold block">
+                  <span className="font-mono text-[10px] uppercase text-brand font-bold block">
                     Diagnostic Imaging Interpretation:
                   </span>
                   <h3 className="font-serif text-lg font-bold text-charcoal">
@@ -194,15 +194,15 @@ export function RadiologyWorkstation({
                   <button
                     type="button"
                     onClick={() => onOpenTransfer(selectedPatient)}
-                    className="px-2.5 py-1 text-xs border border-cream-border hover:border-charcoal bg-cream flex items-center gap-1"
+                    className="px-2.5 py-1 text-xs border border-paper-border hover:border-brand bg-paper flex items-center gap-1"
                   >
-                    <ArrowRightLeft className="w-3.5 h-3.5 text-sage" />
+                    <ArrowRightLeft className="w-3.5 h-3.5 text-brand" />
                     <span>Transfer Patient</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => onOpenDossier(selectedPatient)}
-                    className="px-2.5 py-1 text-xs border border-cream-border hover:border-charcoal bg-cream"
+                    className="px-2.5 py-1 text-xs border border-paper-border hover:border-brand bg-paper"
                   >
                     Chart
                   </button>
@@ -224,8 +224,8 @@ export function RadiologyWorkstation({
                         onClick={() => handleSelectOrder(ro)}
                         className={`p-3 text-left border transition-colors flex flex-col justify-between ${
                           isSelected
-                            ? "bg-sage-light border-sage"
-                            : "bg-white border-cream-border hover:bg-cream-warm"
+                            ? "bg-brand-light border-brand"
+                            : "bg-white border-paper-border hover:bg-paper-warm"
                         }`}
                       >
                         <div className="flex items-center justify-between">
@@ -233,7 +233,7 @@ export function RadiologyWorkstation({
                             {ro.studyType}
                           </span>
                           <span className={`text-[10px] font-mono px-1.5 py-0.2 border ${
-                            ro.status === "completed" ? "bg-white text-sage border-sage font-bold" : "bg-amber-light text-amber-alert border-amber-border"
+                            ro.status === "completed" ? "bg-white text-brand border-brand font-bold" : "bg-amber-light text-amber-alert border-amber-border"
                           }`}>
                             {ro.status === "completed" ? "Done" : "Pending"}
                           </span>
@@ -248,8 +248,8 @@ export function RadiologyWorkstation({
               </div>
 
               {activeOrder && activeOrder.status !== "completed" ? (
-                <form onSubmit={handleCompleteRad} className="space-y-4 text-xs pt-2 border-t border-cream-border">
-                  <div className="p-3 bg-cream-warm border border-cream-border space-y-1">
+                <form onSubmit={handleCompleteRad} className="space-y-4 text-xs pt-2 border-t border-paper-border">
+                  <div className="p-3 bg-paper-warm border border-paper-border space-y-1">
                     <span className="font-mono text-[10px] uppercase font-bold text-charcoal block">
                       Study: {activeOrder.studyType}
                     </span>
@@ -269,12 +269,12 @@ export function RadiologyWorkstation({
                         value={findings}
                         onChange={(e) => setFindings(e.target.value)}
                         placeholder="Detailed anatomical observations across visualized tissue planes..."
-                        className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-sans"
+                        className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-sans"
                       />
                     </div>
 
                     <div>
-                      <label className="block font-mono text-[10px] uppercase text-sage font-bold mb-1">
+                      <label className="block font-mono text-[10px] uppercase text-brand font-bold mb-1">
                         Radiological Impression & Diagnostic Conclusion *
                       </label>
                       <textarea
@@ -283,13 +283,13 @@ export function RadiologyWorkstation({
                         value={impression}
                         onChange={(e) => setImpression(e.target.value)}
                         placeholder="e.g. Mild cardiomegaly without acute pulmonary edema..."
-                        className="w-full p-2 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-serif font-bold"
+                        className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-serif font-bold"
                       />
                     </div>
                   </div>
 
                   {/* Flexible Routing */}
-                  <div className="p-3.5 bg-cream border border-cream-border space-y-2">
+                  <div className="p-3.5 bg-paper border border-paper-border space-y-2">
                     <label className="block font-mono text-[10px] uppercase text-charcoal font-semibold">
                       Route Patient Post-Imaging:
                     </label>
@@ -308,8 +308,8 @@ export function RadiologyWorkstation({
                           }}
                           className={`p-2 text-left border text-xs ${
                             routeToDept === d.dept
-                              ? "bg-charcoal text-cream border-charcoal font-bold"
-                              : "bg-white border-cream-border hover:bg-cream-warm text-charcoal"
+                              ? "bg-brand text-paper border-brand font-bold"
+                              : "bg-white border-paper-border hover:bg-paper-warm text-charcoal"
                           }`}
                         >
                           <span className="font-serif text-xs block">{d.name}</span>
@@ -321,15 +321,15 @@ export function RadiologyWorkstation({
                       type="text"
                       value={routingReason}
                       onChange={(e) => setRoutingReason(e.target.value)}
-                      className="w-full p-2 bg-white border border-cream-border text-xs text-charcoal"
+                      className="w-full p-2 bg-white border border-paper-border text-xs text-charcoal"
                     />
                   </div>
 
-                  <div className="flex justify-end pt-2 border-t border-cream-border">
+                  <div className="flex justify-end pt-2 border-t border-paper-border">
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="px-6 py-2.5 bg-sage hover:bg-sage-hover text-cream text-xs font-semibold flex items-center gap-2 border border-sage transition-colors"
+                      className="px-6 py-2.5 bg-brand hover:bg-brand-hover text-paper text-xs font-semibold flex items-center gap-2 border border-brand transition-colors"
                     >
                       <Check className="w-4 h-4" />
                       <span>{submitting ? "Signing Scan Report..." : "Publish Imaging Report & Route Patient"}</span>
@@ -337,8 +337,8 @@ export function RadiologyWorkstation({
                   </div>
                 </form>
               ) : activeOrder && activeOrder.status === "completed" ? (
-                <div className="p-4 bg-sage-light border border-sage text-xs space-y-2">
-                  <div className="flex items-center gap-2 text-sage font-bold">
+                <div className="p-4 bg-brand-light border border-brand text-xs space-y-2">
+                  <div className="flex items-center gap-2 text-brand font-bold">
                     <Check className="w-4 h-4" />
                     <span>Report finalized by Radiographer {activeOrder.radiographerName}.</span>
                   </div>
@@ -347,13 +347,13 @@ export function RadiologyWorkstation({
                   </p>
                 </div>
               ) : (
-                <div className="p-8 text-center text-charcoal-muted bg-cream-warm border border-cream-border text-xs">
+                <div className="p-8 text-center text-charcoal-muted bg-paper-warm border border-paper-border text-xs">
                   Please select an imaging study from above.
                 </div>
               )}
             </div>
           ) : (
-            <div className="p-12 text-center text-charcoal-muted bg-white border border-cream-border text-xs">
+            <div className="p-12 text-center text-charcoal-muted bg-white border border-paper-border text-xs">
               Select a patient from the queue to review imaging.
             </div>
           )}
