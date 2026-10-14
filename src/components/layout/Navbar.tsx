@@ -311,7 +311,7 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
                     {currentUser.fullName}
                   </span>
                   <span className="text-[10px] text-charcoal-muted font-mono">
-                    {currentUser.studentId}
+                    {HOSPITAL_ROLES.find((r) => r.id === currentUser.assignedRole)?.badge}
                   </span>
                 </div>
                 <button

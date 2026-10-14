@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { useAuth, DEFAULT_STUDENT_ACCOUNTS } from "@/context/AuthContext";
-import { useEMR } from "@/context/EMRContext";
 import { RoleId, HOSPITAL_ROLES } from "@/types/emr";
 import { useDialogA11y } from "@/hooks/useDialogA11y";
 import { LogIn, UserPlus, X, Check, ShieldAlert, KeyRound } from "lucide-react";
@@ -17,7 +16,6 @@ function AuthModalInner() {
     signup,
   } = useAuth();
 
-  const { setActiveRole, setActiveStaffName } = useEMR();
   const dialogRef = useDialogA11y<HTMLDivElement>(() => setAuthModalOpen(false));
 
   // Sign In State
@@ -26,7 +24,6 @@ function AuthModalInner() {
 
   // Sign Up State
   const [fullName, setFullName] = useState("");
-  const [studentId, setStudentId] = useState("");
   const [role, setRole] = useState<RoleId>("triage_nurse");
   const [signupPassword, setSignupPassword] = useState("");
 
@@ -44,14 +41,7 @@ function AuthModalInner() {
     setSubmitting(false);
 
     if (res.success) {
-      // Find logged in account to sync EMR context
-      const account = DEFAULT_STUDENT_ACCOUNTS.find(
-        (a) => a.studentId.toUpperCase() === loginId.trim().toUpperCase()
-      );
-      if (account) {
-        setActiveRole(account.assignedRole);
-        setActiveStaffName(`${account.fullName} (${account.studentId})`);
-      }
+      // Role and sign-off name are synced from the signed-in account in page.tsx
       setLoginId("");
       setLoginPassword("");
     } else {
@@ -64,14 +54,11 @@ function AuthModalInner() {
     setErrorMessage("");
     setSubmitting(true);
 
-    const res = await signup(fullName, studentId, role, signupPassword);
+    const res = await signup(fullName, role, signupPassword);
     setSubmitting(false);
 
     if (res.success) {
-      setActiveRole(role);
-      setActiveStaffName(`${fullName.trim()} (${studentId.trim().toUpperCase()})`);
       setFullName("");
-      setStudentId("");
       setSignupPassword("");
     } else {
       setErrorMessage(res.error || "Registration failed.");
@@ -80,9 +67,7 @@ function AuthModalInner() {
 
   const handleQuickLogin = async (account: (typeof DEFAULT_STUDENT_ACCOUNTS)[0]) => {
     setSubmitting(true);
-    await login(account.studentId, account.password);
-    setActiveRole(account.assignedRole);
-    setActiveStaffName(`${account.fullName} (${account.studentId})`);
+    await login(account.fullName, account.password);
     setSubmitting(false);
   };
 
@@ -149,7 +134,7 @@ function AuthModalInner() {
                 : "text-charcoal-muted hover:text-charcoal"
             }`}
           >
-            Sign Up (Register Student)
+            Sign Up (New Student)
           </button>
         </div>
 
@@ -167,14 +152,14 @@ function AuthModalInner() {
             <div className="space-y-3">
               <div>
                 <label className="block font-mono text-[10px] uppercase text-charcoal-muted mb-1">
-                  Matric / Student ID *
+                  Full Name *
                 </label>
                 <input
                   required
                   type="text"
                   value={loginId}
                   onChange={(e) => setLoginId(e.target.value)}
-                  placeholder="e.g. NUR-001 or NUR/2024/042"
+                  placeholder="e.g. Nurse Mary Okon"
                   className="w-full p-2.5 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-mono"
                 />
               </div>
@@ -219,7 +204,7 @@ function AuthModalInner() {
                       {acc.fullName}
                     </span>
                     <span className="font-mono text-charcoal-subtle">
-                      {acc.studentId} ({acc.assignedRole.slice(0, 3).toUpperCase()})
+                      {HOSPITAL_ROLES.find((r) => r.id === acc.assignedRole)?.badge}
                     </span>
                   </button>
                 ))}
@@ -244,19 +229,6 @@ function AuthModalInner() {
                 />
               </div>
 
-              <div>
-                <label className="block font-mono text-[10px] uppercase text-charcoal-muted mb-1">
-                  Student / Matriculation Number *
-                </label>
-                <input
-                  required
-                  type="text"
-                  value={studentId}
-                  onChange={(e) => setStudentId(e.target.value)}
-                  placeholder="e.g. NUR/2024/098"
-                  className="w-full p-2.5 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-mono"
-                />
-              </div>
 
               <div>
                 <label className="block font-mono text-[10px] uppercase text-charcoal-muted mb-1">

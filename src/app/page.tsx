@@ -41,7 +41,8 @@ export default function Home() {
   useEffect(() => {
     if (currentUser) {
       setActiveRole(currentUser.assignedRole);
-      setActiveStaffName(`${currentUser.fullName} (${currentUser.studentId})`);
+      const badge = HOSPITAL_ROLES.find((r) => r.id === currentUser.assignedRole)?.badge;
+      setActiveStaffName(badge ? `${currentUser.fullName} (${badge})` : currentUser.fullName);
     }
   }, [currentUser, setActiveRole, setActiveStaffName]);
 
