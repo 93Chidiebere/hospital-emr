@@ -7,54 +7,42 @@ export const DEFAULT_STUDENT_ACCOUNTS: UserAccount[] = [
   {
     id: "usr-001",
     fullName: "Nurse Mary Okon",
-    studentId: "NUR-001",
     assignedRole: "triage_nurse",
-    institution: "Faculty of Nursing & Health Sciences",
     password: "pass",
     createdAt: "2026-10-13T08:00:00Z",
   },
   {
     id: "usr-002",
     fullName: "Dr. Kelechi Adeyemi",
-    studentId: "DOC-001",
     assignedRole: "doctor",
-    institution: "Faculty of Clinical Medicine",
     password: "pass",
     createdAt: "2026-10-13T08:00:00Z",
   },
   {
     id: "usr-003",
     fullName: "MLS Emeka Chukwuma",
-    studentId: "MLS-001",
     assignedRole: "mls",
-    institution: "Medical Laboratory Sciences",
     password: "pass",
     createdAt: "2026-10-13T08:00:00Z",
   },
   {
     id: "usr-004",
     fullName: "Officer Musa Bello",
-    studentId: "REC-001",
     assignedRole: "receptionist",
-    institution: "Health Records & Information",
     password: "pass",
     createdAt: "2026-10-13T08:00:00Z",
   },
   {
     id: "usr-005",
     fullName: "Nurse Titi Dike",
-    studentId: "TRT-001",
     assignedRole: "treatment_nurse",
-    institution: "Faculty of Nursing & Health Sciences",
     password: "pass",
     createdAt: "2026-10-13T08:00:00Z",
   },
   {
     id: "usr-006",
     fullName: "Prof. J. C. Okon",
-    studentId: "DIR-001",
     assignedRole: "director",
-    institution: "Medical Directorate",
     password: "pass",
     createdAt: "2026-10-13T08:00:00Z",
   },
@@ -67,13 +55,11 @@ interface AuthContextType {
   authMode: "signin" | "signup";
   setAuthModalOpen: (open: boolean) => void;
   setAuthMode: (mode: "signin" | "signup") => void;
-  login: (studentId: string, password?: string) => Promise<{ success: boolean; error?: string }>;
+  login: (fullName: string, password?: string) => Promise<{ success: boolean; error?: string }>;
   signup: (
     fullName: string,
-    studentId: string,
     role: RoleId,
-    password?: string,
-    institution?: string
+    password?: string
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
@@ -93,10 +79,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (storedUsers) {
         const parsed = JSON.parse(storedUsers);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Merge custom accounts with defaults
           const merged = [...DEFAULT_STUDENT_ACCOUNTS];
           parsed.forEach((p: UserAccount) => {
-            if (!merged.some((m) => m.studentId === p.studentId)) {
+            if (!merged.some((m) => m.fullName.toLowerCase() === p.fullName.toLowerCase())) {
               merged.push(p);
             }
           });
@@ -115,18 +100,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (
-    studentId: string,
+    fullName: string,
     password?: string
   ): Promise<{ success: boolean; error?: string }> => {
-    const cleanId = studentId.trim().toUpperCase();
+    const cleanName = fullName.trim().toLowerCase();
     const found = users.find(
-      (u) => u.studentId.toUpperCase() === cleanId || u.fullName.toLowerCase() === studentId.trim().toLowerCase()
+      (u) => u.fullName.toLowerCase() === cleanName
     );
 
     if (!found) {
       return {
         success: false,
-        error: `No student record found for '${studentId}'. Please check your Matric/Student ID or Sign Up.`,
+        error: `No staff or student profile found for '${fullName}'. Please Sign Up with your name and role.`,
       };
     }
 
@@ -142,32 +127,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signup = async (
     fullName: string,
-    studentId: string,
     role: RoleId,
-    password?: string,
-    institution: string = "Faculty of Nursing & Health Sciences"
+    password?: string
   ): Promise<{ success: boolean; error?: string }> => {
-    const cleanId = studentId.trim().toUpperCase();
     const cleanName = fullName.trim();
 
-    if (!cleanName || !cleanId) {
-      return { success: false, error: "Full Name and Student/Matric Number are required." };
+    if (!cleanName) {
+      return { success: false, error: "Full Name is required for registration." };
     }
 
-    const existing = users.find((u) => u.studentId.toUpperCase() === cleanId);
+    const existing = users.find(
+      (u) => u.fullName.toLowerCase() === cleanName.toLowerCase()
+    );
     if (existing) {
       return {
         success: false,
-        error: `A student with ID '${cleanId}' is already registered. Please Sign In.`,
+        error: `'${cleanName}' is already registered. Please Sign In.`,
       };
     }
 
     const newUser: UserAccount = {
       id: `usr-${Date.now()}`,
       fullName: cleanName,
-      studentId: cleanId,
       assignedRole: role,
-      institution: institution || "Faculty of Nursing & Health Sciences",
       password: password?.trim() || "pass",
       createdAt: new Date().toISOString(),
     };

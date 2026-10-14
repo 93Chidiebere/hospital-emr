@@ -33,20 +33,22 @@ export function HospitalPipelineBar() {
     patients.filter((p) => p.currentDepartment === dept).length;
 
   return (
-    <div className="bg-white border-b border-cream-border">
+    <section aria-label="Live clinical flow pipeline" className="bg-white border-b border-cream-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-mono uppercase tracking-wider text-charcoal-muted">
               Live Clinical Flow Pipeline:
             </span>
-            <span className="text-[10px] text-charcoal-subtle italic">
+            <span className="hidden sm:inline text-[10px] text-charcoal-subtle italic">
               Click any station to view its active queue
             </span>
           </div>
           <button
+            type="button"
+            aria-pressed={filterDepartment === "ALL"}
             onClick={() => setFilterDepartment("ALL")}
-            className={`px-2 py-0.5 text-xs font-mono transition-colors border ${
+            className={`px-3 py-2 sm:px-2 sm:py-0.5 text-xs font-mono transition-colors border ${
               filterDepartment === "ALL"
                 ? "bg-charcoal text-cream border-charcoal font-semibold"
                 : "bg-cream-warm text-charcoal-muted border-cream-border hover:border-charcoal hover:text-charcoal"
@@ -66,8 +68,11 @@ export function HospitalPipelineBar() {
             return (
               <button
                 key={dept}
+                type="button"
+                aria-pressed={isSelected}
+                aria-label={`${meta.name}: ${count} ${count === 1 ? "patient" : "patients"}`}
                 onClick={() => setFilterDepartment(dept)}
-                className={`p-2 text-left transition-all border flex flex-col justify-between ${
+                className={`p-2.5 sm:p-2 min-h-[56px] text-left transition-all border flex flex-col justify-between ${
                   isSelected
                     ? "bg-sage-light border-sage text-charcoal shadow-sm"
                     : "bg-cream/60 border-cream-border hover:bg-cream-warm hover:border-cream-border-dark text-charcoal-muted"
@@ -76,6 +81,7 @@ export function HospitalPipelineBar() {
                 <div className="flex items-center justify-between gap-1 w-full">
                   <div className="flex items-center gap-1.5">
                     <Icon
+                      aria-hidden="true"
                       className={`w-3.5 h-3.5 ${
                         isSelected ? "text-sage" : "text-charcoal-subtle"
                       }`}
@@ -85,7 +91,8 @@ export function HospitalPipelineBar() {
                     </span>
                   </div>
                   <span
-                    className={`font-mono text-xs px-1.5 py-0.2 ${
+                    aria-hidden="true"
+                    className={`font-mono text-xs px-1.5 py-0.5 ${
                       count > 0
                         ? isSelected
                           ? "bg-sage text-cream font-bold"
@@ -106,6 +113,6 @@ export function HospitalPipelineBar() {
           })}
         </div>
       </div>
-    </div>
+    </section>
   );
 }

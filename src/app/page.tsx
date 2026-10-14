@@ -5,6 +5,7 @@ import { useEMR } from "@/context/EMRContext";
 import { useAuth } from "@/context/AuthContext";
 import { Patient, RoleId, HOSPITAL_ROLES } from "@/types/emr";
 import { Navbar } from "@/components/layout/Navbar";
+import { canSwitchRole } from "@/lib/role-access";
 import { HospitalPipelineBar } from "@/components/pipeline/HospitalPipelineBar";
 import { ReceptionWorkstation } from "@/components/workstations/ReceptionWorkstation";
 import { TriageWorkstation } from "@/components/workstations/TriageWorkstation";
@@ -44,8 +45,25 @@ export default function Home() {
     }
   }, [currentUser, setActiveRole, setActiveStaffName]);
 
+  // Enforce role lock: students cannot leave the station they registered with
+  useEffect(() => {
+    if (currentUser && !canSwitchRole(currentUser) && activeRole !== currentUser.assignedRole) {
+      setActiveRole(currentUser.assignedRole);
+    }
+  }, [currentUser, activeRole, setActiveRole]);
+
+  const roleSwitchAllowed = canSwitchRole(currentUser);
+  const activeRoleTitle = HOSPITAL_ROLES.find((r) => r.id === activeRole)?.title;
+
   return (
     <div className="min-h-screen flex flex-col bg-cream text-charcoal">
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+      <div className="sr-only" role="status" aria-live="polite">
+        {activeRoleTitle ? `Active station: ${activeRoleTitle}` : ""}
+      </div>
+
       {/* 1. Masthead Navbar */}
       <Navbar onOpenIntake={() => setIntakeOpen(true)} />
 
@@ -60,12 +78,21 @@ export default function Home() {
               Active Station View:
             </span>
             <span className="font-serif font-bold text-charcoal text-sm">
-              {HOSPITAL_ROLES.find((r) => r.id === activeRole)?.title}
+              {activeRoleTitle}
             </span>
           </div>
 
-          {/* Quick Station Tab Bar */}
-          <div className="flex items-center gap-1 overflow-x-auto py-1">
+          {/* Quick Station Tab Bar (guests and instructors only) */}
+          {!roleSwitchAllowed && (
+            <p className="text-[11px] text-charcoal-muted">
+              Station locked to your registered role. Sign out to use a different account.
+            </p>
+          )}
+          {roleSwitchAllowed && (
+          <nav
+            aria-label="Hospital stations"
+            className="flex w-full md:w-auto min-w-0 items-center gap-1 overflow-x-auto py-1 snap-x"
+          >
             {[
               { id: "receptionist" as RoleId, label: "Front Desk", icon: FileText },
               { id: "triage_nurse" as RoleId, label: "Triage Vitals", icon: Activity },
@@ -80,24 +107,27 @@ export default function Home() {
               return (
                 <button
                   key={tab.id}
+                  type="button"
+                  aria-pressed={isCurrent}
                   onClick={() => setActiveRole(tab.id)}
-                  className={`px-2.5 py-1 flex items-center gap-1.5 transition-colors font-mono text-[11px] border whitespace-nowrap ${
+                  className={`px-3 py-2.5 sm:px-2.5 sm:py-1 shrink-0 snap-start flex items-center gap-1.5 transition-colors font-mono text-[11px] border whitespace-nowrap ${
                     isCurrent
                       ? "bg-charcoal text-cream border-charcoal font-bold"
                       : "bg-white text-charcoal-muted border-cream-border hover:bg-cream hover:border-charcoal hover:text-charcoal"
                   }`}
                 >
-                  <Icon className={`w-3 h-3 ${isCurrent ? "text-sage-light" : ""}`} />
+                  <Icon aria-hidden="true" className={`w-3 h-3 ${isCurrent ? "text-sage-light" : ""}`} />
                   <span>{tab.label}</span>
                 </button>
               );
             })}
-          </div>
+          </nav>
+          )}
         </div>
       </div>
 
       {/* 4. Main Workstation Area */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+      <main id="main-content" tabIndex={-1} className="outline-none flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
         {activeRole === "receptionist" && (
           <ReceptionWorkstation
             onOpenIntake={() => setIntakeOpen(true)}
@@ -158,19 +188,21 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2 font-mono text-[10px] text-charcoal-subtle uppercase">
-            <span>Intake</span>
-            <ArrowRight className="w-2.5 h-2.5 text-sage" />
-            <span>Triage</span>
-            <ArrowRight className="w-2.5 h-2.5 text-sage" />
-            <span>Consultation</span>
-            <ArrowRight className="w-2.5 h-2.5 text-sage" />
-            <span>MLS Lab</span>
-            <ArrowRight className="w-2.5 h-2.5 text-sage" />
-            <span>Treatment</span>
-            <ArrowRight className="w-2.5 h-2.5 text-sage" />
-            <span>Discharge</span>
-          </div>
+          <ol
+            aria-label="Patient journey"
+            className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10px] text-charcoal-subtle uppercase"
+          >
+            {["Intake", "Triage", "Consultation", "MLS Lab", "Treatment", "Discharge"].map(
+              (step, i, arr) => (
+                <li key={step} className="flex items-center gap-2">
+                  <span>{step}</span>
+                  {i < arr.length - 1 && (
+                    <ArrowRight aria-hidden="true" className="w-2.5 h-2.5 text-sage" />
+                  )}
+                </li>
+              )
+            )}
+          </ol>
         </div>
       </footer>
 

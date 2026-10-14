@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useEMR } from "@/context/EMRContext";
 import { Patient, Department, DEPARTMENTS_METADATA } from "@/types/emr";
 import { ArrowRightLeft, X, Check } from "lucide-react";
+import { useDialogA11y } from "@/hooks/useDialogA11y";
 
 interface TransferModalProps {
   patient: Patient;
@@ -30,6 +31,7 @@ export function TransferModal({ patient, onClose }: TransferModalProps) {
     "Patient transferred for continuation of clinical care."
   );
   const [submitting, setSubmitting] = useState(false);
+  const dialogRef = useDialogA11y<HTMLDivElement>(onClose);
 
   const departmentsList: Department[] = [
     "RECEPTION",
@@ -52,13 +54,20 @@ export function TransferModal({ patient, onClose }: TransferModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/40 backdrop-blur-[1px] p-4">
-      <div className="bg-white border border-charcoal max-w-xl w-full p-6 space-y-5">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="transfer-dialog-title"
+        tabIndex={-1}
+        className="bg-white border border-charcoal max-w-xl w-full max-h-[92vh] overflow-y-auto p-5 sm:p-6 space-y-5 outline-none"
+      >
         {/* Header */}
         <div className="flex items-start justify-between border-b border-cream-border pb-3">
           <div>
             <div className="flex items-center gap-2">
               <ArrowRightLeft className="w-4 h-4 text-sage" />
-              <h3 className="font-serif text-lg font-bold text-charcoal">
+              <h3 id="transfer-dialog-title" className="font-serif text-lg font-bold text-charcoal">
                 Transfer / Route Patient
               </h3>
             </div>
@@ -67,8 +76,10 @@ export function TransferModal({ patient, onClose }: TransferModalProps) {
             </p>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="text-charcoal-muted hover:text-charcoal p-1"
+            aria-label="Close transfer dialog"
+            className="text-charcoal-muted hover:text-charcoal p-2"
           >
             <X className="w-4 h-4" />
           </button>
@@ -76,7 +87,7 @@ export function TransferModal({ patient, onClose }: TransferModalProps) {
 
         <form onSubmit={handleTransfer} className="space-y-4">
           {/* Current vs Target */}
-          <div className="p-3 bg-cream-warm border border-cream-border grid grid-cols-2 gap-4 text-xs">
+          <div className="p-3 bg-cream-warm border border-cream-border grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div>
               <span className="text-[10px] uppercase font-mono text-charcoal-muted">
                 Current Location:

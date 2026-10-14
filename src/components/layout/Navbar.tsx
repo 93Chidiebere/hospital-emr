@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import { useEMR } from "@/context/EMRContext";
 import { useAuth } from "@/context/AuthContext";
-import { HOSPITAL_ROLES } from "@/types/emr";
+import { HOSPITAL_ROLES, RoleId } from "@/types/emr";
+import { canSwitchRole } from "@/lib/role-access";
+import { useDialogA11y } from "@/hooks/useDialogA11y";
 import {
   UserCheck,
   RotateCcw,
@@ -14,12 +16,238 @@ import {
   LogIn,
   LogOut,
   User,
+  Lock,
 } from "lucide-react";
 
 interface NavbarProps {
   onOpenIntake: () => void;
 }
 
+/* ------------------------------------------------------------------ */
+/* Role menu (only rendered for guests and instructors)                */
+/* ------------------------------------------------------------------ */
+function RoleMenu({
+  activeRole,
+  onSelect,
+}: {
+  activeRole: RoleId;
+  onSelect: (id: RoleId) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const menuId = useId();
+
+  const current = HOSPITAL_ROLES.find((r) => r.id === activeRole) || HOSPITAL_ROLES[0];
+
+  const closeAndReturnFocus = () => {
+    setOpen(false);
+    buttonRef.current?.focus();
+  };
+
+  // Focus the active item when opening; close on outside pointer press
+  useEffect(() => {
+    if (!open) return;
+
+    const activeIndex = Math.max(
+      0,
+      HOSPITAL_ROLES.findIndex((r) => r.id === activeRole)
+    );
+    itemRefs.current[activeIndex]?.focus();
+
+    const handlePointerDown = (e: MouseEvent | TouchEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+    };
+  }, [open, activeRole]);
+
+  const handleMenuKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const items = itemRefs.current.filter(Boolean) as HTMLButtonElement[];
+    if (items.length === 0) return;
+    const index = items.indexOf(document.activeElement as HTMLButtonElement);
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        items[(index + 1) % items.length].focus();
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        items[(index - 1 + items.length) % items.length].focus();
+        break;
+      case "Home":
+        e.preventDefault();
+        items[0].focus();
+        break;
+      case "End":
+        e.preventDefault();
+        items[items.length - 1].focus();
+        break;
+      case "Escape":
+        e.preventDefault();
+        closeAndReturnFocus();
+        break;
+      case "Tab":
+        setOpen(false);
+        break;
+    }
+  };
+
+  return (
+    <div className="relative" ref={wrapperRef}>
+      <button
+        ref={buttonRef}
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={open ? menuId : undefined}
+        onClick={() => setOpen((v) => !v)}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowDown" && !open) {
+            e.preventDefault();
+            setOpen(true);
+          }
+        }}
+        className="flex items-center gap-2 px-3 py-1.5 min-h-[44px] sm:min-h-0 bg-white border border-cream-border text-charcoal hover:border-charcoal transition-colors font-medium text-xs"
+      >
+        <span className="font-mono px-1 bg-sage-light text-sage border border-sage-border text-[10px]">
+          {current.badge}
+        </span>
+        <span className="font-serif text-sm font-semibold text-left">{current.title}</span>
+        <ChevronDown
+          aria-hidden="true"
+          className={`w-3.5 h-3.5 text-charcoal-muted ml-1 transition-transform ${
+            open ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {open && (
+        <div
+          id={menuId}
+          role="menu"
+          aria-label="Select your simulated department post"
+          onKeyDown={handleMenuKeyDown}
+          className="absolute left-0 mt-1 w-[min(20rem,calc(100vw-2rem))] max-h-[70vh] overflow-y-auto bg-white border border-charcoal shadow-sm z-50 divide-y divide-cream-border"
+        >
+          <div
+            aria-hidden="true"
+            className="px-3 py-2 bg-cream-warm text-[11px] text-charcoal-muted uppercase font-mono tracking-wider"
+          >
+            Select Your Simulated Department Post:
+          </div>
+          {HOSPITAL_ROLES.map((r, i) => {
+            const selected = activeRole === r.id;
+            return (
+              <button
+                key={r.id}
+                ref={(el) => {
+                  itemRefs.current[i] = el;
+                }}
+                type="button"
+                role="menuitemradio"
+                aria-checked={selected}
+                tabIndex={-1}
+                onClick={() => {
+                  onSelect(r.id);
+                  closeAndReturnFocus();
+                }}
+                className={`w-full text-left px-3 py-3 sm:py-2.5 hover:bg-cream-warm focus:bg-cream-warm transition-colors flex items-start gap-2.5 ${
+                  selected ? "bg-sage-light/60 font-medium" : ""
+                }`}
+              >
+                <span className="font-mono px-1.5 py-0.5 bg-cream border border-cream-border text-[10px] text-charcoal mt-0.5">
+                  {r.badge}
+                </span>
+                <span className="flex-1 min-w-0">
+                  <span className="font-serif text-xs font-bold text-charcoal flex flex-wrap items-center justify-between gap-x-2">
+                    <span>{r.title}</span>
+                    <span className="text-[10px] font-sans text-charcoal-muted font-normal">
+                      {r.cadre}
+                    </span>
+                  </span>
+                  <span className="block text-[11px] text-charcoal-muted mt-0.5 line-clamp-2">
+                    {r.description}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Reset confirmation dialog                                           */
+/* ------------------------------------------------------------------ */
+function ResetConfirmDialog({
+  onCancel,
+  onConfirm,
+}: {
+  onCancel: () => void;
+  onConfirm: () => void | Promise<void>;
+}) {
+  const dialogRef = useDialogA11y<HTMLDivElement>(onCancel);
+  const titleId = useId();
+  const descId = useId();
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/40 backdrop-blur-[1px] p-4">
+      <div
+        ref={dialogRef}
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={descId}
+        tabIndex={-1}
+        className="bg-white border border-charcoal max-w-md w-full max-h-[90vh] overflow-y-auto p-5 sm:p-6 space-y-4 outline-none"
+      >
+        <div className="flex items-center gap-2 text-terracotta">
+          <ShieldAlert aria-hidden="true" className="w-5 h-5 shrink-0" />
+          <h2 id={titleId} className="font-serif text-lg font-bold text-charcoal">
+            Reset Simulated Drill Data?
+          </h2>
+        </div>
+        <p id={descId} className="text-xs text-charcoal-muted leading-relaxed">
+          This will restore the patient registry back to the original 5 clinical cases (including
+          acute malaria in treatment, follow-up lab review, hypertensive urgency, and pediatric
+          cases). Any new entries created during this session will be replaced.
+        </p>
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2 border-t border-cream-border">
+          <button
+            type="button"
+            autoFocus
+            onClick={onCancel}
+            className="px-3 py-2.5 sm:py-1.5 text-xs border border-cream-border text-charcoal hover:bg-cream-warm"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="px-4 py-2.5 sm:py-1.5 text-xs bg-charcoal text-cream hover:bg-charcoal/90"
+          >
+            Yes, Restore Demo Cases
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Navbar                                                              */
+/* ------------------------------------------------------------------ */
 export function Navbar({ onOpenIntake }: NavbarProps) {
   const {
     activeRole,
@@ -32,206 +260,167 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
 
   const { currentUser, setAuthModalOpen, setAuthMode, logout } = useAuth();
 
-  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const signOffId = useId();
 
+  const roleSwitchAllowed = canSwitchRole(currentUser);
   const currentRoleMeta = HOSPITAL_ROLES.find((r) => r.id === activeRole) || HOSPITAL_ROLES[0];
   const activeCount = patients.filter((p) => p.status === "Active").length;
 
   return (
-    <header className="bg-cream border-b border-cream-border sticky top-0 z-30">
-      {/* Topmast Institution Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4 border-b border-cream-border/60">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-charcoal text-cream flex items-center justify-center font-serif text-lg font-bold border border-charcoal">
-            T
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-charcoal">
+    <>
+      <header className="bg-cream border-b border-cream-border md:sticky md:top-0 md:z-30">
+        {/* Topmast Institution Bar */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-cream-border/60">
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              aria-hidden="true"
+              className="w-8 h-8 shrink-0 bg-charcoal text-cream flex items-center justify-center font-serif text-lg font-bold border border-charcoal"
+            >
+              T
+            </div>
+            <div className="min-w-0">
+              <h1 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-charcoal leading-tight">
                 Trinity Point Hospital
+              </h1>
+              <p className="text-[11px] text-charcoal-muted tracking-wide font-sans">
+                Clinical/Hospital Data Flow
+              </p>
+            </div>
+          </div>
+
+          {/* Global Classroom Status & Actions */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div
+              role="status"
+              className="hidden sm:flex items-center gap-2 text-xs text-charcoal-muted md:border-r border-cream-border md:pr-3"
+            >
+              <Clock aria-hidden="true" className="w-3.5 h-3.5 text-sage" />
+              <span className="font-mono">
+                Live Registry:{" "}
+                <strong className="text-charcoal font-semibold">{activeCount}</strong> In-Clinic
               </span>
             </div>
-            <p className="text-[11px] text-charcoal-muted tracking-wide font-sans">
-              Clinical/Hospital Data Flow
-            </p>
+
+            {/* Student Auth Button / Profile Badge */}
+            {currentUser ? (
+              <div className="flex items-center gap-2 pl-2.5 pr-1 py-1 bg-cream-warm border border-cream-border text-xs max-w-full">
+                <User aria-hidden="true" className="w-3.5 h-3.5 text-sage shrink-0" />
+                <div className="text-left font-sans min-w-0">
+                  <span className="font-serif font-bold text-charcoal text-xs block leading-tight truncate max-w-[10rem] sm:max-w-[14rem]">
+                    {currentUser.fullName}
+                  </span>
+                  <span className="text-[10px] text-charcoal-muted font-mono">
+                    {currentUser.studentId}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={logout}
+                  aria-label={`Sign out ${currentUser.fullName}`}
+                  title="Sign out of student account"
+                  className="ml-1 text-charcoal-muted hover:text-terracotta transition-colors p-2.5 sm:p-1.5"
+                >
+                  <LogOut aria-hidden="true" className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode("signin");
+                  setAuthModalOpen(true);
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] sm:min-h-0 sm:px-2.5 sm:py-1.5 text-xs text-charcoal bg-white hover:bg-cream-warm border border-cream-border transition-colors font-mono"
+              >
+                <LogIn aria-hidden="true" className="w-3.5 h-3.5 text-sage" />
+                <span className="sm:hidden">Sign In</span>
+                <span className="hidden sm:inline">Student Sign In / Sign Up</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setResetConfirmOpen(true)}
+              title="Reset to 5 pre-configured student clinical cases"
+              className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] sm:min-h-0 sm:px-2.5 sm:py-1.5 text-xs text-charcoal-muted hover:text-charcoal bg-cream hover:bg-cream-warm border border-cream-border transition-colors"
+            >
+              <RotateCcw aria-hidden="true" className="w-3.5 h-3.5" />
+              <span className="sm:hidden">Reset</span>
+              <span className="hidden sm:inline">Reset Drill Data</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onOpenIntake}
+              className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] sm:min-h-0 sm:py-1.5 text-xs font-medium text-cream bg-sage hover:bg-sage-hover transition-colors border border-sage"
+            >
+              <Plus aria-hidden="true" className="w-3.5 h-3.5" />
+              <span className="sm:hidden">Enroll</span>
+              <span className="hidden sm:inline">Enroll New Patient</span>
+            </button>
           </div>
         </div>
 
-        {/* Global Classroom Status & Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="hidden lg:flex items-center gap-2 text-xs text-charcoal-muted border-r border-cream-border pr-3">
-            <Clock className="w-3.5 h-3.5 text-sage" />
-            <span className="font-mono">
-              Live Registry: <strong className="text-charcoal font-semibold">{activeCount}</strong> In-Clinic
+        {/* Role Selection & Identity Banner */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between text-xs bg-cream-warm/40">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+            <span className="text-charcoal-muted font-sans uppercase tracking-wider text-[11px] flex items-center gap-1">
+              <UserCheck aria-hidden="true" className="w-3.5 h-3.5 text-sage" />
+              {roleSwitchAllowed ? "Active Classroom Role:" : "Your Assigned Station:"}
             </span>
-          </div>
 
-          {/* Student Auth Button / Profile Badge */}
-          {currentUser ? (
-            <div className="flex items-center gap-2 px-2.5 py-1 bg-cream-warm border border-cream-border text-xs">
-              <User className="w-3.5 h-3.5 text-sage" />
-              <div className="text-left font-sans">
-                <span className="font-serif font-bold text-charcoal text-xs block leading-tight">
-                  {currentUser.fullName}
+            {roleSwitchAllowed ? (
+              <RoleMenu activeRole={activeRole} onSelect={setActiveRole} />
+            ) : (
+              <div
+                title="Your station is fixed by the role you registered with. Sign out to use a different account."
+                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-cream-border text-charcoal text-xs w-fit max-w-full"
+              >
+                <Lock aria-hidden="true" className="w-3.5 h-3.5 text-charcoal-muted shrink-0" />
+                <span className="font-mono px-1 bg-sage-light text-sage border border-sage-border text-[10px]">
+                  {currentRoleMeta.badge}
                 </span>
-                <span className="text-[10px] text-charcoal-muted font-mono">
-                  {currentUser.studentId}
+                <span className="font-serif text-sm font-semibold">{currentRoleMeta.title}</span>
+                <span className="sr-only">
+                  (locked to your registered role; sign out to use a different account)
                 </span>
               </div>
-              <button
-                onClick={logout}
-                title="Sign out of student account"
-                className="ml-2 text-charcoal-muted hover:text-terracotta transition-colors p-1"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => {
-                setAuthMode("signin");
-                setAuthModalOpen(true);
-              }}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-charcoal bg-white hover:bg-cream-warm border border-cream-border transition-colors font-mono"
-            >
-              <LogIn className="w-3.5 h-3.5 text-sage" />
-              <span>Student Sign In / Sign Up</span>
-            </button>
-          )}
-
-          <button
-            onClick={() => setResetConfirmOpen(true)}
-            title="Reset to 5 pre-configured student clinical cases"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-charcoal-muted hover:text-charcoal bg-cream hover:bg-cream-warm border border-cream-border transition-colors"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Reset Drill Data</span>
-          </button>
-
-          <button
-            onClick={onOpenIntake}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-cream bg-sage hover:bg-sage-hover transition-colors border border-sage"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Enroll New Patient</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Role Selection & Identity Banner */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs bg-cream-warm/40">
-        <div className="flex items-center gap-3">
-          <span className="text-charcoal-muted font-sans uppercase tracking-wider text-[11px] flex items-center gap-1">
-            <UserCheck className="w-3.5 h-3.5 text-sage" />
-            Active Classroom Role:
-          </span>
-
-          {/* Role Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
-              className="flex items-center gap-2 px-3 py-1 bg-white border border-cream-border text-charcoal hover:border-charcoal transition-colors font-medium text-xs"
-            >
-              <span className="font-mono px-1 py-0.2 bg-sage-light text-sage border border-sage-border text-[10px]">
-                {currentRoleMeta.badge}
-              </span>
-              <span className="font-serif text-sm font-semibold">{currentRoleMeta.title}</span>
-              <ChevronDown className="w-3.5 h-3.5 text-charcoal-muted ml-1" />
-            </button>
-
-            {roleDropdownOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setRoleDropdownOpen(false)}
-                />
-                <div className="absolute left-0 mt-1 w-80 bg-white border border-charcoal shadow-sm z-50 divide-y divide-cream-border">
-                  <div className="px-3 py-2 bg-cream-warm text-[11px] text-charcoal-muted uppercase font-mono tracking-wider">
-                    Select Your Simulated Department Post:
-                  </div>
-                  {HOSPITAL_ROLES.map((r) => (
-                    <button
-                      key={r.id}
-                      onClick={() => {
-                        setActiveRole(r.id);
-                        setRoleDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-2.5 hover:bg-cream-warm transition-colors flex items-start gap-2.5 ${
-                        activeRole === r.id ? "bg-sage-light/60 font-medium" : ""
-                      }`}
-                    >
-                      <span className="font-mono px-1.5 py-0.5 bg-cream border border-cream-border text-[10px] text-charcoal mt-0.5">
-                        {r.badge}
-                      </span>
-                      <div className="flex-1">
-                        <div className="font-serif text-xs font-bold text-charcoal flex items-center justify-between">
-                          <span>{r.title}</span>
-                          <span className="text-[10px] font-sans text-charcoal-subtle font-normal">
-                            {r.cadre}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-charcoal-muted mt-0.5 line-clamp-1">
-                          {r.description}
-                        </p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </>
             )}
           </div>
-        </div>
 
-        {/* Staff Sign-off Identity Field */}
-        <div className="flex items-center gap-2">
-          <span className="text-charcoal-subtle text-[11px]">Signing off as:</span>
-          <input
-            type="text"
-            value={activeStaffName}
-            onChange={(e) => setActiveStaffName(e.target.value)}
-            title="Type student name or ID for clinical log entries"
-            className="px-2 py-0.5 text-xs bg-white border border-cream-border focus:border-sage text-charcoal w-48 sm:w-64 font-sans"
-            placeholder="Student Name / Staff ID"
-          />
-        </div>
-      </div>
-
-      {/* Reset Confirmation Modal */}
-      {resetConfirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/40 backdrop-blur-[1px] p-4">
-          <div className="bg-white border border-charcoal max-w-md w-full p-6 space-y-4">
-            <div className="flex items-center gap-2 text-terracotta">
-              <ShieldAlert className="w-5 h-5" />
-              <h3 className="font-serif text-lg font-bold text-charcoal">
-                Reset Simulated Drill Data?
-              </h3>
-            </div>
-            <p className="text-xs text-charcoal-muted leading-relaxed">
-              This will restore the patient registry back to the original 5 clinical cases
-              (including acute malaria in treatment, follow-up lab review, hypertensive urgency,
-              and pediatric cases). Any new entries created during this session will be replaced.
-            </p>
-            <div className="flex justify-end gap-2 pt-2 border-t border-cream-border">
-              <button
-                onClick={() => setResetConfirmOpen(false)}
-                className="px-3 py-1.5 text-xs border border-cream-border text-charcoal hover:bg-cream-warm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={async () => {
-                  await resetToDemoCases();
-                  setResetConfirmOpen(false);
-                }}
-                className="px-4 py-1.5 text-xs bg-charcoal text-cream hover:bg-charcoal/90"
-              >
-                Yes, Restore Demo Cases
-              </button>
-            </div>
+          {/* Staff Sign-off Identity Field */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+            <label htmlFor={signOffId} className="text-charcoal-muted text-[11px]">
+              Signing off as:
+            </label>
+            <input
+              id={signOffId}
+              type="text"
+              value={activeStaffName}
+              readOnly={!!currentUser}
+              onChange={(e) => setActiveStaffName(e.target.value)}
+              title={
+                currentUser
+                  ? "Locked to your signed-in student account"
+                  : "Type student name or ID for clinical log entries"
+              }
+              className="px-2 py-2 sm:py-0.5 text-xs bg-white border border-cream-border focus:border-sage text-charcoal w-full sm:w-64 font-sans read-only:bg-cream-warm read-only:text-charcoal-muted"
+              placeholder="Student Name / Staff ID"
+            />
           </div>
         </div>
+      </header>
+
+      {resetConfirmOpen && (
+        <ResetConfirmDialog
+          onCancel={() => setResetConfirmOpen(false)}
+          onConfirm={async () => {
+            await resetToDemoCases();
+            setResetConfirmOpen(false);
+          }}
+        />
       )}
-    </header>
+    </>
   );
 }

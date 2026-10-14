@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useEMR } from "@/context/EMRContext";
 import { Patient, DEPARTMENTS_METADATA } from "@/types/emr";
 import { TransferModal } from "@/components/shared/TransferModal";
+import { useDialogA11y } from "@/hooks/useDialogA11y";
 import {
   FileText,
   Activity,
@@ -24,6 +25,7 @@ interface PatientDossierModalProps {
 }
 
 export function PatientDossierModal({ patient, onClose }: PatientDossierModalProps) {
+  const dialogRef = useDialogA11y<HTMLDivElement>(onClose);
   const [activeTab, setActiveTab] = useState<
     "journey" | "vitals" | "doctor" | "labs" | "radiology" | "meds"
   >("journey");
@@ -33,7 +35,14 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/45 backdrop-blur-[1px] p-2 sm:p-4">
-      <div className="bg-white border border-charcoal max-w-4xl w-full h-[92vh] flex flex-col shadow-lg overflow-hidden">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dossier-dialog-title"
+        tabIndex={-1}
+        className="bg-white border border-charcoal max-w-4xl w-full h-[92dvh] max-h-[92vh] flex flex-col shadow-lg overflow-hidden outline-none"
+      >
         {/* Dossier Header / Docket Jacket */}
         <div className="p-4 sm:p-5 bg-cream border-b border-cream-border flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-1">
@@ -54,7 +63,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                 {patient.paymentType}
               </span>
             </div>
-            <h2 className="font-serif text-xl sm:text-2xl font-bold text-charcoal">
+            <h2 id="dossier-dialog-title" className="font-serif text-xl sm:text-2xl font-bold text-charcoal">
               {patient.fullName}
             </h2>
             <div className="text-xs text-charcoal-muted flex flex-wrap items-center gap-3">
@@ -77,8 +86,10 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
               <span>Route / Transfer</span>
             </button>
             <button
+              type="button"
               onClick={onClose}
-              className="p-1.5 text-charcoal-muted hover:text-charcoal border border-cream-border hover:bg-cream-warm"
+              aria-label="Close patient chart"
+              className="p-2 text-charcoal-muted hover:text-charcoal border border-cream-border hover:bg-cream-warm"
             >
               <X className="w-4 h-4" />
             </button>
@@ -107,7 +118,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-cream-border bg-white px-5 overflow-x-auto text-xs font-mono">
+        <div role="group" aria-label="Chart sections" className="flex border-b border-cream-border bg-white px-2 sm:px-5 overflow-x-auto text-xs font-mono">
           {[
             { id: "journey", label: `Clinical Journey (${patient.routingHistory.length})`, icon: Clock },
             { id: "vitals", label: `Vital Signs (${patient.vitalsHistory.length})`, icon: Activity },
@@ -121,6 +132,8 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
             return (
               <button
                 key={t.id}
+                type="button"
+                aria-pressed={isCurrent}
                 onClick={() => setActiveTab(t.id as any)}
                 className={`py-3 px-3.5 flex items-center gap-2 border-b-2 whitespace-nowrap transition-colors ${
                   isCurrent

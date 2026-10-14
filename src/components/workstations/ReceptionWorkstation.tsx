@@ -75,15 +75,16 @@ export function ReceptionWorkstation({
       {/* Patient Dockets Table */}
       <div className="bg-white border border-cream-border overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+          <table className="responsive-table w-full text-left text-xs border-collapse">
+            <caption className="sr-only">Patient dockets currently at the Front Desk</caption>
             <thead>
               <tr className="bg-cream-warm border-b border-cream-border text-charcoal font-mono uppercase tracking-wider text-[10px]">
-                <th className="p-3.5">Hospital Record No.</th>
-                <th className="p-3.5">Patient Name & Demographics</th>
-                <th className="p-3.5">Current Location</th>
-                <th className="p-3.5">Billing Scheme</th>
-                <th className="p-3.5">Last Hospital Event</th>
-                <th className="p-3.5 text-right">Station Actions</th>
+                <th scope="col" className="p-3.5">Hospital Record No.</th>
+                <th scope="col" className="p-3.5">Patient Name & Demographics</th>
+                <th scope="col" className="p-3.5">Current Location</th>
+                <th scope="col" className="p-3.5">Billing Scheme</th>
+                <th scope="col" className="p-3.5">Last Hospital Event</th>
+                <th scope="col" className="p-3.5 text-right">Station Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-cream-border">
@@ -104,11 +105,11 @@ export function ReceptionWorkstation({
                       className="hover:bg-cream/40 transition-colors cursor-pointer"
                       onClick={() => onOpenDossier(pat)}
                     >
-                      <td className="p-3.5 font-mono font-bold text-charcoal">
+                      <td data-label="Record No." className="p-3.5 font-mono font-bold text-charcoal">
                         {pat.hospitalNumber}
                       </td>
 
-                      <td className="p-3.5">
+                      <td data-label="Patient" className="p-3.5">
                         <div className="font-serif font-bold text-charcoal text-sm">
                           {pat.fullName}
                         </div>
@@ -117,17 +118,17 @@ export function ReceptionWorkstation({
                         </div>
                       </td>
 
-                      <td className="p-3.5">
+                      <td data-label="Location" className="p-3.5">
                         <span className="font-mono text-xs px-2 py-0.5 bg-cream-warm border border-cream-border text-charcoal font-medium">
                           {deptMeta.shortName}
                         </span>
                       </td>
 
-                      <td className="p-3.5 text-charcoal-muted font-sans">
+                      <td data-label="Billing" className="p-3.5 text-charcoal-muted font-sans">
                         {pat.paymentType}
                       </td>
 
-                      <td className="p-3.5 max-w-xs">
+                      <td data-label="Last Event" className="p-3.5 max-w-xs">
                         <p className="text-[11px] text-charcoal line-clamp-1">
                           {lastRoute?.reason || "Intake enrolled at Front Desk."}
                         </p>
@@ -136,7 +137,7 @@ export function ReceptionWorkstation({
                         </span>
                       </td>
 
-                      <td className="p-3.5 text-right">
+                      <td data-label="Actions" className="p-3.5 text-right">
                         <div
                           className="flex items-center justify-end gap-2"
                           onClick={(e) => e.stopPropagation()}
@@ -144,7 +145,8 @@ export function ReceptionWorkstation({
                           <button
                             type="button"
                             onClick={() => onOpenTransfer(pat)}
-                            className="px-2.5 py-1 text-xs bg-charcoal hover:bg-charcoal/90 text-cream flex items-center gap-1 font-mono"
+                            aria-label={`Route or move ${pat.fullName}`}
+                            className="px-2.5 py-2 md:py-1 text-xs bg-charcoal hover:bg-charcoal/90 text-cream flex items-center gap-1 font-mono"
                           >
                             <ArrowRightLeft className="w-3 h-3 text-sage-light" />
                             <span>Route / Move</span>
@@ -153,7 +155,8 @@ export function ReceptionWorkstation({
                           <button
                             type="button"
                             onClick={() => onOpenDossier(pat)}
-                            className="px-2.5 py-1 text-xs border border-cream-border hover:border-charcoal bg-white font-mono"
+                            aria-label={`Open chart for ${pat.fullName}`}
+                            className="px-2.5 py-2 md:py-1 text-xs border border-cream-border hover:border-charcoal bg-white font-mono"
                           >
                             Chart
                           </button>

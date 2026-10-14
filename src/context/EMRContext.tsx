@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { useAuth } from "@/context/AuthContext";
 import {
   Patient,
   RoleId,
@@ -76,6 +77,7 @@ const EMRContext = createContext<EMRContextType | undefined>(undefined);
 export function EMRProvider({ children }: { children: ReactNode }) {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
+  const { currentUser } = useAuth();
   const [activeRole, setActiveRole] = useState<RoleId>("director");
   const [activeStaffName, setActiveStaffName] = useState<string>("Clinical Supervisor");
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -83,7 +85,9 @@ export function EMRProvider({ children }: { children: ReactNode }) {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Sync role title to staff name if user hasn't customized
+  // (skipped for signed-in accounts so their own name is never overwritten)
   useEffect(() => {
+    if (currentUser) return;
     const roleMeta = HOSPITAL_ROLES.find((r) => r.id === activeRole);
     if (roleMeta) {
       if (activeRole === "receptionist") setActiveStaffName("Staff Officer M. Bello (REC)");
@@ -94,7 +98,7 @@ export function EMRProvider({ children }: { children: ReactNode }) {
       else if (activeRole === "treatment_nurse") setActiveStaffName("Staff Nurse T. Dike (TRT)");
       else setActiveStaffName("Prof. J. C. Okon, Medical Director");
     }
-  }, [activeRole]);
+  }, [activeRole, currentUser]);
 
   // Load patients from API or fallback to localStorage / Demo data
   const fetchPatients = async () => {

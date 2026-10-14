@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useEMR } from "@/context/EMRContext";
 import { Department } from "@/types/emr";
 import { UserPlus, X, Check } from "lucide-react";
+import { useDialogA11y } from "@/hooks/useDialogA11y";
 
 interface NewPatientModalProps {
   onClose: () => void;
@@ -11,6 +12,7 @@ interface NewPatientModalProps {
 
 export function NewPatientModal({ onClose }: NewPatientModalProps) {
   const { registerPatient } = useEMR();
+  const dialogRef = useDialogA11y<HTMLDivElement>(onClose);
   const [fullName, setFullName] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState<"Female" | "Male" | "Other">("Female");
@@ -58,12 +60,19 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/40 backdrop-blur-[1px] p-4">
-      <div className="bg-white border border-charcoal max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="intake-dialog-title"
+        tabIndex={-1}
+        className="bg-white border border-charcoal max-w-2xl w-full p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto outline-none"
+      >
         <div className="flex items-start justify-between border-b border-cream-border pb-3">
           <div>
             <div className="flex items-center gap-2">
               <UserPlus className="w-4 h-4 text-sage" />
-              <h3 className="font-serif text-lg font-bold text-charcoal">
+              <h3 id="intake-dialog-title" className="font-serif text-lg font-bold text-charcoal">
                 Trinity Point Hospital — Patient Intake
               </h3>
             </div>
@@ -72,8 +81,10 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
             </p>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="text-charcoal-muted hover:text-charcoal p-1"
+            aria-label="Close patient intake dialog"
+            className="text-charcoal-muted hover:text-charcoal p-2"
           >
             <X className="w-4 h-4" />
           </button>

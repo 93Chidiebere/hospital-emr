@@ -19,8 +19,8 @@ const config: Config = {
         charcoal: {
           DEFAULT: "#1A1A1A",
           muted: "#4F4F4F",
-          subtle: "#7E7E7E",
-          faint: "#A8A8A8",
+          subtle: "#666666",
+          faint: "#767676",
         },
         sage: {
           DEFAULT: "#3D5245",

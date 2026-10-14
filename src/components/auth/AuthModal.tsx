@@ -4,9 +4,10 @@ import React, { useState } from "react";
 import { useAuth, DEFAULT_STUDENT_ACCOUNTS } from "@/context/AuthContext";
 import { useEMR } from "@/context/EMRContext";
 import { RoleId, HOSPITAL_ROLES } from "@/types/emr";
+import { useDialogA11y } from "@/hooks/useDialogA11y";
 import { LogIn, UserPlus, X, Check, ShieldAlert, KeyRound } from "lucide-react";
 
-export function AuthModal() {
+function AuthModalInner() {
   const {
     authModalOpen,
     setAuthModalOpen,
@@ -17,6 +18,7 @@ export function AuthModal() {
   } = useAuth();
 
   const { setActiveRole, setActiveStaffName } = useEMR();
+  const dialogRef = useDialogA11y<HTMLDivElement>(() => setAuthModalOpen(false));
 
   // Sign In State
   const [loginId, setLoginId] = useState("");
@@ -86,13 +88,20 @@ export function AuthModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/45 backdrop-blur-[1px] p-4">
-      <div className="bg-white border border-charcoal max-w-lg w-full p-6 space-y-4 shadow-xl">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-dialog-title"
+        tabIndex={-1}
+        className="bg-white border border-charcoal max-w-lg w-full max-h-[92vh] overflow-y-auto p-5 sm:p-6 space-y-4 shadow-xl outline-none"
+      >
         {/* Top Header */}
         <div className="flex items-start justify-between border-b border-cream-border pb-3">
           <div>
             <div className="flex items-center gap-2">
               <KeyRound className="w-4 h-4 text-sage" />
-              <h3 className="font-serif text-lg font-bold text-charcoal">
+              <h3 id="auth-dialog-title" className="font-serif text-lg font-bold text-charcoal">
                 Trinity Point Hospital — Student Portal
               </h3>
             </div>
@@ -101,8 +110,10 @@ export function AuthModal() {
             </p>
           </div>
           <button
+            type="button"
             onClick={() => setAuthModalOpen(false)}
-            className="text-charcoal-muted hover:text-charcoal p-1"
+            aria-label="Close sign in dialog"
+            className="text-charcoal-muted hover:text-charcoal p-2"
           >
             <X className="w-4 h-4" />
           </button>
@@ -112,6 +123,7 @@ export function AuthModal() {
         <div className="grid grid-cols-2 border border-cream-border p-1 bg-cream-warm text-xs font-mono">
           <button
             type="button"
+            aria-pressed={authMode === "signin"}
             onClick={() => {
               setAuthMode("signin");
               setErrorMessage("");
@@ -126,6 +138,7 @@ export function AuthModal() {
           </button>
           <button
             type="button"
+            aria-pressed={authMode === "signup"}
             onClick={() => {
               setAuthMode("signup");
               setErrorMessage("");
@@ -142,7 +155,7 @@ export function AuthModal() {
 
         {/* Error Alert */}
         {errorMessage && (
-          <div className="p-3 bg-terracotta-light border border-terracotta-border text-terracotta text-xs flex items-center gap-2">
+          <div role="alert" className="p-3 bg-terracotta-light border border-terracotta-border text-terracotta text-xs flex items-center gap-2">
             <ShieldAlert className="w-4 h-4 shrink-0" />
             <span>{errorMessage}</span>
           </div>
@@ -254,7 +267,7 @@ export function AuthModal() {
                   onChange={(e) => setRole(e.target.value as RoleId)}
                   className="w-full p-2.5 bg-cream-warm border border-cream-border focus:border-sage text-charcoal font-sans"
                 >
-                  {HOSPITAL_ROLES.map((r) => (
+                  {HOSPITAL_ROLES.filter((r) => r.id !== "director").map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.title} ({r.badge}) — {r.cadre}
                     </option>
@@ -289,4 +302,10 @@ export function AuthModal() {
       </div>
     </div>
   );
+}
+
+export function AuthModal() {
+  const { authModalOpen } = useAuth();
+  if (!authModalOpen) return null;
+  return <AuthModalInner />;
 }

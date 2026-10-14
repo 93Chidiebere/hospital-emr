@@ -29,12 +29,11 @@ export interface RoleConfig {
 export interface UserAccount {
   id: string;
   fullName: string;
-  studentId: string;
   assignedRole: RoleId;
-  institution?: string;
   password?: string;
   createdAt: string;
 }
+
 
 
 export interface VitalsRecord {

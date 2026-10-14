@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
 import { useEMR } from "@/context/EMRContext";
 import { Patient, Department, DEPARTMENTS_METADATA } from "@/types/emr";
 import { Search, ArrowRightLeft, FileSpreadsheet, AlertTriangle } from "lucide-react";
@@ -16,6 +16,7 @@ export function MasterDirectoryWorkstation({
 }: MasterDirectoryWorkstationProps) {
   const { patients, filterDepartment, setFilterDepartment } = useEMR();
   const [query, setQuery] = useState("");
+  const searchId = useId();
 
   const filtered = patients.filter((p) => {
     const matchesDept = filterDepartment === "ALL" || p.currentDepartment === filterDepartment;
@@ -43,17 +44,21 @@ export function MasterDirectoryWorkstation({
           </p>
         </div>
 
-        <div className="text-xs font-mono text-charcoal-muted">
+        <div role="status" className="text-xs font-mono text-charcoal-muted">
           Total Registered Cases: <strong>{patients.length}</strong>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
       <div className="bg-white border border-cream-border p-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-charcoal-muted absolute left-3 top-2.5" />
+        <div className="relative w-full md:flex-1 md:max-w-md">
+          <label htmlFor={searchId} className="sr-only">
+            Search patients by name, hospital number, or station
+          </label>
+          <Search aria-hidden="true" className="w-4 h-4 text-charcoal-muted absolute left-3 top-3" />
           <input
-            type="text"
+            id={searchId}
+            type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by patient name, hospital number, or condition..."
@@ -61,13 +66,15 @@ export function MasterDirectoryWorkstation({
           />
         </div>
 
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[10px] font-mono text-charcoal-muted uppercase mr-1">
+        <div role="group" aria-label="Station filter" className="flex items-center gap-1.5 flex-wrap">
+          <span aria-hidden="true" className="text-[10px] font-mono text-charcoal-muted uppercase mr-1">
             Station Filter:
           </span>
           <button
+            type="button"
+            aria-pressed={filterDepartment === "ALL"}
             onClick={() => setFilterDepartment("ALL")}
-            className={`px-2 py-1 text-xs font-mono border ${
+            className={`px-2.5 py-2 md:px-2 md:py-1 text-xs font-mono border ${
               filterDepartment === "ALL"
                 ? "bg-charcoal text-cream border-charcoal font-bold"
                 : "bg-cream-warm text-charcoal-muted border-cream-border hover:border-charcoal"
@@ -81,8 +88,11 @@ export function MasterDirectoryWorkstation({
             return (
               <button
                 key={key}
+                type="button"
+                aria-pressed={isSelected}
+                aria-label={`${meta.name}: ${count} ${count === 1 ? "patient" : "patients"}`}
                 onClick={() => setFilterDepartment(key as Department)}
-                className={`px-2 py-1 text-xs font-mono border ${
+                className={`px-2.5 py-2 md:px-2 md:py-1 text-xs font-mono border ${
                   isSelected
                     ? "bg-sage text-cream border-sage font-bold"
                     : "bg-cream-warm text-charcoal-muted border-cream-border hover:border-charcoal"
@@ -98,16 +108,17 @@ export function MasterDirectoryWorkstation({
       {/* Master Table */}
       <div className="bg-white border border-cream-border overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+          <table className="responsive-table w-full text-left text-xs border-collapse">
+            <caption className="sr-only">Master clinical directory of all registered patients</caption>
             <thead>
               <tr className="bg-cream-warm border-b border-cream-border text-charcoal font-mono uppercase tracking-wider text-[10px]">
-                <th className="p-3.5">Hospital Record No.</th>
-                <th className="p-3.5">Patient Details</th>
-                <th className="p-3.5">Current Station</th>
-                <th className="p-3.5">Latest Vitals</th>
-                <th className="p-3.5">Pending Orders</th>
-                <th className="p-3.5">Current Status</th>
-                <th className="p-3.5 text-right">Actions</th>
+                <th scope="col" className="p-3.5">Hospital Record No.</th>
+                <th scope="col" className="p-3.5">Patient Details</th>
+                <th scope="col" className="p-3.5">Current Station</th>
+                <th scope="col" className="p-3.5">Latest Vitals</th>
+                <th scope="col" className="p-3.5">Pending Orders</th>
+                <th scope="col" className="p-3.5">Current Status</th>
+                <th scope="col" className="p-3.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-cream-border">
@@ -130,11 +141,11 @@ export function MasterDirectoryWorkstation({
                       className="hover:bg-cream/40 transition-colors cursor-pointer"
                       onClick={() => onOpenDossier(pat)}
                     >
-                      <td className="p-3.5 font-mono font-bold text-charcoal">
+                      <td data-label="Record No." className="p-3.5 font-mono font-bold text-charcoal">
                         {pat.hospitalNumber}
                       </td>
 
-                      <td className="p-3.5">
+                      <td data-label="Patient" className="p-3.5">
                         <div className="font-serif font-bold text-charcoal text-sm">
                           {pat.fullName}
                         </div>
@@ -143,13 +154,13 @@ export function MasterDirectoryWorkstation({
                         </div>
                       </td>
 
-                      <td className="p-3.5">
+                      <td data-label="Station" className="p-3.5">
                         <span className="font-mono text-xs px-2 py-0.5 bg-cream-warm border border-cream-border text-charcoal font-medium">
                           {deptMeta.name}
                         </span>
                       </td>
 
-                      <td className="p-3.5">
+                      <td data-label="Vitals" className="p-3.5">
                         {vit ? (
                           <div className="font-mono text-[11px] space-y-0.5">
                             <div>BP: {vit.bloodPressureSystolic}/{vit.bloodPressureDiastolic} mmHg</div>
@@ -162,7 +173,7 @@ export function MasterDirectoryWorkstation({
                         )}
                       </td>
 
-                      <td className="p-3.5">
+                      <td data-label="Pending" className="p-3.5">
                         <div className="flex flex-col gap-1 font-mono text-[10px]">
                           {pendingLabs > 0 && (
                             <span className="text-amber-alert font-bold">
@@ -180,7 +191,7 @@ export function MasterDirectoryWorkstation({
                         </div>
                       </td>
 
-                      <td className="p-3.5">
+                      <td data-label="Status" className="p-3.5">
                         <span
                           className={`font-mono text-[10px] uppercase px-2 py-0.5 border ${
                             pat.status === "Discharged"
@@ -192,7 +203,7 @@ export function MasterDirectoryWorkstation({
                         </span>
                       </td>
 
-                      <td className="p-3.5 text-right">
+                      <td data-label="Actions" className="p-3.5 text-right">
                         <div
                           className="flex items-center justify-end gap-2"
                           onClick={(e) => e.stopPropagation()}
@@ -200,7 +211,8 @@ export function MasterDirectoryWorkstation({
                           <button
                             type="button"
                             onClick={() => onOpenTransfer(pat)}
-                            className="px-2.5 py-1 text-xs bg-charcoal hover:bg-charcoal/90 text-cream flex items-center gap-1 font-mono"
+                            aria-label={`Route ${pat.fullName}`}
+                            className="px-2.5 py-2 md:py-1 text-xs bg-charcoal hover:bg-charcoal/90 text-cream flex items-center gap-1 font-mono"
                           >
                             <ArrowRightLeft className="w-3 h-3 text-sage-light" />
                             <span>Route</span>
@@ -209,7 +221,8 @@ export function MasterDirectoryWorkstation({
                           <button
                             type="button"
                             onClick={() => onOpenDossier(pat)}
-                            className="px-2.5 py-1 text-xs border border-cream-border hover:border-charcoal bg-white font-mono"
+                            aria-label={`Open chart for ${pat.fullName}`}
+                            className="px-2.5 py-2 md:py-1 text-xs border border-cream-border hover:border-charcoal bg-white font-mono"
                           >
                             Chart
                           </button>

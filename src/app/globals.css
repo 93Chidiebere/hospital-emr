@@ -75,3 +75,95 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .docket-border-r {
   border-right: 1px solid #E6E1D8;
 }
+
+/* ---------- Accessibility & responsive helpers ---------- */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Skip link: hidden until focused via keyboard */
+.skip-link {
+  position: absolute;
+  left: 0.5rem;
+  top: -100px;
+  z-index: 100;
+  padding: 0.6rem 1rem;
+  background: var(--text-charcoal);
+  color: #FDFBF7;
+  font-size: 0.8rem;
+  font-family: 'JetBrains Mono', Consolas, monospace;
+}
+.skip-link:focus {
+  top: 0.5rem;
+}
+
+/* Respect users who ask for less motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Keep notched-phone edges clear */
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Phones: 16px form text stops iOS Safari from zooming in on focus */
+@media (max-width: 767px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  /* Stacked "card" tables. Add class="responsive-table" and data-label="..." on each <td>. */
+  .responsive-table,
+  .responsive-table tbody,
+  .responsive-table tr,
+  .responsive-table td {
+    display: block;
+    width: 100%;
+  }
+  .responsive-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .responsive-table tr {
+    padding: 0.75rem 1rem;
+  }
+  .responsive-table td {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.35rem 0;
+    text-align: left !important;
+  }
+  .responsive-table td::before {
+    content: attr(data-label);
+    flex: 0 0 34%;
+    padding-top: 2px;
+    font-family: 'JetBrains Mono', Consolas, monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+  .responsive-table td[colspan] {
+    display: block;
+    text-align: center !important;
+  }
+  .responsive-table td[colspan]::before {
+    content: none;
+  }
+}
