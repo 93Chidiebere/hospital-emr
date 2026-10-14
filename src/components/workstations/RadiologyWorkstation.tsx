@@ -297,7 +297,7 @@ export function RadiologyWorkstation({
                       {[
                         { dept: "CONSULTATION" as Department, name: "Back to Doctor (Review)", reason: "Imaging completed; report sent to Physician." },
                         { dept: "WARD" as Department, name: "Inpatient Ward", reason: "Direct transfer back to Inpatient Ward." },
-                        { dept: "TREATMENT" as Department, name: "Treatment Room", reason: "Direct transfer to Treatment Room." },
+                        { dept: "TREATMENT" as Department, name: "Pharmacy", reason: "Direct transfer to Pharmacy." },
                       ].map((d) => (
                         <button
                           key={d.dept}

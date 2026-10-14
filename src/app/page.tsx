@@ -100,7 +100,7 @@ export default function Home() {
               { id: "doctor" as RoleId, label: "Doctor Consult", icon: Stethoscope },
               { id: "mls" as RoleId, label: "MLS Lab", icon: FlaskConical },
               { id: "radiographer" as RoleId, label: "Radiology", icon: Scan },
-              { id: "treatment_nurse" as RoleId, label: "Treatment Room", icon: Syringe },
+              { id: "treatment_nurse" as RoleId, label: "Pharmacy", icon: Syringe },
               { id: "director" as RoleId, label: "Master Registry", icon: Layers },
             ].map((tab) => {
               const Icon = tab.icon;
@@ -193,7 +193,7 @@ export default function Home() {
             aria-label="Patient journey"
             className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10px] text-charcoal-subtle uppercase"
           >
-            {["Intake", "Triage", "Consultation", "MLS Lab", "Treatment", "Discharge"].map(
+            {["Intake", "Triage", "Consultation", "MLS Lab", "Pharmacy", "Discharge"].map(
               (step, i, arr) => (
                 <li key={step} className="flex items-center gap-2">
                   <span>{step}</span>

@@ -50,9 +50,11 @@ export const INITIAL_DEMO_PATIENTS: Patient[] = [
         physicalExamFindings:
           "Mild conjunctival pallor, anicteric. Chest clear, vesicular breath sounds. Abdomen soft, mild splenomegaly palpated 2cm below costal margin, non-tender.",
         provisionalDiagnosis: "Severe Plasmodium Falciparum Malaria vs Enteric Fever",
+        provisionalIcd10: { code: "B50.8", description: "Other severe and complicated Plasmodium falciparum malaria" },
         definitiveDiagnosis: "Acute Plasmodium Falciparum Malaria (Hyperparasitemia)",
+        definitiveIcd10: { code: "B50.8", description: "Other severe and complicated Plasmodium falciparum malaria" },
         clinicalPlan:
-          "1. Urgent Giemsa thick film for MP\n2. FBC / CBC\n3. Start stat IV Artesunate 120mg in Treatment Room once lab confirms.\n4. Follow with Oral Coartem post-injection.",
+          "1. Urgent Giemsa thick film for MP\n2. FBC / CBC\n3. Start stat IV Artesunate 120mg in Pharmacy once lab confirms.\n4. Follow with Oral Coartem post-injection.",
       },
     ],
     labOrders: [
@@ -151,7 +153,7 @@ export const INITIAL_DEMO_PATIENTS: Patient[] = [
         fromDepartment: "CONSULTATION",
         toDepartment: "TREATMENT",
         authorizedBy: "Dr. K. Adeyemi",
-        reason: "Transferred to Treatment Room for administration of stat parenteral IV Artesunate & IM Paracetamol.",
+        reason: "Transferred to Pharmacy for administration of stat parenteral IV Artesunate & IM Paracetamol.",
       },
     ],
   },
@@ -289,6 +291,7 @@ export const INITIAL_DEMO_PATIENTS: Patient[] = [
         physicalExamFindings:
           "Anxious, diaphoretic. Heart: S4 gallop audible at apex, no murmurs. Lungs: Basal fine crackles at bilateral posterior bases. Abdomen unremarkable.",
         provisionalDiagnosis: "Hypertensive Emergency with Left Ventricular Strain vs Acute Coronary Syndrome",
+        provisionalIcd10: { code: "I10", description: "Essential (primary) hypertension" },
         clinicalPlan:
           "1. Immediate sublingual vasodilator\n2. Stat Chest X-ray (PA & Lateral) to evaluate cardiomegaly/pulmonary edema\n3. 12-lead ECG & Cardiac Troponins in MLS\n4. Prepare for monitored bed in Ward.",
       },
@@ -439,7 +442,9 @@ export const INITIAL_DEMO_PATIENTS: Patient[] = [
         historyOfPresentIllness: "45-year-old presenting with acute flare of dyspepsia. History of NSAID intake for lower back strain.",
         physicalExamFindings: "Epigastric tenderness on deep palpation. No guarding, no rebound.",
         provisionalDiagnosis: "Acute Peptic Ulcer Disease / Erosive Gastritis",
+        provisionalIcd10: { code: "K29.7", description: "Gastritis, unspecified" },
         definitiveDiagnosis: "Acute NSAID-induced Gastritis",
+        definitiveIcd10: { code: "K29.1", description: "Other acute gastritis" },
         clinicalPlan: "1. Stat IV Pantoprazole 40mg + IM Hyoscine 20mg\n2. 45-minute post-injection observation\n3. Discharge on oral PPI.",
       },
     ],
@@ -457,7 +462,7 @@ export const INITIAL_DEMO_PATIENTS: Patient[] = [
         instructions: "Administer slow IV push over 3 minutes.",
         status: "administered",
         timestampAdministered: "2026-10-13T08:00:00Z",
-        nurseName: "Staff Nurse T. Dike (TRT)",
+        nurseName: "Pharmacist T. Dike (PHM)",
         injectionSite: "IV Port Left Forearm",
         nurseNotes: "Patient tolerated well. No adverse reaction observed.",
       },

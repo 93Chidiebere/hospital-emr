@@ -125,7 +125,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
             { id: "doctor", label: `Physician Notes (${patient.doctorNotes.length})`, icon: Stethoscope },
             { id: "labs", label: `MLS Labs (${patient.labOrders.length})`, icon: FlaskConical },
             { id: "radiology", label: `Imaging (${patient.radiologyOrders.length})`, icon: Scan },
-            { id: "meds", label: `Treatments (${patient.medications.length})`, icon: Syringe },
+            { id: "meds", label: `Medications (${patient.medications.length})`, icon: Syringe },
           ].map((t) => {
             const Icon = t.icon;
             const isCurrent = activeTab === t.id;
@@ -364,6 +364,12 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                             <span className="font-serif font-bold text-charcoal text-xs">
                               {note.provisionalDiagnosis}
                             </span>
+                            {note.provisionalIcd10 && (
+                              <span className="block mt-1 text-[11px] text-charcoal">
+                                <span className="font-mono font-bold text-brand mr-1.5">{note.provisionalIcd10.code}</span>
+                                {note.provisionalIcd10.description}
+                              </span>
+                            )}
                           </div>
                           {note.definitiveDiagnosis && (
                             <div>
@@ -373,6 +379,12 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                               <span className="font-serif font-bold text-charcoal text-xs">
                                 {note.definitiveDiagnosis}
                               </span>
+                              {note.definitiveIcd10 && (
+                                <span className="block mt-1 text-[11px] text-charcoal">
+                                  <span className="font-mono font-bold text-brand mr-1.5">{note.definitiveIcd10.code}</span>
+                                  {note.definitiveIcd10.description}
+                                </span>
+                              )}
                             </div>
                           )}
                         </div>

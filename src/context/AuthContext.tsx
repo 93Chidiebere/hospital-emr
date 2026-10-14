@@ -34,7 +34,7 @@ export const DEFAULT_STUDENT_ACCOUNTS: UserAccount[] = [
   },
   {
     id: "usr-005",
-    fullName: "Nurse Titi Dike",
+    fullName: "Pharm. Titi Dike",
     assignedRole: "treatment_nurse",
     password: "pass",
     createdAt: "2026-10-13T08:00:00Z",

@@ -343,7 +343,7 @@ export function LabWorkstation({
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {[
                         { dept: "CONSULTATION" as Department, name: "Back to Doctor (Standard)", reason: "Specimen analysis validated; patient routed back to Doctor for review." },
-                        { dept: "TREATMENT" as Department, name: "Direct to Treatment Room", reason: "Direct transfer to Treatment Room for injection." },
+                        { dept: "TREATMENT" as Department, name: "Direct to Pharmacy", reason: "Direct transfer to Pharmacy for medication." },
                         { dept: "WARD" as Department, name: "Inpatient Ward", reason: "Direct transfer to Inpatient Ward." },
                         { dept: "RECEPTION" as Department, name: "Front Desk (Outpatient Wait)", reason: "Patient waiting at Reception for printed results." },
                       ].map((d) => (

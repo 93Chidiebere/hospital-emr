@@ -54,6 +54,11 @@ export interface VitalsRecord {
   triageNotes?: string;
 }
 
+export interface Icd10Code {
+  code: string; // e.g. "B50.9"
+  description: string; // WHO ICD-10 wording
+}
+
 export interface DoctorNote {
   id: string;
   timestamp: string;
@@ -61,7 +66,9 @@ export interface DoctorNote {
   historyOfPresentIllness: string;
   physicalExamFindings: string;
   provisionalDiagnosis: string;
+  provisionalIcd10?: Icd10Code;
   definitiveDiagnosis?: string;
+  definitiveIcd10?: Icd10Code;
   clinicalPlan: string;
 }
 
@@ -182,10 +189,10 @@ export const DEPARTMENTS_METADATA: Record<
     description: "Radiographic imaging, ultrasound diagnostics, and imaging reports.",
   },
   TREATMENT: {
-    name: "Treatment Room & Injections",
-    code: "TRT",
-    shortName: "Treatment",
-    description: "Parenteral injection delivery, IV infusion setup, wound dressing, and bedside care.",
+    name: "Pharmacy & Medication Dispensing",
+    code: "PHM",
+    shortName: "Pharmacy",
+    description: "Dispensing of prescribed medicines, injection and IV infusion administration, and medication counselling.",
   },
   WARD: {
     name: "Inpatient Ward & Bedside Care",
@@ -223,7 +230,7 @@ export const HOSPITAL_ROLES: RoleConfig[] = [
     title: "Attending Physician / MO",
     department: "CONSULTATION",
     cadre: "Clinical Medicine",
-    description: "Conducts history taking, physical exams, orders lab & radiology investigations, and prescribes therapy.",
+    description: "Conducts history taking, physical exams, orders laboratory investigations, codes diagnoses with ICD-10, and prescribes therapy.",
     badge: "DOC",
   },
   {
@@ -244,11 +251,11 @@ export const HOSPITAL_ROLES: RoleConfig[] = [
   },
   {
     id: "treatment_nurse",
-    title: "Treatment Room Staff Nurse",
+    title: "Pharmacist / Pharmacy Staff",
     department: "TREATMENT",
-    cadre: "Nursing & Midwifery",
-    description: "Administers IV/IM injections, executes stat treatment orders, logs nursing progress, and discharges patients.",
-    badge: "TRT",
+    cadre: "Pharmacy & Nursing",
+    description: "Dispenses prescribed medicines, administers IV/IM injections, logs medication administration, and discharges patients.",
+    badge: "PHM",
   },
   {
     id: "director",

@@ -21,15 +21,15 @@ export function TriageWorkstation({
     triageQueue[0]?.id || ""
   );
 
-  // Vitals State
-  const [systolic, setSystolic] = useState("120");
-  const [diastolic, setDiastolic] = useState("80");
-  const [pulse, setPulse] = useState("78");
-  const [temp, setTemp] = useState("37.0");
-  const [respRate, setRespRate] = useState("18");
-  const [spO2, setSpO2] = useState("98");
-  const [weight, setWeight] = useState("70");
-  const [height, setHeight] = useState("170");
+  // Vitals State (starts blank so nothing is carried over from the previous patient)
+  const [systolic, setSystolic] = useState("");
+  const [diastolic, setDiastolic] = useState("");
+  const [pulse, setPulse] = useState("");
+  const [temp, setTemp] = useState("");
+  const [respRate, setRespRate] = useState("");
+  const [spO2, setSpO2] = useState("");
+  const [weight, setWeight] = useState("");
+  const [height, setHeight] = useState("");
   const [urgency, setUrgency] = useState<"routine" | "urgent" | "emergency">("routine");
   const [chiefComplaint, setChiefComplaint] = useState("");
   const [triageNotes, setTriageNotes] = useState("");
@@ -43,10 +43,43 @@ export function TriageWorkstation({
   const weightNum = parseFloat(weight) || 0;
   const heightNum = parseFloat(height) || 0;
   const heightM = heightNum / 100;
-  const bmiComputed = heightM > 0 ? (weightNum / (heightM * heightM)).toFixed(1) : "0.0";
-  const bmiVal = parseFloat(bmiComputed);
+  const bmiComputed = heightM > 0 && weightNum > 0 ? (weightNum / (heightM * heightM)).toFixed(1) : "--";
+  const bmiVal = parseFloat(bmiComputed) || 0;
 
-  const selectedPatient = patients.find((p) => p.id === selectedPatientId);
+  // Only patients still waiting in Triage can be assessed. As soon as a patient is
+  // routed on, they disappear from this screen instead of staying on the form.
+  const selectedPatient = triageQueue.find((p) => p.id === selectedPatientId);
+
+  const resetForm = () => {
+    setSystolic("");
+    setDiastolic("");
+    setPulse("");
+    setTemp("");
+    setRespRate("");
+    setSpO2("");
+    setWeight("");
+    setHeight("");
+    setUrgency("routine");
+    setChiefComplaint("");
+    setTriageNotes("");
+    setNextStation("CONSULTATION");
+    setRoutingReason("Vital signs logged; patient directed to Physician Consultation queue.");
+  };
+
+  // If the selected patient leaves the queue (routed from here or from another station),
+  // clear the form and select nobody so the next patient is chosen deliberately.
+  React.useEffect(() => {
+    if (selectedPatientId && !triageQueue.some((p) => p.id === selectedPatientId)) {
+      setSelectedPatientId("");
+      resetForm();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [triageQueue.map((p) => p.id).join("|"), selectedPatientId]);
+
+  const selectPatient = (id: string) => {
+    if (id !== selectedPatientId) resetForm();
+    setSelectedPatientId(id);
+  };
 
   const handleRecordVitals = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,14 +89,14 @@ export function TriageWorkstation({
     await recordVitals(
       selectedPatient.id,
       {
-        bloodPressureSystolic: Number(systolic) || 120,
-        bloodPressureDiastolic: Number(diastolic) || 80,
-        pulseRate: Number(pulse) || 75,
-        temperature: Number(temp) || 36.8,
-        respiratoryRate: Number(respRate) || 16,
-        spO2: Number(spO2) || 98,
-        weightKg: Number(weight) || 70,
-        heightCm: Number(height) || 170,
+        bloodPressureSystolic: Number(systolic),
+        bloodPressureDiastolic: Number(diastolic),
+        pulseRate: Number(pulse),
+        temperature: Number(temp),
+        respiratoryRate: Number(respRate),
+        spO2: Number(spO2),
+        weightKg: Number(weight),
+        heightCm: Number(height),
         bmi: bmiVal,
         urgency,
         chiefComplaint: chiefComplaint || "General malaise / clinical evaluation",
@@ -73,8 +106,10 @@ export function TriageWorkstation({
       routingReason
     );
     setSubmitting(false);
-    setChiefComplaint("");
-    setTriageNotes("");
+
+    // Triage is complete: clear the form and select nobody so the next patient is chosen deliberately
+    resetForm();
+    setSelectedPatientId("");
   };
 
   return (
@@ -117,7 +152,7 @@ export function TriageWorkstation({
                 return (
                   <div
                     key={pat.id}
-                    onClick={() => setSelectedPatientId(pat.id)}
+                    onClick={() => selectPatient(pat.id)}
                     className={`p-3.5 border cursor-pointer transition-colors text-xs ${
                       isSelected
                         ? "bg-brand-light border-brand"
@@ -292,6 +327,7 @@ export function TriageWorkstation({
                       Resp Rate (cpm)
                     </label>
                     <input
+                        required
                       type="number"
                       value={respRate}
                       onChange={(e) => setRespRate(e.target.value)}
@@ -312,6 +348,7 @@ export function TriageWorkstation({
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <input
+                        required
                         type="number"
                         placeholder="Weight (kg)"
                         value={weight}
@@ -319,6 +356,7 @@ export function TriageWorkstation({
                         className="w-full p-2 bg-white border border-paper-border text-center font-mono text-sm"
                       />
                       <input
+                        required
                         type="number"
                         placeholder="Height (cm)"
                         value={height}
@@ -384,7 +422,7 @@ export function TriageWorkstation({
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {[
                       { dept: "CONSULTATION" as Department, name: "Doctor Consultation (Standard)" },
-                      { dept: "TREATMENT" as Department, name: "Treatment Room (Stat Injection)" },
+                      { dept: "TREATMENT" as Department, name: "Pharmacy (Stat Medication)" },
                       { dept: "WARD" as Department, name: "Inpatient Ward" },
                       { dept: "LABORATORY" as Department, name: "Direct to Lab (MLS)" },
                     ].map((d) => (
@@ -394,7 +432,7 @@ export function TriageWorkstation({
                         onClick={() => {
                           setNextStation(d.dept);
                           if (d.dept === "TREATMENT") {
-                            setRoutingReason("Patient presenting in severe acute distress; routed straight to Treatment Room for stabilization.");
+                            setRoutingReason("Patient presenting in severe acute distress; routed straight to Pharmacy for stat medication.");
                           } else if (d.dept === "WARD") {
                             setRoutingReason("Direct admission to Inpatient Ward authorized from Triage.");
                           } else {

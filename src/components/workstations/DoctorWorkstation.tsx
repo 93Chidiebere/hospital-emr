@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import { useEMR } from "@/context/EMRContext";
-import { Patient, Department, LabOrder, RadiologyOrder, MedicationAdministration } from "@/types/emr";
-import { Stethoscope, FlaskConical, Scan, Syringe, Check, ArrowRightLeft, Plus, Trash2 } from "lucide-react";
+import { Patient, Department, LabOrder, MedicationAdministration, Icd10Code } from "@/types/emr";
+import { Icd10Picker } from "@/components/shared/Icd10Picker";
+import { Stethoscope, FlaskConical, Syringe, Check, ArrowRightLeft, Plus, Trash2 } from "lucide-react";
 
 interface DoctorWorkstationProps {
   onOpenDossier: (patient: Patient) => void;
@@ -21,14 +22,6 @@ const COMMON_LAB_TESTS = [
   "Lipid Profile Panel",
   "High-Sensitivity Cardiac Troponin I (hs-cTnI)",
   "Stool Microscopy & Occult Blood",
-];
-
-const COMMON_RADIOLOGY = [
-  "Chest X-Ray (Erect PA View)",
-  "Abdominal Ultrasound (Abdomino-Pelvic)",
-  "Pelvic Ultrasound (Obstetric / Gynecologic)",
-  "Lumbar Spine X-Ray (AP & Lateral)",
-  "Plain Abdominal X-Ray (Supine / Erect)",
 ];
 
 const COMMON_MEDICATIONS = [
@@ -59,14 +52,15 @@ export function DoctorWorkstation({
   const [exam, setExam] = useState("");
   const [provisionalDx, setProvisionalDx] = useState("");
   const [definitiveDx, setDefinitiveDx] = useState("");
+  const [provisionalIcd, setProvisionalIcd] = useState<Icd10Code | null>(null);
+  const [definitiveIcd, setDefinitiveIcd] = useState<Icd10Code | null>(null);
+  const [provisionalIcdError, setProvisionalIcdError] = useState("");
+  const [definitiveIcdError, setDefinitiveIcdError] = useState("");
   const [clinicalPlan, setClinicalPlan] = useState("");
 
   // Orders State
   const [labOrders, setLabOrders] = useState<
     Omit<LabOrder, "id" | "timestampOrdered" | "doctorName" | "status">[]
-  >([]);
-  const [radiologyOrders, setRadiologyOrders] = useState<
-    Omit<RadiologyOrder, "id" | "timestampOrdered" | "doctorName" | "status">[]
   >([]);
   const [medications, setMedications] = useState<
     Omit<MedicationAdministration, "id" | "timestampOrdered" | "doctorName" | "status">[]
@@ -109,13 +103,20 @@ export function DoctorWorkstation({
     ]);
     if (med.route === "IV" || med.route === "IM") {
       setTargetDept("TREATMENT");
-      setRoutingReason(`Transferred to Treatment Room for stat injection of ${med.name}.`);
+      setRoutingReason(`Transferred to Pharmacy for stat administration of ${med.name}.`);
     }
   };
 
   const handleSubmitConsult = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPatient) return;
+
+    // ICD-10 coding is part of the documentation
+    const missingProvisional = !provisionalIcd;
+    const missingDefinitive = !!definitiveDx.trim() && !definitiveIcd;
+    setProvisionalIcdError(missingProvisional ? "Select the ICD-10 code that matches the provisional diagnosis." : "");
+    setDefinitiveIcdError(missingDefinitive ? "Select the ICD-10 code that matches the definitive diagnosis." : "");
+    if (missingProvisional || missingDefinitive) return;
 
     setSubmitting(true);
     await saveDoctorConsultation(
@@ -124,11 +125,13 @@ export function DoctorWorkstation({
         historyOfPresentIllness: hpi || "Patient reviewed in consultation room.",
         physicalExamFindings: exam || "General physical exam recorded.",
         provisionalDiagnosis: provisionalDx || "Clinical Evaluation Underway",
+        provisionalIcd10: provisionalIcd || undefined,
         definitiveDiagnosis: definitiveDx || undefined,
+        definitiveIcd10: definitiveIcd || undefined,
         clinicalPlan: clinicalPlan || "Continue diagnostic & therapeutic steps as ordered.",
       },
       labOrders,
-      radiologyOrders,
+      [], // doctors cannot request imaging
       medications,
       targetDept,
       routingReason
@@ -140,9 +143,12 @@ export function DoctorWorkstation({
     setExam("");
     setProvisionalDx("");
     setDefinitiveDx("");
+    setProvisionalIcd(null);
+    setDefinitiveIcd(null);
+    setProvisionalIcdError("");
+    setDefinitiveIcdError("");
     setClinicalPlan("");
     setLabOrders([]);
-    setRadiologyOrders([]);
     setMedications([]);
   };
 
@@ -158,7 +164,7 @@ export function DoctorWorkstation({
             </h2>
           </div>
           <p className="text-xs text-charcoal-muted mt-0.5">
-            Evaluate triage vitals, review laboratory & imaging results, document diagnoses, and order treatment.
+            Evaluate triage vitals, review laboratory results, document and ICD-10 code diagnoses, and order treatment.
           </p>
         </div>
         <div className="font-mono text-xs px-2.5 py-1 bg-paper-warm border border-paper-border text-charcoal">
@@ -411,7 +417,7 @@ export function DoctorWorkstation({
 
                     <div>
                       <label className="block font-mono text-[10px] uppercase text-brand font-bold mb-1">
-                        Definitive Diagnosis (Post-Lab / Imaging)
+                        Definitive Diagnosis (Post-Lab)
                       </label>
                       <input
                         type="text"
@@ -419,6 +425,38 @@ export function DoctorWorkstation({
                         onChange={(e) => setDefinitiveDx(e.target.value)}
                         placeholder="e.g. Acute Plasmodium Falciparum Malaria (confirmed)"
                         className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-serif font-bold"
+                      />
+                    </div>
+                  </div>
+
+                  {/* ICD-10 medical coding */}
+                  <div className="p-3 bg-brand-light/40 border border-brand-border space-y-2">
+                    <p className="font-mono text-[10px] uppercase text-brand font-bold">
+                      Medical Coding (ICD-10)
+                    </p>
+                    <p className="text-[11px] text-charcoal-muted">
+                      Choose the most specific code that matches each diagnosis. Search by code or by word.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <Icd10Picker
+                        label="ICD-10 for Provisional Diagnosis"
+                        required
+                        value={provisionalIcd}
+                        onChange={(v) => {
+                          setProvisionalIcd(v);
+                          if (v) setProvisionalIcdError("");
+                        }}
+                        error={provisionalIcdError}
+                      />
+                      <Icd10Picker
+                        label="ICD-10 for Definitive Diagnosis"
+                        value={definitiveIcd}
+                        onChange={(v) => {
+                          setDefinitiveIcd(v);
+                          if (v) setDefinitiveIcdError("");
+                        }}
+                        error={definitiveIcdError}
+                        hint="Required once a definitive diagnosis is typed."
                       />
                     </div>
                   </div>
@@ -440,7 +478,7 @@ export function DoctorWorkstation({
                 {/* Investigations Ordering */}
                 <div className="space-y-3 pt-2">
                   <h4 className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold border-b border-paper-border pb-1 flex items-center justify-between">
-                    <span>2. Order Laboratory & Radiology Investigations</span>
+                    <span>2. Order Laboratory Investigations</span>
                     <span className="text-[10px] font-normal text-charcoal-muted">Click panel to append</span>
                   </h4>
 
@@ -489,7 +527,7 @@ export function DoctorWorkstation({
                 <div className="space-y-3 pt-2">
                   <h4 className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold border-b border-paper-border pb-1 flex items-center justify-between">
                     <span>3. Prescribe Injections & Medications</span>
-                    <span className="text-[10px] font-normal text-charcoal-muted">Stat injections route to Treatment Room</span>
+                    <span className="text-[10px] font-normal text-charcoal-muted">Stat injections route to Pharmacy</span>
                   </h4>
 
                   <div className="space-y-2">
@@ -541,11 +579,10 @@ export function DoctorWorkstation({
                   <label className="block font-mono text-[10px] uppercase text-charcoal font-semibold">
                     Flexible Patient Routing Post-Consultation:
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {[
                       { dept: "LABORATORY" as Department, name: "Medical Lab (MLS)", reason: "Referred for ordered diagnostic tests." },
-                      { dept: "TREATMENT" as Department, name: "Treatment Room", reason: "Referred for stat injection / IV therapy." },
-                      { dept: "RADIOLOGY" as Department, name: "Radiology", reason: "Referred for diagnostic imaging." },
+                      { dept: "TREATMENT" as Department, name: "Pharmacy", reason: "Referred to Pharmacy for prescribed medication / stat injection." },
                       { dept: "WARD" as Department, name: "Inpatient Ward", reason: "Admitted to Inpatient Ward for ongoing care." },
                       { dept: "DISCHARGED" as Department, name: "Discharge Home", reason: "Outpatient consultation concluded; discharged on oral meds." },
                     ].map((d) => (

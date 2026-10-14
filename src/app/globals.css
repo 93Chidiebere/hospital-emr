@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -10,9 +10,9 @@
   --bg-surface: #FFFFFF;
   --border-subtle: #DCE3EA;
   --border-strong: #C3CDD8;
-  --text-charcoal: #1A1A1A;
-  --text-muted: #555555;
-  --text-subtle: #666666;
+  --text-charcoal: #111111;
+  --text-muted: #3F3F3F;
+  --text-subtle: #555555;
   --accent-brand: #1F4E79;
   --accent-brand-hover: #173B5C;
   --accent-brand-light: #EAF1F8;
@@ -22,14 +22,16 @@ body {
   background-color: var(--bg-paper);
   color: var(--text-charcoal);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Default smoothing keeps strokes heavier than 'antialiased' (better on projectors) */
+  -webkit-font-smoothing: auto;
+  -moz-osx-font-smoothing: auto;
+  font-weight: 500;
   line-height: 1.5;
 }
 
 /* Strict Editorial Typography */
 h1, h2, h3, .font-serif {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;
   letter-spacing: -0.015em;
 }
 
@@ -177,4 +179,18 @@ body {
   .text-xs       { font-size: 14px !important; line-height: 1.5 !important; }
   .text-sm       { font-size: 15px !important; line-height: 1.5 !important; }
   .text-lg       { font-size: 19px !important; line-height: 1.35 !important; }
+}
+
+/* ---------- Bolder, projector-friendly text ----------
+   Utilities (font-bold etc.) are shifted one step heavier in tailwind.config.ts.
+   These base rules lift everything that has no explicit weight. */
+@layer base {
+  .font-mono {
+    font-weight: 600;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: #5F6B7A;
+    opacity: 1;
+  }
 }

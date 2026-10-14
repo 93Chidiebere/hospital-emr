@@ -95,7 +95,7 @@ export function EMRProvider({ children }: { children: ReactNode }) {
       else if (activeRole === "doctor") setActiveStaffName("Dr. K. Adeyemi, FWACP (DOC)");
       else if (activeRole === "mls") setActiveStaffName("MLS E. Chukwuma, AMLSCN (MLS)");
       else if (activeRole === "radiographer") setActiveStaffName("Radiographer S. Ojo (RAD)");
-      else if (activeRole === "treatment_nurse") setActiveStaffName("Staff Nurse T. Dike (TRT)");
+      else if (activeRole === "treatment_nurse") setActiveStaffName("Pharmacist T. Dike (PHM)");
       else setActiveStaffName("Prof. J. C. Okon, Medical Director");
     }
   }, [activeRole, currentUser]);
@@ -318,7 +318,7 @@ export function EMRProvider({ children }: { children: ReactNode }) {
         defReason = `Referred to Diagnostic Imaging for ${createdRads.length} study(ies).`;
       } else if (createdMeds.length > 0) {
         target = "TREATMENT";
-        defReason = `Referred to Treatment Room for administration of prescribed therapy.`;
+        defReason = `Referred to Pharmacy for dispensing and administration of prescribed therapy.`;
       }
     }
 

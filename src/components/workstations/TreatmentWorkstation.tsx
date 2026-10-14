@@ -76,7 +76,7 @@ export function TreatmentWorkstation({
     setSubmitting(true);
     await dischargePatient(
       selectedPatient.id,
-      "Patient completed treatment course and observed in Treatment Room. Vital signs stable. Discharged home."
+      "Patient completed treatment course and observed in Pharmacy. Vital signs stable. Discharged home."
     );
     setSubmitting(false);
   };
@@ -89,7 +89,7 @@ export function TreatmentWorkstation({
           <div className="flex items-center gap-2">
             <Syringe className="w-5 h-5 text-brand" />
             <h2 className="font-serif text-lg sm:text-xl font-bold text-charcoal">
-              Treatment Room & Injection Administration Station
+              Pharmacy & Medication Administration Station
             </h2>
           </div>
           <p className="text-xs text-charcoal-muted mt-0.5">
@@ -97,7 +97,7 @@ export function TreatmentWorkstation({
           </p>
         </div>
         <div className="font-mono text-xs px-2.5 py-1 bg-paper-warm border border-paper-border text-charcoal">
-          Treatment Queue: <strong>{treatmentQueue.length}</strong> patient(s) waiting
+          Pharmacy Queue: <strong>{treatmentQueue.length}</strong> patient(s) waiting
         </div>
       </div>
 
@@ -106,13 +106,13 @@ export function TreatmentWorkstation({
         <div className="lg:col-span-4 space-y-3">
           <div className="flex items-center justify-between border-b border-paper-border pb-1">
             <span className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold">
-              Waiting for Treatment ({treatmentQueue.length})
+              Waiting at Pharmacy ({treatmentQueue.length})
             </span>
           </div>
 
           {treatmentQueue.length === 0 ? (
             <div className="p-8 text-center text-charcoal-muted bg-white border border-paper-border text-xs">
-              No patients currently waiting in Treatment Room.
+              No patients currently waiting at the Pharmacy.
             </div>
           ) : (
             <div className="space-y-2">
@@ -185,7 +185,7 @@ export function TreatmentWorkstation({
               <div className="flex flex-wrap items-start justify-between border-b border-paper-border pb-3 gap-2">
                 <div>
                   <span className="font-mono text-[10px] uppercase text-brand font-bold block">
-                    Active Treatment Administration:
+                    Active Medication Administration:
                   </span>
                   <h3 className="font-serif text-lg font-bold text-charcoal">
                     {selectedPatient.fullName}
@@ -372,7 +372,7 @@ export function TreatmentWorkstation({
             </div>
           ) : (
             <div className="p-12 text-center text-charcoal-muted bg-white border border-paper-border text-xs">
-              Select a patient from the left queue to administer prescribed injections and treatments.
+              Select a patient from the left queue to dispense and administer prescribed medication.
             </div>
           )}
         </div>

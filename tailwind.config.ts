@@ -17,10 +17,10 @@ const config: Config = {
           "border-dark": "#C3CDD8",
         },
         charcoal: {
-          DEFAULT: "#1A1A1A",
-          muted: "#4F4F4F",
-          subtle: "#666666",
-          faint: "#767676",
+          DEFAULT: "#111111",
+          muted: "#3F3F3F",
+          subtle: "#555555",
+          faint: "#666666",
         },
         // Muted "denim / hospital navy" blue (deliberately not a bright screen blue)
         brand: {
@@ -41,9 +41,16 @@ const config: Config = {
         },
       },
       fontFamily: {
-        serif: ["Merriweather", "Playfair Display", "Georgia", "serif"],
+        serif: ["Source Serif 4", "Georgia", "Times New Roman", "serif"],
         sans: ["Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
-        mono: ["Consolas", "Monaco", "monospace"],
+        mono: ["JetBrains Mono", "Consolas", "Monaco", "monospace"],
+      },
+      // One step heavier than Tailwind's defaults so text reads well on projectors
+      fontWeight: {
+        normal: "500",
+        medium: "600",
+        semibold: "700",
+        bold: "800",
       },
       borderRadius: {
         none: "0px",

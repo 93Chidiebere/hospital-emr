@@ -10,6 +10,24 @@ interface NewPatientModalProps {
   onClose: () => void;
 }
 
+const KIN_RELATIONSHIPS = [
+  "Spouse",
+  "Father",
+  "Mother",
+  "Son",
+  "Daughter",
+  "Brother",
+  "Sister",
+  "Grandparent",
+  "Uncle",
+  "Aunt",
+  "Cousin",
+  "Legal Guardian",
+  "Friend",
+  "Employer / Colleague",
+  "Other",
+];
+
 export function NewPatientModal({ onClose }: NewPatientModalProps) {
   const { registerPatient } = useEMR();
   const dialogRef = useDialogA11y<HTMLDivElement>(onClose);
@@ -20,7 +38,9 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
   const [kinName, setKinName] = useState("");
-  const [kinRelation, setKinRelation] = useState("Next of Kin");
+  const [kinRelation, setKinRelation] = useState("");
+  const [kinRelationOther, setKinRelationOther] = useState("");
+  const [kinError, setKinError] = useState("");
   const [kinPhone, setKinPhone] = useState("");
   const [paymentType, setPaymentType] = useState<
     "Out-of-Pocket / Cash" | "NHIS / Health Insurance" | "Corporate HMO"
@@ -35,6 +55,14 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
     e.preventDefault();
     if (!fullName) return;
 
+    // Emergency contact is compulsory
+    const relationFinal = kinRelation === "Other" ? kinRelationOther.trim() : kinRelation;
+    if (!kinName.trim() || !relationFinal || kinPhone.replace(/\D/g, "").length < 7) {
+      setKinError("Emergency contact is compulsory: enter the contact's name, relationship, and a valid phone number.");
+      return;
+    }
+    setKinError("");
+
     setSubmitting(true);
     await registerPatient(
       {
@@ -45,9 +73,9 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
         phoneNumber,
         address,
         nextOfKin: {
-          name: kinName,
-          relation: kinRelation,
-          phone: kinPhone,
+          name: kinName.trim(),
+          relation: relationFinal,
+          phone: kinPhone.trim(),
         },
         paymentType,
       },
@@ -200,14 +228,15 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
           {/* Next of Kin */}
           <div className="space-y-3 pt-2">
             <h4 className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold border-b border-paper-border pb-1">
-              2. Emergency Contact / Next of Kin
+              2. Emergency Contact / Next of Kin (Required)
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="block text-charcoal-muted mb-1 font-mono text-[10px] uppercase">
-                  Name
+                  Name *
                 </label>
                 <input
+                  required
                   type="text"
                   value={kinName}
                   onChange={(e) => setKinName(e.target.value)}
@@ -217,22 +246,44 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
               </div>
               <div>
                 <label className="block text-charcoal-muted mb-1 font-mono text-[10px] uppercase">
-                  Relationship
+                  Relationship *
                 </label>
-                <input
-                  type="text"
+                <select
+                  required
                   value={kinRelation}
                   onChange={(e) => setKinRelation(e.target.value)}
-                  placeholder="e.g. Mother, Spouse, Sister"
                   className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal"
-                />
+                >
+                  <option value="" disabled>
+                    Select relationship
+                  </option>
+                  {KIN_RELATIONSHIPS.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+                {kinRelation === "Other" && (
+                  <input
+                    required
+                    type="text"
+                    value={kinRelationOther}
+                    onChange={(e) => setKinRelationOther(e.target.value)}
+                    placeholder="Specify relationship"
+                    aria-label="Specify the other relationship"
+                    className="w-full p-2 mt-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal"
+                  />
+                )}
               </div>
               <div>
                 <label className="block text-charcoal-muted mb-1 font-mono text-[10px] uppercase">
-                  Emergency Phone
+                  Emergency Phone *
                 </label>
                 <input
+                  required
                   type="tel"
+                  inputMode="tel"
+                  minLength={7}
                   value={kinPhone}
                   onChange={(e) => setKinPhone(e.target.value)}
                   placeholder="e.g. 0803 111 2222"
@@ -241,6 +292,12 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
               </div>
             </div>
           </div>
+
+          {kinError && (
+            <p role="alert" className="text-xs text-terracotta font-semibold">
+              {kinError}
+            </p>
+          )}
 
           {/* Flexible Initial Routing */}
           <div className="space-y-3 pt-2">
@@ -261,7 +318,7 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
                 },
                 {
                   dept: "TREATMENT" as Department,
-                  label: "Emergency / Treatment",
+                  label: "Emergency / Pharmacy",
                   desc: "Acute urgent medication",
                 },
                 {
@@ -278,7 +335,7 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
                     if (r.dept === "CONSULTATION") {
                       setRoutingReason("Patient returning from earlier lab draw; routed straight to Doctor consultation.");
                     } else if (r.dept === "TREATMENT") {
-                      setRoutingReason("Patient presenting in acute pain; routed straight to Treatment Room.");
+                      setRoutingReason("Patient presenting in acute pain; routed straight to Pharmacy.");
                     } else if (r.dept === "LABORATORY") {
                       setRoutingReason("Patient walking in for routine lab specimen draw.");
                     } else {
