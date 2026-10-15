@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useEMR } from "@/context/EMRContext";
-import { Patient, Department, LabOrder, MedicationAdministration, Icd10Code } from "@/types/emr";
+import { Patient, Department, LabOrder, RadiologyOrder, MedicationAdministration, Icd10Code } from "@/types/emr";
 import { Icd10Picker } from "@/components/shared/Icd10Picker";
 import { Stethoscope, FlaskConical, Syringe, Check, ArrowRightLeft, Plus, Trash2 } from "lucide-react";
 
@@ -22,6 +22,14 @@ const COMMON_LAB_TESTS = [
   "Lipid Profile Panel",
   "High-Sensitivity Cardiac Troponin I (hs-cTnI)",
   "Stool Microscopy & Occult Blood",
+];
+
+const COMMON_IMAGING = [
+  "Chest X-Ray (Erect PA View)",
+  "Abdominal Ultrasound (Abdomino-Pelvic)",
+  "Pelvic Ultrasound (Obstetric / Gynecologic)",
+  "Lumbar Spine X-Ray (AP & Lateral)",
+  "Plain Abdominal X-Ray (Supine / Erect)",
 ];
 
 const COMMON_MEDICATIONS = [
@@ -62,6 +70,12 @@ export function DoctorWorkstation({
   const [labOrders, setLabOrders] = useState<
     Omit<LabOrder, "id" | "timestampOrdered" | "doctorName" | "status">[]
   >([]);
+  const [radiologyOrders, setRadiologyOrders] = useState<
+    Omit<RadiologyOrder, "id" | "timestampOrdered" | "doctorName" | "status">[]
+  >([]);
+  const [imagingIndication, setImagingIndication] = useState("");
+  const [customStudy, setCustomStudy] = useState("");
+  const [imagingError, setImagingError] = useState("");
   const [medications, setMedications] = useState<
     Omit<MedicationAdministration, "id" | "timestampOrdered" | "doctorName" | "status">[]
   >([]);
@@ -88,6 +102,10 @@ export function DoctorWorkstation({
     setDefinitiveIcdError("");
     setClinicalPlan("");
     setLabOrders([]);
+    setRadiologyOrders([]);
+    setImagingIndication("");
+    setCustomStudy("");
+    setImagingError("");
     setMedications([]);
     setTargetDept("LABORATORY");
     setRoutingReason("Referred to Medical Laboratory for urgent diagnostic investigations.");
@@ -121,6 +139,32 @@ export function DoctorWorkstation({
     setRoutingReason(`Referred to Medical Laboratory (MLS) for ${testName}.`);
   };
 
+  const handleAddImaging = (rawStudy: string) => {
+    const studyType = rawStudy.trim();
+    if (!studyType || radiologyOrders.some((r) => r.studyType === studyType)) return;
+    setRadiologyOrders([
+      ...radiologyOrders,
+      {
+        studyType,
+        indication:
+          imagingIndication.trim() || provisionalDx || "Diagnostic imaging to support the clinical diagnosis",
+      },
+    ]);
+    setImagingError("");
+    setTargetDept("RADIOLOGY");
+    setRoutingReason(`Referred to Diagnostic Imaging for ${studyType}.`);
+  };
+
+  const handleRemoveImaging = (index: number) => {
+    const remaining = radiologyOrders.filter((_, idx) => idx !== index);
+    setRadiologyOrders(remaining);
+    // If the last imaging request is removed, don't leave the patient routed to Radiology
+    if (remaining.length === 0 && targetDept === "RADIOLOGY") {
+      setTargetDept("LABORATORY");
+      setRoutingReason("Referred to Medical Laboratory for urgent diagnostic investigations.");
+    }
+  };
+
   const handleAddMed = (med: typeof COMMON_MEDICATIONS[0]) => {
     setMedications([
       ...medications,
@@ -149,6 +193,13 @@ export function DoctorWorkstation({
     setDefinitiveIcdError(missingDefinitive ? "Select the ICD-10 code that matches the definitive diagnosis." : "");
     if (missingProvisional || missingDefinitive) return;
 
+    // Routing to Radiology only makes sense with at least one imaging request
+    if (targetDept === "RADIOLOGY" && radiologyOrders.length === 0) {
+      setImagingError("Add at least one imaging request before routing the patient to Radiology.");
+      return;
+    }
+    setImagingError("");
+
     setSubmitting(true);
     await saveDoctorConsultation(
       selectedPatient.id,
@@ -162,7 +213,7 @@ export function DoctorWorkstation({
         clinicalPlan: clinicalPlan || "Continue diagnostic & therapeutic steps as ordered.",
       },
       labOrders,
-      [], // doctors cannot request imaging
+      radiologyOrders,
       medications,
       targetDept,
       routingReason
@@ -186,7 +237,7 @@ export function DoctorWorkstation({
             </h2>
           </div>
           <p className="text-xs text-charcoal-muted mt-0.5">
-            Evaluate triage vitals, review laboratory results, document and ICD-10 code diagnoses, and order treatment.
+            Evaluate triage vitals, review laboratory & imaging results, document and ICD-10 code diagnoses, and order treatment.
           </p>
         </div>
         <div className="font-mono text-xs px-2.5 py-1 bg-paper-warm border border-paper-border text-charcoal">
@@ -387,6 +438,36 @@ export function DoctorWorkstation({
                 </div>
               )}
 
+              {/* Imaging Requests & Results */}
+              {selectedPatient.radiologyOrders.length > 0 && (
+                <div className="p-3 bg-paper border border-paper-border space-y-2 text-xs">
+                  <span className="font-mono text-[10px] uppercase font-bold text-charcoal block">
+                    Imaging Status ({selectedPatient.radiologyOrders.length} {selectedPatient.radiologyOrders.length === 1 ? "study" : "studies"} requested):
+                  </span>
+                  <div className="space-y-1.5">
+                    {selectedPatient.radiologyOrders.map((ro) => (
+                      <div key={ro.id} className="p-2 bg-white border border-paper-border flex items-start justify-between gap-2">
+                        <div>
+                          <strong>{ro.studyType}</strong>
+                          {ro.impression && (
+                            <p className="text-xs text-charcoal font-serif mt-0.5">Impression: {ro.impression}</p>
+                          )}
+                        </div>
+                        <span
+                          className={`shrink-0 text-[10px] font-mono px-1.5 py-0.5 border ${
+                            ro.status === "completed"
+                              ? "bg-brand-light text-brand border-brand-border font-bold"
+                              : "bg-paper-warm text-charcoal-muted border-paper-border"
+                          }`}
+                        >
+                          {ro.status === "completed" ? "Reported" : "Pending"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <form onSubmit={handleSubmitConsult} className="space-y-4 text-xs">
                 {/* Clinical Notes Inputs */}
                 <div className="space-y-3">
@@ -439,7 +520,7 @@ export function DoctorWorkstation({
 
                     <div>
                       <label className="block font-mono text-[10px] uppercase text-brand font-bold mb-1">
-                        Definitive Diagnosis (Post-Lab)
+                        Definitive Diagnosis (Post-Lab / Imaging)
                       </label>
                       <input
                         type="text"
@@ -500,7 +581,7 @@ export function DoctorWorkstation({
                 {/* Investigations Ordering */}
                 <div className="space-y-3 pt-2">
                   <h4 className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold border-b border-paper-border pb-1 flex items-center justify-between">
-                    <span>2. Order Laboratory Investigations</span>
+                    <span>2. Order Laboratory & Imaging Investigations</span>
                     <span className="text-[10px] font-normal text-charcoal-muted">Click panel to append</span>
                   </h4>
 
@@ -543,6 +624,98 @@ export function DoctorWorkstation({
                       ))}
                     </div>
                   )}
+
+                  {/* Imaging requests (X-ray / Ultrasound) */}
+                  <div className="space-y-2 pt-3 border-t border-paper-border">
+                    <span className="font-mono text-[10px] uppercase text-charcoal-muted block">
+                      Request Imaging Services (Radiology):
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {COMMON_IMAGING.map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => handleAddImaging(s)}
+                          className="px-2 py-1 bg-paper-warm hover:bg-paper border border-paper-border hover:border-brand text-[11px] text-charcoal flex items-center gap-1"
+                        >
+                          <Plus aria-hidden="true" className="w-3 h-3 text-brand" />
+                          <span>{s}</span>
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        aria-label="Clinical indication for imaging"
+                        value={imagingIndication}
+                        onChange={(e) => setImagingIndication(e.target.value)}
+                        placeholder="Clinical indication (e.g. cough 2/52, ?pneumonia)"
+                        className="p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal"
+                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          aria-label="Other imaging study"
+                          value={customStudy}
+                          onChange={(e) => setCustomStudy(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleAddImaging(customStudy);
+                              setCustomStudy("");
+                            }
+                          }}
+                          placeholder="Other study (e.g. Echocardiogram)"
+                          className="flex-1 min-w-0 p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal"
+                        />
+                        <button
+                          type="button"
+                          disabled={!customStudy.trim()}
+                          onClick={() => {
+                            handleAddImaging(customStudy);
+                            setCustomStudy("");
+                          }}
+                          className="px-3 py-2 border border-paper-border hover:border-brand bg-paper text-xs disabled:opacity-50"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </div>
+
+                    {radiologyOrders.length > 0 && (
+                      <div className="p-3 bg-brand-light/60 border border-brand space-y-2">
+                        <span className="font-mono text-[10px] uppercase font-bold text-brand block">
+                          Imaging Requests to be Sent to Radiology ({radiologyOrders.length}):
+                        </span>
+                        {radiologyOrders.map((ro, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center justify-between gap-2 bg-white p-2 border border-brand-border text-xs"
+                          >
+                            <div>
+                              <strong>{ro.studyType}</strong>
+                              <span className="text-[11px] text-charcoal-muted block">Indication: {ro.indication}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImaging(i)}
+                              aria-label={`Remove imaging request ${ro.studyType}`}
+                              className="text-terracotta hover:text-charcoal p-1.5"
+                            >
+                              <Trash2 aria-hidden="true" className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {imagingError && (
+                      <p role="alert" className="text-[11px] text-terracotta font-semibold">
+                        {imagingError}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Medications & Injections */}
@@ -601,9 +774,10 @@ export function DoctorWorkstation({
                   <label className="block font-mono text-[10px] uppercase text-charcoal font-semibold">
                     Flexible Patient Routing Post-Consultation:
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                     {[
                       { dept: "LABORATORY" as Department, name: "Medical Lab (MLS)", reason: "Referred for ordered diagnostic tests." },
+                      { dept: "RADIOLOGY" as Department, name: "Radiology", reason: "Referred for diagnostic imaging." },
                       { dept: "TREATMENT" as Department, name: "Pharmacy", reason: "Referred to Pharmacy for prescribed medication / stat injection." },
                       { dept: "WARD" as Department, name: "Inpatient Ward", reason: "Admitted to Inpatient Ward for ongoing care." },
                       { dept: "DISCHARGED" as Department, name: "Discharge Home", reason: "Outpatient consultation concluded; discharged on oral meds." },

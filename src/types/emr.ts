@@ -230,7 +230,7 @@ export const HOSPITAL_ROLES: RoleConfig[] = [
     title: "Attending Physician / MO",
     department: "CONSULTATION",
     cadre: "Clinical Medicine",
-    description: "Conducts history taking, physical exams, orders laboratory investigations, codes diagnoses with ICD-10, and prescribes therapy.",
+    description: "Conducts history taking, physical exams, orders laboratory and imaging investigations, codes diagnoses with ICD-10, and prescribes therapy.",
     badge: "DOC",
   },
   {

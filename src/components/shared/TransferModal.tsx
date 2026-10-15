@@ -23,7 +23,7 @@ const COMMON_REASONS = [
 ];
 
 export function TransferModal({ patient, onClose }: TransferModalProps) {
-  const { transferPatient, activeStaffName, activeRole } = useEMR();
+  const { transferPatient, activeStaffName } = useEMR();
   const [targetDept, setTargetDept] = useState<Department>(
     patient.currentDepartment === "CONSULTATION" ? "LABORATORY" : "CONSULTATION"
   );
@@ -33,7 +33,7 @@ export function TransferModal({ patient, onClose }: TransferModalProps) {
   const [submitting, setSubmitting] = useState(false);
   const dialogRef = useDialogA11y<HTMLDivElement>(onClose);
 
-  const allDepartments: Department[] = [
+  const departmentsList: Department[] = [
     "RECEPTION",
     "TRIAGE",
     "CONSULTATION",
@@ -43,9 +43,6 @@ export function TransferModal({ patient, onClose }: TransferModalProps) {
     "WARD",
     "DISCHARGED",
   ];
-  // Doctors cannot request imaging services
-  const departmentsList: Department[] =
-    activeRole === "doctor" ? allDepartments.filter((d) => d !== "RADIOLOGY") : allDepartments;
 
   const handleTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,7 +149,7 @@ export function TransferModal({ patient, onClose }: TransferModalProps) {
               Clinical Justification / Reason:
             </label>
             <div className="flex flex-wrap gap-1 mb-2">
-              {COMMON_REASONS.filter((r) => activeRole !== "doctor" || !r.toLowerCase().includes("radiolog")).slice(0, 4).map((r, i) => (
+              {COMMON_REASONS.slice(0, 4).map((r, i) => (
                 <button
                   key={i}
                   type="button"
