@@ -193,9 +193,11 @@ function RoleMenu({
 function ResetConfirmDialog({
   onCancel,
   onConfirm,
+  live,
 }: {
   onCancel: () => void;
   onConfirm: () => void | Promise<void>;
+  live: boolean;
 }) {
   const dialogRef = useDialogA11y<HTMLDivElement>(onCancel);
   const titleId = useId();
@@ -215,13 +217,13 @@ function ResetConfirmDialog({
         <div className="flex items-center gap-2 text-terracotta">
           <ShieldAlert aria-hidden="true" className="w-5 h-5 shrink-0" />
           <h2 id={titleId} className="font-serif text-lg font-bold text-charcoal">
-            Reset Simulated Drill Data?
+            {live ? "Clear all class records?" : "Reset Simulated Drill Data?"}
           </h2>
         </div>
         <p id={descId} className="text-xs text-charcoal-muted leading-relaxed">
-          This will restore the patient registry back to the original 5 clinical cases (including
-          acute malaria in treatment, follow-up lab review, hypertensive urgency, and pediatric
-          cases). Any new entries created during this session will be replaced.
+          {live
+            ? "This permanently deletes every patient record created by all students and restarts hospital numbers at 1. All counts return to zero. This cannot be undone."
+            : "This will restore the demo registry back to the original 5 sample cases. Any entries you added in this browser will be replaced. (Demo data is never shared and is not the class record.)"}
         </p>
         <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2 border-t border-paper-border">
           <button
@@ -256,6 +258,7 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
     setActiveStaffName,
     resetToDemoCases,
     patients,
+    isLive,
   } = useEMR();
 
   const { currentUser, setAuthModalOpen, setAuthMode, logout } = useAuth();
@@ -266,6 +269,8 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
   const roleSwitchAllowed = canSwitchRole(currentUser);
   const currentRoleMeta = HOSPITAL_ROLES.find((r) => r.id === activeRole) || HOSPITAL_ROLES[0];
   const activeCount = patients.filter((p) => p.status === "Active").length;
+  // Live class records can only be cleared by the instructor account
+  const canReset = !isLive || currentUser?.assignedRole === "director";
 
   return (
     <>
@@ -296,6 +301,15 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
               className="hidden sm:flex items-center gap-2 text-xs text-charcoal-muted md:border-r border-paper-border md:pr-3"
             >
               <Clock aria-hidden="true" className="w-3.5 h-3.5 text-brand" />
+              <span
+                className={`font-mono px-1.5 py-0.5 border text-[10px] uppercase mr-1 ${
+                  isLive
+                    ? "bg-brand text-paper border-brand"
+                    : "bg-paper-warm text-charcoal border-paper-border"
+                }`}
+              >
+                {isLive ? "Live records" : "Demo data"}
+              </span>
               <span className="font-mono">
                 Live Registry:{" "}
                 <strong className="text-charcoal font-semibold">{activeCount}</strong> In-Clinic
@@ -339,16 +353,18 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
               </button>
             )}
 
+            {canReset && (
             <button
               type="button"
               onClick={() => setResetConfirmOpen(true)}
-              title="Reset to 5 pre-configured student clinical cases"
+              title={isLive ? "Delete all class records and restart numbering at 1" : "Reset to the 5 sample demo cases"}
               className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] sm:min-h-0 sm:px-2.5 sm:py-1.5 text-xs text-charcoal-muted hover:text-charcoal bg-paper hover:bg-paper-warm border border-paper-border transition-colors"
             >
               <RotateCcw aria-hidden="true" className="w-3.5 h-3.5" />
-              <span className="sm:hidden">Reset</span>
-              <span className="hidden sm:inline">Reset Drill Data</span>
+              <span className="sm:hidden">{isLive ? "Clear" : "Reset"}</span>
+              <span className="hidden sm:inline">{isLive ? "Clear Class Records" : "Reset Drill Data"}</span>
             </button>
+            )}
 
             <button
               type="button"
@@ -414,6 +430,7 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
 
       {resetConfirmOpen && (
         <ResetConfirmDialog
+          live={isLive}
           onCancel={() => setResetConfirmOpen(false)}
           onConfirm={async () => {
             await resetToDemoCases();

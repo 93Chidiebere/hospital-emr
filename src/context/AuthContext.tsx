@@ -53,6 +53,7 @@ interface AuthContextType {
   users: UserAccount[];
   authModalOpen: boolean;
   authMode: "signin" | "signup";
+  authReady: boolean; // true once any saved session has been restored
   setAuthModalOpen: (open: boolean) => void;
   setAuthMode: (mode: "signin" | "signup") => void;
   login: (fullName: string, password?: string) => Promise<{ success: boolean; error?: string }>;
@@ -71,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
+  const [authReady, setAuthReady] = useState(false);
 
   // Load existing accounts and active session from localStorage
   useEffect(() => {
@@ -97,6 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // ignore parse error
     }
+    setAuthReady(true);
   }, []);
 
   const login = async (
@@ -181,6 +184,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         users,
         authModalOpen,
         authMode,
+        authReady,
         setAuthModalOpen,
         setAuthMode,
         login,

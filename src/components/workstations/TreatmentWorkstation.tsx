@@ -37,7 +37,8 @@ export function TreatmentWorkstation({
   const [selectedPatientId, setSelectedPatientId] = useState<string>(
     treatmentQueue[0]?.id || ""
   );
-  const selectedPatient = patients.find((p) => p.id === selectedPatientId);
+  // Only patients still in the Pharmacy queue can be open on this screen
+  const selectedPatient = treatmentQueue.find((p) => p.id === selectedPatientId);
 
   const pendingMeds = selectedPatient?.medications.filter((m) => m.status !== "administered") || [];
   const [selectedMedId, setSelectedMedId] = useState<string>(pendingMeds[0]?.id || "");
@@ -55,6 +56,26 @@ export function TreatmentWorkstation({
 
   const activeMed = selectedPatient?.medications.find((m) => m.id === selectedMedId);
 
+  const resetForm = () => {
+    setSelectedMedId("");
+    setInjectionSite(COMMON_SITES[0]);
+    setNurseNotes(
+      "Patient verified against hospital chart. Drug reconstituted and administered as ordered. Vital signs re-checked and stable. No acute hypersensitivity reactions observed."
+    );
+    setNextStation("DISCHARGED");
+    setRoutingReason(
+      "Stat medication administered successfully; symptoms resolved. Discharged home in stable condition."
+    );
+  };
+
+  React.useEffect(() => {
+    if (selectedPatientId && !treatmentQueue.some((p) => p.id === selectedPatientId)) {
+      setSelectedPatientId("");
+      resetForm();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [treatmentQueue.map((p) => p.id).join("|"), selectedPatientId]);
+
   const handleAdminister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPatient || !selectedMedId) return;
@@ -69,6 +90,10 @@ export function TreatmentWorkstation({
       routingReason
     );
     setSubmitting(false);
+
+    // Medication recorded: clear the form and the screen
+    resetForm();
+    setSelectedPatientId("");
   };
 
   const handleDirectDischarge = async () => {
@@ -79,6 +104,8 @@ export function TreatmentWorkstation({
       "Patient completed treatment course and observed in Pharmacy. Vital signs stable. Discharged home."
     );
     setSubmitting(false);
+    resetForm();
+    setSelectedPatientId("");
   };
 
   return (
@@ -124,6 +151,7 @@ export function TreatmentWorkstation({
                   <div
                     key={pat.id}
                     onClick={() => {
+                      if (pat.id !== selectedPatientId) resetForm();
                       setSelectedPatientId(pat.id);
                       const firstPending = pat.medications.find((m) => m.status !== "administered");
                       if (firstPending) setSelectedMedId(firstPending.id);

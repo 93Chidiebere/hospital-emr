@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
-import { resetPatientsStore } from "@/lib/server-store";
+import { clearAllPatients } from "@/lib/server-store";
 
+export const dynamic = "force-dynamic";
+
+// Kept for backwards compatibility: now clears the live class records (back to zero).
 export async function POST() {
-  const resetPatients = resetPatientsStore();
-  return NextResponse.json({
-    success: true,
-    message: "Store restored to initial Trinity Point Hospital clinical demo cases",
-    count: resetPatients.length,
-    data: resetPatients,
-  });
+  try {
+    await clearAllPatients();
+    return NextResponse.json({ success: true, count: 0, data: [] });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
+  }
 }

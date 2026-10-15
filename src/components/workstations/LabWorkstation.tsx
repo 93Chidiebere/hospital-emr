@@ -27,7 +27,8 @@ export function LabWorkstation({
   const [selectedPatientId, setSelectedPatientId] = useState<string>(
     labQueue[0]?.id || ""
   );
-  const selectedPatient = patients.find((p) => p.id === selectedPatientId);
+  // Only patients still in the lab queue can be open on this screen
+  const selectedPatient = labQueue.find((p) => p.id === selectedPatientId);
 
   const pendingOrders = selectedPatient?.labOrders.filter((lo) => lo.status !== "completed") || [];
   const [selectedOrderId, setSelectedOrderId] = useState<string>(pendingOrders[0]?.id || "");
@@ -44,6 +45,24 @@ export function LabWorkstation({
   const [submitting, setSubmitting] = useState(false);
 
   const activeOrder = selectedPatient?.labOrders.find((lo) => lo.id === selectedOrderId);
+
+  const resetForm = () => {
+    setFindings("");
+    setQuantitative("");
+    setRefRange("");
+    setComments("");
+    setSelectedOrderId("");
+    setRouteToDept("CONSULTATION");
+    setRoutingReason("Laboratory test completed & validated; patient results routed back to Physician.");
+  };
+
+  React.useEffect(() => {
+    if (selectedPatientId && !labQueue.some((p) => p.id === selectedPatientId)) {
+      setSelectedPatientId("");
+      resetForm();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [labQueue.map((p) => p.id).join("|"), selectedPatientId]);
 
   // Auto populate typical test suggestions
   const handleSelectOrder = (order: LabOrder) => {
@@ -88,10 +107,9 @@ export function LabWorkstation({
     );
     setSubmitting(false);
 
-    setFindings("");
-    setQuantitative("");
-    setRefRange("");
-    setComments("");
+    // Result sent: clear the form and the screen
+    resetForm();
+    setSelectedPatientId("");
   };
 
   return (
@@ -138,6 +156,7 @@ export function LabWorkstation({
                   <div
                     key={pat.id}
                     onClick={() => {
+                      if (pat.id !== selectedPatientId) resetForm();
                       setSelectedPatientId(pat.id);
                       const firstPending = pat.labOrders.find((lo) => lo.status !== "completed");
                       if (firstPending) handleSelectOrder(firstPending);

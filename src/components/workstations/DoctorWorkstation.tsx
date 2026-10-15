@@ -73,8 +73,39 @@ export function DoctorWorkstation({
   );
   const [submitting, setSubmitting] = useState(false);
 
-  const selectedPatient = patients.find((p) => p.id === selectedPatientId);
+  // Only patients still waiting for consultation can be open on this screen
+  const selectedPatient = consultQueue.find((p) => p.id === selectedPatientId);
   const latestVitals = selectedPatient?.vitalsHistory[0];
+
+  const resetForm = () => {
+    setHpi("");
+    setExam("");
+    setProvisionalDx("");
+    setDefinitiveDx("");
+    setProvisionalIcd(null);
+    setDefinitiveIcd(null);
+    setProvisionalIcdError("");
+    setDefinitiveIcdError("");
+    setClinicalPlan("");
+    setLabOrders([]);
+    setMedications([]);
+    setTargetDept("LABORATORY");
+    setRoutingReason("Referred to Medical Laboratory for urgent diagnostic investigations.");
+  };
+
+  // Once the patient leaves the consultation queue, clear the screen and the form
+  React.useEffect(() => {
+    if (selectedPatientId && !consultQueue.some((p) => p.id === selectedPatientId)) {
+      setSelectedPatientId("");
+      resetForm();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [consultQueue.map((p) => p.id).join("|"), selectedPatientId]);
+
+  const selectPatient = (id: string) => {
+    if (id !== selectedPatientId) resetForm();
+    setSelectedPatientId(id);
+  };
 
   const handleAddLab = (testName: string) => {
     if (labOrders.some((l) => l.testName === testName)) return;
@@ -138,18 +169,9 @@ export function DoctorWorkstation({
     );
     setSubmitting(false);
 
-    // Reset local inputs
-    setHpi("");
-    setExam("");
-    setProvisionalDx("");
-    setDefinitiveDx("");
-    setProvisionalIcd(null);
-    setDefinitiveIcd(null);
-    setProvisionalIcdError("");
-    setDefinitiveIcdError("");
-    setClinicalPlan("");
-    setLabOrders([]);
-    setMedications([]);
+    // Consultation complete: clear the form and the screen
+    resetForm();
+    setSelectedPatientId("");
   };
 
   return (
@@ -195,7 +217,7 @@ export function DoctorWorkstation({
                 return (
                   <div
                     key={pat.id}
-                    onClick={() => setSelectedPatientId(pat.id)}
+                    onClick={() => selectPatient(pat.id)}
                     className={`p-3.5 border cursor-pointer transition-colors text-xs ${
                       isSelected
                         ? "bg-brand-light border-brand"

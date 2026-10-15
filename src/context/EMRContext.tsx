@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 import { useAuth } from "@/context/AuthContext";
 import {
   Patient,
@@ -70,6 +70,12 @@ interface EMRContextType {
   dischargePatient: (patientId: string, dischargeReason: string) => Promise<void>;
   resetToDemoCases: () => Promise<void>;
   refresh: () => Promise<void>;
+  /** true when a user is signed in: records are real, shared, and start from zero */
+  isLive: boolean;
+  /** set when the server could not be reached / saved */
+  syncError: string | null;
+  /** how the server stores live records (ephemeral = not durable on this host) */
+  storageInfo: { storage: "redis" | "memory"; ephemeral: boolean } | null;
 }
 
 const EMRContext = createContext<EMRContextType | undefined>(undefined);
@@ -77,7 +83,12 @@ const EMRContext = createContext<EMRContextType | undefined>(undefined);
 export function EMRProvider({ children }: { children: ReactNode }) {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
-  const { currentUser } = useAuth();
+  const { currentUser, authReady } = useAuth();
+  const isLive = !!currentUser;
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [storageInfo, setStorageInfo] = useState<{ storage: "redis" | "memory"; ephemeral: boolean } | null>(null);
+  // patient id -> time of our last write (so a refresh can't overwrite fresh local changes)
+  const recentWrites = useRef<Map<string, number>>(new Map());
   const [activeRole, setActiveRole] = useState<RoleId>("director");
   const [activeStaffName, setActiveStaffName] = useState<string>("Clinical Supervisor");
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -100,44 +111,94 @@ export function EMRProvider({ children }: { children: ReactNode }) {
     }
   }, [activeRole, currentUser]);
 
-  // Load patients from API or fallback to localStorage / Demo data
-  const fetchPatients = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/patients");
-      if (res.ok) {
-        const json = await res.json();
-        if (json.data && Array.isArray(json.data) && json.data.length > 0) {
-          setPatients(json.data);
-          localStorage.setItem("trinity_point_patients", JSON.stringify(json.data));
+  // ---- Data modes ----
+  // Not signed in  -> demo patients, kept only in this browser (never sent to the server).
+  // Signed in      -> live class records from the server; they start at zero.
+  const DEMO_KEY = "trinity_point_demo_patients";
+  const LIVE_CACHE_KEY = "trinity_point_live_cache";
+  const RECENT_MS = 6000;
+
+  const fetchPatients = async (opts?: { silent?: boolean }) => {
+    if (!isLive) {
+      try {
+        const cached = localStorage.getItem(DEMO_KEY);
+        if (cached) {
+          setPatients(JSON.parse(cached));
           setLoading(false);
           return;
         }
+      } catch {
+        // ignore parse error and use the template below
+      }
+      setPatients(JSON.parse(JSON.stringify(INITIAL_DEMO_PATIENTS)));
+      setLoading(false);
+      return;
+    }
+
+    if (!opts?.silent) setLoading(true);
+    try {
+      const res = await fetch("/api/patients", { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      const server: Patient[] = Array.isArray(json.data) ? json.data : [];
+      setStorageInfo({ storage: json.storage, ephemeral: !!json.ephemeral });
+      setSyncError(null);
+
+      const now = Date.now();
+      recentWrites.current.forEach((t, id) => {
+        if (now - t > RECENT_MS) recentWrites.current.delete(id);
+      });
+      setPatients((prev) => {
+        const localById = new Map(prev.map((p) => [p.id, p]));
+        const merged = server.map((sp) =>
+          recentWrites.current.has(sp.id) && localById.has(sp.id) ? (localById.get(sp.id) as Patient) : sp
+        );
+        prev.forEach((lp) => {
+          if (recentWrites.current.has(lp.id) && !server.some((sp) => sp.id === lp.id)) merged.unshift(lp);
+        });
+        return merged;
+      });
+      try {
+        localStorage.setItem(LIVE_CACHE_KEY, JSON.stringify(server));
+      } catch {
+        // storage full or unavailable
       }
     } catch {
-      // offline or serverless fallback
-    }
-
-    // Try localStorage
-    const cached = localStorage.getItem("trinity_point_patients");
-    if (cached) {
-      try {
-        setPatients(JSON.parse(cached));
-        setLoading(false);
-        return;
-      } catch {
-        // ignore parse error
+      setSyncError("Cannot reach the server. Showing the last saved copy; new changes may not be shared.");
+      if (!opts?.silent) {
+        try {
+          const cached = localStorage.getItem(LIVE_CACHE_KEY);
+          setPatients(cached ? JSON.parse(cached) : []);
+        } catch {
+          setPatients([]);
+        }
       }
     }
-
-    // Fallback to initial demo cases
-    setPatients(INITIAL_DEMO_PATIENTS);
     setLoading(false);
   };
 
+  // Load (or reload) whenever we switch between demo and live mode
   useEffect(() => {
+    if (!authReady) return;
+    setSelectedPatient(null);
     fetchPatients();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLive, authReady]);
+
+  // While signed in, keep pulling other students' records so every station stays current
+  useEffect(() => {
+    if (!isLive) return;
+    const tick = () => {
+      if (document.visibilityState === "visible") fetchPatients({ silent: true });
+    };
+    const timer = setInterval(tick, 6000);
+    document.addEventListener("visibilitychange", tick);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", tick);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLive]);
 
   // Keep selectedPatient updated when master list updates
   useEffect(() => {
@@ -151,18 +212,30 @@ export function EMRProvider({ children }: { children: ReactNode }) {
     // Optimistic local update
     setPatients((prev) => {
       const next = prev.map((p) => (p.id === updatedPatient.id ? updatedPatient : p));
-      localStorage.setItem("trinity_point_patients", JSON.stringify(next));
+      if (!isLive) {
+        try {
+          localStorage.setItem(DEMO_KEY, JSON.stringify(next));
+        } catch {
+          // ignore
+        }
+      }
       return next;
     });
 
+    if (!isLive) return; // demo mode never talks to the server
+
+    recentWrites.current.set(updatedPatient.id, Date.now());
     try {
-      await fetch(`/api/patients/${updatedPatient.id}`, {
+      const res = await fetch(`/api/patients/${updatedPatient.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedPatient),
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      recentWrites.current.set(updatedPatient.id, Date.now());
+      setSyncError(null);
     } catch {
-      // client-side persistence remains active
+      setSyncError("The last change could not be saved to the server. Check the connection and repeat it.");
     }
   };
 
@@ -171,6 +244,28 @@ export function EMRProvider({ children }: { children: ReactNode }) {
     initialRoute: Department = "TRIAGE",
     reason: string = "Patient enrolled at Front Desk and routed for clinical assessment."
   ): Promise<Patient> => {
+    // LIVE: the server issues the next hospital number (1, 2, 3 ...) so there are no duplicates
+    if (isLive) {
+      const res = await fetch("/api/patients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...data,
+          currentDepartment: initialRoute,
+          initialReason: reason,
+          registeredBy: activeStaffName,
+        }),
+      });
+      if (!res.ok) throw new Error("The new patient could not be saved to the server.");
+      const json = await res.json();
+      const created: Patient = json.data;
+      recentWrites.current.set(created.id, Date.now());
+      setPatients((prev) => [created, ...prev.filter((p) => p.id !== created.id)]);
+      setSyncError(null);
+      return created;
+    }
+
+    // DEMO: local only
     const nextSeq = patients.length + 101;
     const hospitalNumber = `TPH-2026-${String(nextSeq).padStart(5, "0")}`;
     const newId = `pat-${Date.now()}`;
@@ -210,20 +305,13 @@ export function EMRProvider({ children }: { children: ReactNode }) {
 
     setPatients((prev) => {
       const next = [newPatient, ...prev];
-      localStorage.setItem("trinity_point_patients", JSON.stringify(next));
+      try {
+        localStorage.setItem(DEMO_KEY, JSON.stringify(next));
+      } catch {
+        // ignore
+      }
       return next;
     });
-
-    try {
-      await fetch("/api/patients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newPatient),
-      });
-    } catch {
-      // optimistic state preserved
-    }
-
     return newPatient;
   };
 
@@ -516,24 +604,39 @@ export function EMRProvider({ children }: { children: ReactNode }) {
   };
 
   const resetToDemoCases = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/patients/reset", { method: "POST" });
-      if (res.ok) {
-        const json = await res.json();
-        setPatients(json.data);
-        localStorage.setItem("trinity_point_patients", JSON.stringify(json.data));
-        setLoading(false);
-        return;
+    // LIVE: wipe the class records on the server and start again from zero
+    if (isLive) {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/patients", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ confirm: "CLEAR" }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        recentWrites.current.clear();
+        try {
+          localStorage.removeItem(LIVE_CACHE_KEY);
+        } catch {
+          // ignore
+        }
+        setPatients([]);
+        setSyncError(null);
+      } catch {
+        setSyncError("The class records could not be cleared. Check the connection and try again.");
       }
-    } catch {
-      // offline reset
+      setLoading(false);
+      return;
     }
 
+    // DEMO: restore the sample patients (this browser only)
     const resetClone = JSON.parse(JSON.stringify(INITIAL_DEMO_PATIENTS));
     setPatients(resetClone);
-    localStorage.setItem("trinity_point_patients", JSON.stringify(resetClone));
-    setLoading(false);
+    try {
+      localStorage.setItem(DEMO_KEY, JSON.stringify(resetClone));
+    } catch {
+      // ignore
+    }
   };
 
   return (
@@ -561,6 +664,9 @@ export function EMRProvider({ children }: { children: ReactNode }) {
         dischargePatient,
         resetToDemoCases,
         refresh: fetchPatients,
+        isLive,
+        syncError,
+        storageInfo,
       }}
     >
       {children}

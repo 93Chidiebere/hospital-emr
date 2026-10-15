@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 
 export default function Home() {
-  const { activeRole, setActiveRole, setActiveStaffName } = useEMR();
+  const { activeRole, setActiveRole, setActiveStaffName, isLive, syncError, storageInfo } = useEMR();
   const { currentUser } = useAuth();
 
   const [intakeOpen, setIntakeOpen] = useState(false);
@@ -67,6 +67,23 @@ export default function Home() {
 
       {/* 1. Masthead Navbar */}
       <Navbar onOpenIntake={() => setIntakeOpen(true)} />
+
+      {/* Mode / sync notices */}
+      {!isLive && (
+        <div className="bg-brand-light border-b border-brand-border text-charcoal text-xs px-4 py-2 text-center">
+          You are viewing <strong>sample demo patients</strong> (practice only, not shared). Sign in to
+          record real class entries; the registry then starts at zero.
+        </div>
+      )}
+      {isLive && (syncError || storageInfo?.ephemeral) && (
+        <div
+          role="alert"
+          className="bg-amber-light border-b border-amber-border text-amber-alert text-xs px-4 py-2 text-center font-semibold"
+        >
+          {syncError ??
+            "The shared database is not connected on this host, so records may disappear or differ between devices. Ask the administrator to connect it."}
+        </div>
+      )}
 
       {/* 2. Live Hospital Pipeline Bar */}
       <HospitalPipelineBar />

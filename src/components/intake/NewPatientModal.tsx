@@ -64,6 +64,8 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
     setKinError("");
 
     setSubmitting(true);
+    setKinError("");
+    try {
     await registerPatient(
       {
         fullName,
@@ -82,6 +84,11 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
       initialRoute,
       routingReason
     );
+    } catch (err) {
+      setSubmitting(false);
+      setKinError(err instanceof Error ? err.message : "The patient could not be saved. Please try again.");
+      return;
+    }
     setSubmitting(false);
     onClose();
   };

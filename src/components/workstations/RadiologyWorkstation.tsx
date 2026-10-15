@@ -26,7 +26,8 @@ export function RadiologyWorkstation({
   const [selectedPatientId, setSelectedPatientId] = useState<string>(
     radQueue[0]?.id || ""
   );
-  const selectedPatient = patients.find((p) => p.id === selectedPatientId);
+  // Only patients still in the radiology queue can be open on this screen
+  const selectedPatient = radQueue.find((p) => p.id === selectedPatientId);
 
   const pendingOrders = selectedPatient?.radiologyOrders.filter((ro) => ro.status !== "completed") || [];
   const [selectedOrderId, setSelectedOrderId] = useState<string>(pendingOrders[0]?.id || "");
@@ -40,6 +41,22 @@ export function RadiologyWorkstation({
   const [submitting, setSubmitting] = useState(false);
 
   const activeOrder = selectedPatient?.radiologyOrders.find((ro) => ro.id === selectedOrderId);
+
+  const resetForm = () => {
+    setFindings("");
+    setImpression("");
+    setSelectedOrderId("");
+    setRouteToDept("CONSULTATION");
+    setRoutingReason("Diagnostic imaging study finalized; radiological report routed back to Physician.");
+  };
+
+  React.useEffect(() => {
+    if (selectedPatientId && !radQueue.some((p) => p.id === selectedPatientId)) {
+      setSelectedPatientId("");
+      resetForm();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [radQueue.map((p) => p.id).join("|"), selectedPatientId]);
 
   const handleSelectOrder = (order: RadiologyOrder) => {
     setSelectedOrderId(order.id);
@@ -74,8 +91,9 @@ export function RadiologyWorkstation({
     );
     setSubmitting(false);
 
-    setFindings("");
-    setImpression("");
+    // Report sent: clear the form and the screen
+    resetForm();
+    setSelectedPatientId("");
   };
 
   return (
@@ -121,6 +139,7 @@ export function RadiologyWorkstation({
                   <div
                     key={pat.id}
                     onClick={() => {
+                      if (pat.id !== selectedPatientId) resetForm();
                       setSelectedPatientId(pat.id);
                       const firstPending = pat.radiologyOrders.find((ro) => ro.status !== "completed");
                       if (firstPending) handleSelectOrder(firstPending);
