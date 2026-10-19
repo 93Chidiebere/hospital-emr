@@ -39,7 +39,7 @@ export function ReceptionWorkstation({
             </h2>
           </div>
           <p className="text-xs text-charcoal-muted mt-0.5">
-            Register new patient charts, issue Trinity Point Hospital numbers, and route returning patients directly to any station.
+            Register new patient charts, issue Trinity University Hospital EHR numbers, and route returning patients directly to any station.
           </p>
         </div>
 

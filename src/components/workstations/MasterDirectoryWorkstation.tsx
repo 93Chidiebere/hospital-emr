@@ -36,7 +36,7 @@ export function MasterDirectoryWorkstation({
           <div className="flex items-center gap-2">
             <FileSpreadsheet className="w-5 h-5 text-brand" />
             <h2 className="font-serif text-lg sm:text-xl font-bold text-charcoal">
-              Trinity Point Hospital — Master Clinical Directory
+              Trinity University Hospital EHR — Master Clinical Directory
             </h2>
           </div>
           <p className="text-xs text-charcoal-muted mt-0.5">

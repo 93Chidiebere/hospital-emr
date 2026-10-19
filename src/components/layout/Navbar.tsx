@@ -278,15 +278,14 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
         {/* Topmast Institution Bar */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-paper-border/60">
           <div className="flex items-center gap-3 min-w-0">
-            <div
-              aria-hidden="true"
-              className="w-8 h-8 shrink-0 bg-brand text-paper flex items-center justify-center font-serif text-lg font-bold border border-brand"
-            >
-              T
-            </div>
+            <img
+              src="/trinity-logo.png"
+              alt="Trinity University"
+              className="h-10 sm:h-12 w-auto object-contain shrink-0 rounded-[2px]"
+            />
             <div className="min-w-0">
               <h1 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-charcoal leading-tight">
-                Trinity Point Hospital
+                Trinity University Hospital EHR
               </h1>
               <p className="text-[11px] text-charcoal-muted tracking-wide font-sans">
                 Clinical/Hospital Data Flow

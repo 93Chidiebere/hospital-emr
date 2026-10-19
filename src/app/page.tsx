@@ -200,10 +200,20 @@ export default function Home() {
       {/* 5. Editorial Footer */}
       <footer className="bg-white border-t border-paper-border py-6 mt-12 text-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="font-serif font-bold text-charcoal text-sm">
-              Trinity Point Hospital
-            </p>
+          <div className="flex items-center gap-3">
+            <img
+              src="/trinity-logo.png"
+              alt="Trinity University"
+              className="h-8 w-auto object-contain shrink-0 rounded-[2px]"
+            />
+            <div>
+              <p className="font-serif font-bold text-charcoal text-sm">
+                Trinity University Hospital EHR
+              </p>
+              <p className="text-[11px] text-charcoal-muted font-sans">
+                Trinity University &bull; Yaba, Lagos &bull; Clinical Training & Simulation
+              </p>
+            </div>
           </div>
 
           <ol

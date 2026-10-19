@@ -214,7 +214,7 @@ export const HOSPITAL_ROLES: RoleConfig[] = [
     title: "Reception Officer",
     department: "RECEPTION",
     cadre: "Health Records & Information",
-    description: "Enrolls new patients, issues Trinity Point Hospital record numbers, and directs visitors to relevant stations.",
+    description: "Enrolls new patients, issues Trinity University Hospital EHR record numbers, and directs visitors to relevant stations.",
     badge: "REC",
   },
   {

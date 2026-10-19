@@ -158,7 +158,7 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
                   Hospital Movement & Clinical Audit Trail
                 </h3>
                 <p className="text-charcoal-muted text-[11px] mt-0.5">
-                  Complete chronological ledger showing how data and care flowed across Trinity Point Hospital stations
+                  Complete chronological ledger showing how data and care flowed across Trinity University Hospital EHR stations
                 </p>
               </div>
 

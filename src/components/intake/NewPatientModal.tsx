@@ -108,7 +108,7 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
             <div className="flex items-center gap-2">
               <UserPlus className="w-4 h-4 text-brand" />
               <h3 id="intake-dialog-title" className="font-serif text-lg font-bold text-charcoal">
-                Trinity Point Hospital — Patient Intake
+                Trinity University Hospital EHR — Patient Intake
               </h3>
             </div>
             <p className="text-xs text-charcoal-muted mt-0.5">
