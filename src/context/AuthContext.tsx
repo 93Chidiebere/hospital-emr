@@ -3,7 +3,84 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { UserAccount, RoleId } from "@/types/emr";
 
+export const DEFAULT_ADMIN_TEACHER_ACCOUNTS: UserAccount[] = [
+  {
+    id: "adm-001",
+    fullName: "Vincent Chidiebere (Super Admin)",
+    email: "vchidiebere.vc@gmail.com",
+    assignedRole: "director",
+    isAdmin: true,
+    isSuperAdmin: true,
+    password: "Pass@word1",
+    createdAt: "2026-10-20T00:00:00Z",
+  },
+  {
+    id: "adm-002",
+    fullName: "Dr. Vincent Chidiebere",
+    email: "vincent.chidiebere@outlook.com",
+    assignedRole: "director",
+    isAdmin: true,
+    password: "Pass@word1",
+    createdAt: "2026-10-20T00:00:00Z",
+  },
+  {
+    id: "adm-003",
+    fullName: "Nurse Rita Eze",
+    email: "ritaeze53@gmail.com",
+    assignedRole: "director",
+    isAdmin: true,
+    password: "Pass@word1",
+    createdAt: "2026-10-20T00:00:00Z",
+  },
+  {
+    id: "adm-004",
+    fullName: "Dr. Salamah Alawiye",
+    email: "salamahalawiye@gmail.com",
+    assignedRole: "director",
+    isAdmin: true,
+    password: "Pass@word1",
+    createdAt: "2026-10-20T00:00:00Z",
+  },
+  {
+    id: "adm-005",
+    fullName: "Favour Falade",
+    email: "faladefavour@gmail.com",
+    assignedRole: "director",
+    isAdmin: true,
+    password: "Pass@word1",
+    createdAt: "2026-10-20T00:00:00Z",
+  },
+  {
+    id: "adm-006",
+    fullName: "Nyta Edu",
+    email: "nytaedu@gmail.com",
+    assignedRole: "director",
+    isAdmin: true,
+    password: "Pass@word1",
+    createdAt: "2026-10-20T00:00:00Z",
+  },
+  {
+    id: "adm-007",
+    fullName: "Fiyin Anifowose",
+    email: "anifowosefiyin@gmail.com",
+    assignedRole: "director",
+    isAdmin: true,
+    password: "Pass@word1",
+    createdAt: "2026-10-20T00:00:00Z",
+  },
+  {
+    id: "adm-008",
+    fullName: "Lotty Nanche",
+    email: "nanchelotty@gmail.com",
+    assignedRole: "director",
+    isAdmin: true,
+    password: "Pass@word1",
+    createdAt: "2026-10-20T00:00:00Z",
+  },
+];
+
 export const DEFAULT_STUDENT_ACCOUNTS: UserAccount[] = [
+  ...DEFAULT_ADMIN_TEACHER_ACCOUNTS,
   {
     id: "usr-001",
     fullName: "Nurse Mary Okon",
@@ -39,13 +116,6 @@ export const DEFAULT_STUDENT_ACCOUNTS: UserAccount[] = [
     password: "pass",
     createdAt: "2026-10-13T08:00:00Z",
   },
-  {
-    id: "usr-006",
-    fullName: "Prof. J. C. Okon",
-    assignedRole: "director",
-    password: "pass",
-    createdAt: "2026-10-13T08:00:00Z",
-  },
 ];
 
 interface AuthContextType {
@@ -53,10 +123,13 @@ interface AuthContextType {
   users: UserAccount[];
   authModalOpen: boolean;
   authMode: "signin" | "signup";
-  authReady: boolean; // true once any saved session has been restored
+  authReady: boolean;
+  isDemoMode: boolean;
   setAuthModalOpen: (open: boolean) => void;
   setAuthMode: (mode: "signin" | "signup") => void;
-  login: (fullName: string, password?: string) => Promise<{ success: boolean; error?: string }>;
+  enterDemoMode: () => void;
+  exitDemoMode: () => void;
+  login: (identifier: string, password?: string) => Promise<{ success: boolean; error?: string }>;
   signup: (
     fullName: string,
     role: RoleId,
@@ -73,6 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [authReady, setAuthReady] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   // Load existing accounts and active session from localStorage
   useEffect(() => {
@@ -83,7 +157,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (Array.isArray(parsed) && parsed.length > 0) {
           const merged = [...DEFAULT_STUDENT_ACCOUNTS];
           parsed.forEach((p: UserAccount) => {
-            if (!merged.some((m) => m.fullName.toLowerCase() === p.fullName.toLowerCase())) {
+            const exists = merged.some(
+              (m) =>
+                m.fullName.toLowerCase() === p.fullName.toLowerCase() ||
+                (p.email && m.email && m.email.toLowerCase() === p.email.toLowerCase())
+            );
+            if (!exists) {
               merged.push(p);
             }
           });
@@ -103,18 +182,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (
-    fullName: string,
+    identifier: string,
     password?: string
   ): Promise<{ success: boolean; error?: string }> => {
-    const cleanName = fullName.trim().toLowerCase();
+    const clean = identifier.trim().toLowerCase();
+    if (!clean) {
+      return { success: false, error: "Please enter your email or full name." };
+    }
+
     const found = users.find(
-      (u) => u.fullName.toLowerCase() === cleanName
+      (u) =>
+        u.fullName.toLowerCase() === clean ||
+        (u.email && u.email.toLowerCase() === clean)
     );
 
     if (!found) {
       return {
         success: false,
-        error: `No staff or student profile found for '${fullName}'. Please Sign Up with your name and role.`,
+        error: `No staff or teacher profile found for '${identifier}'. Please check credentials or sign up.`,
       };
     }
 
@@ -123,7 +208,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     setCurrentUser(found);
-    localStorage.setItem("trinity_emr_active_session", JSON.stringify(found));
+    setIsDemoMode(false);
+    try {
+      localStorage.setItem("trinity_emr_active_session", JSON.stringify(found));
+    } catch {}
     setAuthModalOpen(false);
     return { success: true };
   };
@@ -160,6 +248,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const updatedList = [newUser, ...users];
     setUsers(updatedList);
     setCurrentUser(newUser);
+    setIsDemoMode(false);
 
     try {
       localStorage.setItem("trinity_emr_users", JSON.stringify(updatedList));
@@ -172,9 +261,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { success: true };
   };
 
+  const enterDemoMode = () => {
+    setIsDemoMode(true);
+    setCurrentUser(null);
+  };
+
+  const exitDemoMode = () => {
+    setIsDemoMode(false);
+    setCurrentUser(null);
+  };
+
   const logout = () => {
     setCurrentUser(null);
-    localStorage.removeItem("trinity_emr_active_session");
+    setIsDemoMode(false);
+    try {
+      localStorage.removeItem("trinity_emr_active_session");
+    } catch {}
   };
 
   return (
@@ -185,8 +287,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         authModalOpen,
         authMode,
         authReady,
+        isDemoMode,
         setAuthModalOpen,
         setAuthMode,
+        enterDemoMode,
+        exitDemoMode,
         login,
         signup,
         logout,

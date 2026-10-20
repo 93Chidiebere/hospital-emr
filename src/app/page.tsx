@@ -17,7 +17,7 @@ import { MasterDirectoryWorkstation } from "@/components/workstations/MasterDire
 import { NewPatientModal } from "@/components/intake/NewPatientModal";
 import { PatientDossierModal } from "@/components/dossier/PatientDossierModal";
 import { TransferModal } from "@/components/shared/TransferModal";
-import { AuthModal } from "@/components/auth/AuthModal";
+import { HeroLanding } from "@/components/home/HeroLanding";
 import {
   FileText,
   Activity,
@@ -31,13 +31,13 @@ import {
 
 export default function Home() {
   const { activeRole, setActiveRole, setActiveStaffName, isLive, syncError, storageInfo } = useEMR();
-  const { currentUser } = useAuth();
+  const { currentUser, isDemoMode, authReady } = useAuth();
 
   const [intakeOpen, setIntakeOpen] = useState(false);
   const [dossierPatient, setDossierPatient] = useState<Patient | null>(null);
   const [transferPatient, setTransferPatient] = useState<Patient | null>(null);
 
-  // Sync role & staff name whenever student logs in
+  // Sync role & staff name whenever student/teacher logs in
   useEffect(() => {
     if (currentUser) {
       setActiveRole(currentUser.assignedRole);
@@ -53,11 +53,25 @@ export default function Home() {
     }
   }, [currentUser, activeRole, setActiveRole]);
 
+  // Don't render until localStorage auth state has been read
+  if (!authReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-navy-dark text-amber-300 font-mono text-sm">
+        Loading Trinity University Hospital EHR session...
+      </div>
+    );
+  }
+
+  // If not signed in and not in demo mode, render the Grand Hero Landing Page
+  if (!currentUser && !isDemoMode) {
+    return <HeroLanding />;
+  }
+
   const roleSwitchAllowed = canSwitchRole(currentUser);
   const activeRoleTitle = HOSPITAL_ROLES.find((r) => r.id === activeRole)?.title;
 
   return (
-    <div className="min-h-screen flex flex-col bg-paper text-charcoal">
+    <div className="min-h-screen flex flex-col bg-[#071B33] text-charcoal">
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
@@ -68,20 +82,14 @@ export default function Home() {
       {/* 1. Masthead Navbar */}
       <Navbar onOpenIntake={() => setIntakeOpen(true)} />
 
-      {/* Mode / sync notices */}
-      {!isLive && (
-        <div className="bg-brand-light border-b border-brand-border text-charcoal text-xs px-4 py-2 text-center">
-          You are viewing <strong>sample demo patients</strong> (practice only, not shared). Sign in to
-          record real class entries; the registry then starts at zero.
-        </div>
-      )}
+      {/* Database connection warning if live storage has issues */}
       {isLive && (syncError || storageInfo?.ephemeral) && (
         <div
           role="alert"
-          className="bg-amber-light border-b border-amber-border text-amber-alert text-xs px-4 py-2 text-center font-semibold"
+          className="bg-amber-100 border-b border-amber-300 text-amber-900 text-xs px-4 py-2 text-center font-bold"
         >
           {syncError ??
-            "The shared database is not connected on this host, so records may disappear or differ between devices. Ask the administrator to connect it."}
+            "The shared database is not connected on this host, so records may differ between devices. Ask the administrator to connect it."}
         </div>
       )}
 
@@ -89,57 +97,59 @@ export default function Home() {
       <HospitalPipelineBar />
 
       {/* 3. Station Switcher Strip */}
-      <div className="bg-paper-warm border-b border-paper-border">
+      <div className="bg-[#0B2545] border-b border-[#1E4E79] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-charcoal-muted">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-amber-300 font-bold">
               Active Station View:
             </span>
-            <span className="font-serif font-bold text-charcoal text-sm">
+            <span className="font-sans font-bold text-white text-sm">
               {activeRoleTitle}
             </span>
           </div>
 
-          {/* Quick Station Tab Bar (guests and instructors only) */}
+          {/* Station Locked Notice for Students */}
           {!roleSwitchAllowed && (
-            <p className="text-[11px] text-charcoal-muted">
-              Station locked to your registered role. Sign out to use a different account.
+            <p className="text-[11px] text-slate-300">
+              Station locked to your registered role. Sign out to switch station.
             </p>
           )}
+
+          {/* Quick Station Tab Bar (instructors and demo view only) */}
           {roleSwitchAllowed && (
-          <nav
-            aria-label="Hospital stations"
-            className="flex w-full md:w-auto min-w-0 items-center gap-1 overflow-x-auto py-1 snap-x"
-          >
-            {[
-              { id: "receptionist" as RoleId, label: "Front Desk", icon: FileText },
-              { id: "triage_nurse" as RoleId, label: "Triage Vitals", icon: Activity },
-              { id: "doctor" as RoleId, label: "Doctor Consult", icon: Stethoscope },
-              { id: "mls" as RoleId, label: "MLS Lab", icon: FlaskConical },
-              { id: "radiographer" as RoleId, label: "Radiology", icon: Scan },
-              { id: "treatment_nurse" as RoleId, label: "Pharmacy", icon: Syringe },
-              { id: "director" as RoleId, label: "Master Registry", icon: Layers },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              const isCurrent = activeRole === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  aria-pressed={isCurrent}
-                  onClick={() => setActiveRole(tab.id)}
-                  className={`px-3 py-2.5 sm:px-2.5 sm:py-1 shrink-0 snap-start flex items-center gap-1.5 transition-colors font-mono text-[11px] border whitespace-nowrap ${
-                    isCurrent
-                      ? "bg-brand text-paper border-brand font-bold"
-                      : "bg-white text-charcoal-muted border-paper-border hover:bg-paper hover:border-brand hover:text-charcoal"
-                  }`}
-                >
-                  <Icon aria-hidden="true" className={`w-3 h-3 ${isCurrent ? "text-brand-light" : ""}`} />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </nav>
+            <nav
+              aria-label="Hospital stations"
+              className="flex w-full md:w-auto min-w-0 items-center gap-1 overflow-x-auto py-1 snap-x"
+            >
+              {[
+                { id: "receptionist" as RoleId, label: "Front Desk", icon: FileText },
+                { id: "triage_nurse" as RoleId, label: "Triage Vitals", icon: Activity },
+                { id: "doctor" as RoleId, label: "Doctor Consult", icon: Stethoscope },
+                { id: "mls" as RoleId, label: "MLS Lab", icon: FlaskConical },
+                { id: "radiographer" as RoleId, label: "Radiology", icon: Scan },
+                { id: "treatment_nurse" as RoleId, label: "Pharmacy", icon: Syringe },
+                { id: "director" as RoleId, label: "Master Registry", icon: Layers },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isCurrent = activeRole === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    aria-pressed={isCurrent}
+                    onClick={() => setActiveRole(tab.id)}
+                    className={`px-3 py-1.5 sm:px-2.5 sm:py-1 shrink-0 snap-start flex items-center gap-1.5 transition-colors font-mono text-[11px] border whitespace-nowrap rounded-[2px] ${
+                      isCurrent
+                        ? "bg-brand text-navy-dark border-brand font-bold shadow-sm"
+                        : "bg-[#071B33] text-slate-300 border-[#1E4E79] hover:bg-[#0F325E] hover:text-white hover:border-brand"
+                    }`}
+                  >
+                    <Icon aria-hidden="true" className={`w-3 h-3 ${isCurrent ? "text-navy-dark" : "text-amber-300"}`} />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
           )}
         </div>
       </div>
@@ -198,19 +208,19 @@ export default function Home() {
       </main>
 
       {/* 5. Editorial Footer */}
-      <footer className="bg-white border-t border-paper-border py-6 mt-12 text-xs">
+      <footer className="bg-[#051426] border-t border-[#1E4E79] py-6 mt-12 text-xs text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <img
               src="/trinity-logo.png"
               alt="Trinity University"
-              className="h-8 w-auto object-contain shrink-0 rounded-[2px]"
+              className="h-8 w-auto object-contain shrink-0 rounded-[2px] bg-white p-0.5"
             />
             <div>
-              <p className="font-serif font-bold text-charcoal text-sm">
+              <p className="font-sans font-bold text-white text-sm">
                 Trinity University Hospital EHR
               </p>
-              <p className="text-[11px] text-charcoal-muted font-sans">
+              <p className="text-[11px] text-amber-300 font-sans">
                 Trinity University &bull; Yaba, Lagos &bull; Clinical Training & Simulation
               </p>
             </div>
@@ -218,7 +228,7 @@ export default function Home() {
 
           <ol
             aria-label="Patient journey"
-            className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10px] text-charcoal-subtle uppercase"
+            className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10px] text-slate-300 uppercase"
           >
             {["Intake", "Triage", "Consultation", "MLS Lab", "Pharmacy", "Discharge"].map(
               (step, i, arr) => (
@@ -250,8 +260,6 @@ export default function Home() {
           onClose={() => setTransferPatient(null)}
         />
       )}
-
-      <AuthModal />
     </div>
   );
 }

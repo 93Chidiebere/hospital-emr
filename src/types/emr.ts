@@ -29,7 +29,10 @@ export interface RoleConfig {
 export interface UserAccount {
   id: string;
   fullName: string;
+  email?: string;
   assignedRole: RoleId;
+  isAdmin?: boolean;
+  isSuperAdmin?: boolean;
   password?: string;
   createdAt: string;
 }

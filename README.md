@@ -10,16 +10,29 @@ $$\text{Front Desk (Reception)} \longrightarrow \text{Nurse Triage} \longrightar
 
 ## 1. Getting Started in Class
 
-1. **Open the Platform**: In your web browser, navigate to the simulation address.
-2. **Sign In or Register**:
-   * Click the **Sign In / Staff Portal** button in the top navigation bar.
-   * **New Students**: Click **Sign Up**, type your Full Name (e.g., `Adaeze Nwafor`), choose your assigned clinical station role (e.g., *Triage Staff Nurse*, *Attending Physician*, *Reception Officer*, etc.), and set a password.
-   * **Existing Students**: Simply enter your Full Name and password, or click one of the quick 1-click test simulation accounts.
-   * Upon sign-in, the system automatically routes your workspace directly to your assigned clinical station and logs your credentials.
-3. **Automatic Clinical Sign-Off**:
-   * Everything you record—vitals, doctor notes, lab values, or injections—will permanently log your name and role in the patient's audit trail.
-4. **Inspect Any Patient's Chart**:
-   * Click **Chart** on any patient row to open their full clinical jacket, where you can view every note, lab report, vital sign, and timestamp recorded by your classmates.
+1. **Open the Platform**: Navigate to the platform address. You will be greeted by the **Trinity University Hospital EHR Hero Portal** with the campus gate backdrop.
+2. **Choose Your Access Method**:
+   * **Students (Sign In / Register)**:
+     - **New Students**: Click **Student Register**, type your Full Name (e.g., `Adaeze Nwafor`), select your assigned clinical station role (Triage Nurse, Doctor, Receptionist, MLS, Radiographer, or Treatment Nurse), and enter a password (or default `pass`).
+     - **Returning Students**: Use **Student Sign In** with your name and password, or click one of the 1-click simulation test profiles.
+     - Upon signing in, you are automatically routed directly to your assigned station with all medical entries tagged to your name.
+   * **Teachers & Administrators (Admin Portal)**:
+     - Click **Teachers / Admin** tab on the hero card.
+     - Enter your teacher email and password (`Pass@word1`), or use the fast 1-click teacher buttons.
+     - Authorized Admin/Teacher accounts:
+       - `vchidiebere.vc@gmail.com` (Super Admin for setups)
+       - `vincent.chidiebere@outlook.com`
+       - `ritaeze53@gmail.com`
+       - `salamahalawiye@gmail.com`
+       - `faladefavour@gmail.com`
+       - `nytaedu@gmail.com`
+       - `anifowosefiyin@gmail.com`
+       - `nanchelotty@gmail.com`
+     - As a Teacher/Admin, you have Master Directory authority, can monitor all stations in real-time, and can use the **Reset Session** tool to wipe class records to zero for fresh student drills.
+   * **Demo Preview Mode**:
+     - Visitors or students can click **"Explore Demo Simulation (5 Sample Patients)"** directly on the hero page to practice without modifying live classroom data.
+3. **Session Clearing & Fresh Drills**:
+   * After any classroom scenario or case study concludes, teachers can click **Reset Session** in the top navigation bar to reset the patient count and medical records back to zero for the next class.
 
 ---
 

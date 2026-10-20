@@ -13,10 +13,12 @@ import {
   Clock,
   ChevronDown,
   ShieldAlert,
-  LogIn,
   LogOut,
   User,
   Lock,
+  Sparkles,
+  ShieldCheck,
+  GraduationCap,
 } from "lucide-react";
 
 interface NavbarProps {
@@ -24,7 +26,7 @@ interface NavbarProps {
 }
 
 /* ------------------------------------------------------------------ */
-/* Role menu (only rendered for guests and instructors)                */
+/* Role menu (only rendered for instructors / directors)               */
 /* ------------------------------------------------------------------ */
 function RoleMenu({
   activeRole,
@@ -46,7 +48,6 @@ function RoleMenu({
     buttonRef.current?.focus();
   };
 
-  // Focus the active item when opening; close on outside pointer press
   useEffect(() => {
     if (!open) return;
 
@@ -116,15 +117,15 @@ function RoleMenu({
             setOpen(true);
           }
         }}
-        className="flex items-center gap-2 px-3 py-1.5 min-h-[44px] sm:min-h-0 bg-white border border-paper-border text-charcoal hover:border-brand transition-colors font-medium text-xs"
+        className="flex items-center gap-2 px-3 py-1.5 min-h-[44px] sm:min-h-0 bg-[#0F325E] border border-paper-border text-white hover:border-brand transition-colors font-medium text-xs rounded-[2px]"
       >
-        <span className="font-mono px-1 bg-brand-light text-brand border border-brand-border text-[10px]">
+        <span className="font-mono px-1 bg-brand text-navy-dark font-bold text-[10px]">
           {current.badge}
         </span>
-        <span className="font-serif text-sm font-semibold text-left">{current.title}</span>
+        <span className="font-sans text-xs sm:text-sm font-bold text-left">{current.title}</span>
         <ChevronDown
           aria-hidden="true"
-          className={`w-3.5 h-3.5 text-charcoal-muted ml-1 transition-transform ${
+          className={`w-3.5 h-3.5 text-slate-300 ml-1 transition-transform ${
             open ? "rotate-180" : ""
           }`}
         />
@@ -134,15 +135,15 @@ function RoleMenu({
         <div
           id={menuId}
           role="menu"
-          aria-label="Select your simulated department post"
+          aria-label="Select simulated department post"
           onKeyDown={handleMenuKeyDown}
-          className="absolute left-0 mt-1 w-[min(20rem,calc(100vw-2rem))] max-h-[70vh] overflow-y-auto bg-white border border-brand shadow-sm z-50 divide-y divide-paper-border"
+          className="absolute left-0 mt-1 w-[min(20rem,calc(100vw-2rem))] max-h-[70vh] overflow-y-auto bg-white border border-brand shadow-2xl z-50 divide-y divide-slate-100 rounded-[2px]"
         >
           <div
             aria-hidden="true"
-            className="px-3 py-2 bg-paper-warm text-[11px] text-charcoal-muted uppercase font-mono tracking-wider"
+            className="px-3 py-2 bg-[#0B2545] text-[11px] text-amber-300 uppercase font-mono tracking-wider font-bold"
           >
-            Select Your Simulated Department Post:
+            Switch Active Workstation Station:
           </div>
           {HOSPITAL_ROLES.map((r, i) => {
             const selected = activeRole === r.id;
@@ -160,21 +161,21 @@ function RoleMenu({
                   onSelect(r.id);
                   closeAndReturnFocus();
                 }}
-                className={`w-full text-left px-3 py-3 sm:py-2.5 hover:bg-paper-warm focus:bg-paper-warm transition-colors flex items-start gap-2.5 ${
-                  selected ? "bg-brand-light/60 font-medium" : ""
+                className={`w-full text-left px-3 py-2.5 hover:bg-amber-50 focus:bg-amber-50 transition-colors flex items-start gap-2.5 ${
+                  selected ? "bg-amber-50/90 font-bold" : ""
                 }`}
               >
-                <span className="font-mono px-1.5 py-0.5 bg-paper border border-paper-border text-[10px] text-charcoal mt-0.5">
+                <span className="font-mono px-1.5 py-0.5 bg-[#0B2545] text-amber-300 text-[10px] mt-0.5 font-bold">
                   {r.badge}
                 </span>
                 <span className="flex-1 min-w-0">
-                  <span className="font-serif text-xs font-bold text-charcoal flex flex-wrap items-center justify-between gap-x-2">
+                  <span className="font-sans text-xs font-bold text-navy-dark flex flex-wrap items-center justify-between gap-x-2">
                     <span>{r.title}</span>
-                    <span className="text-[10px] font-sans text-charcoal-muted font-normal">
+                    <span className="text-[10px] font-sans text-slate-500 font-normal">
                       {r.cadre}
                     </span>
                   </span>
-                  <span className="block text-[11px] text-charcoal-muted mt-0.5 line-clamp-2">
+                  <span className="block text-[11px] text-slate-600 mt-0.5 line-clamp-2">
                     {r.description}
                   </span>
                 </span>
@@ -188,15 +189,17 @@ function RoleMenu({
 }
 
 /* ------------------------------------------------------------------ */
-/* Reset confirmation dialog                                           */
+/* Admin Session Reset dialog                                          */
 /* ------------------------------------------------------------------ */
 function ResetConfirmDialog({
   onCancel,
-  onConfirm,
+  onResetZero,
+  onSeedDemo,
   live,
 }: {
   onCancel: () => void;
-  onConfirm: () => void | Promise<void>;
+  onResetZero: () => void | Promise<void>;
+  onSeedDemo?: () => void | Promise<void>;
   live: boolean;
 }) {
   const dialogRef = useDialogA11y<HTMLDivElement>(onCancel);
@@ -204,7 +207,7 @@ function ResetConfirmDialog({
   const descId = useId();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/40 backdrop-blur-[1px] p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-dark/75 backdrop-blur-[2px] p-4">
       <div
         ref={dialogRef}
         role="alertdialog"
@@ -212,34 +215,54 @@ function ResetConfirmDialog({
         aria-labelledby={titleId}
         aria-describedby={descId}
         tabIndex={-1}
-        className="bg-white border border-brand max-w-md w-full max-h-[90vh] overflow-y-auto p-5 sm:p-6 space-y-4 outline-none"
+        className="bg-white border-2 border-brand max-w-lg w-full max-h-[90vh] overflow-y-auto p-5 sm:p-6 space-y-4 outline-none shadow-2xl rounded-[2px]"
       >
-        <div className="flex items-center gap-2 text-terracotta">
+        <div className="flex items-center gap-2 text-red-600">
           <ShieldAlert aria-hidden="true" className="w-5 h-5 shrink-0" />
-          <h2 id={titleId} className="font-serif text-lg font-bold text-charcoal">
-            {live ? "Clear all class records?" : "Reset Simulated Drill Data?"}
+          <h2 id={titleId} className="font-sans text-base sm:text-lg font-bold text-navy-dark">
+            Classroom Session Management & Reset
           </h2>
         </div>
-        <p id={descId} className="text-xs text-charcoal-muted leading-relaxed">
+        <p id={descId} className="text-xs text-slate-600 leading-relaxed">
           {live
-            ? "This permanently deletes every patient record created by all students and restarts hospital numbers at 1. All counts return to zero. This cannot be undone."
-            : "This will restore the demo registry back to the original 5 sample cases. Any entries you added in this browser will be replaced. (Demo data is never shared and is not the class record.)"}
+            ? "You are signed in as an administrator/teacher. Choose whether to wipe all live student entries back to a clean zero state for a new class drill, or seed standard demo cases for demonstration."
+            : "Reset the practice simulation back to initial sample cases or clean the local cache."}
         </p>
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2 border-t border-paper-border">
+
+        <div className="p-3 bg-amber-50 border border-amber-200 text-[11px] text-amber-900 space-y-1">
+          <p className="font-bold">Reset Options:</p>
+          <ul className="list-disc list-inside space-y-0.5 text-slate-700">
+            <li><strong>Reset Registry to 0:</strong> Wipes all patient admissions, vitals, doctor notes, and lab logs so the next student group starts completely fresh.</li>
+            <li><strong>Restore 5 Demo Cases:</strong> Populates the standard patient scenarios for guided classroom lectures.</li>
+          </ul>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:justify-end gap-2 pt-3 border-t border-slate-200">
           <button
             type="button"
             autoFocus
             onClick={onCancel}
-            className="px-3 py-2.5 sm:py-1.5 text-xs border border-paper-border text-charcoal hover:bg-paper-warm"
+            className="px-3 py-2 text-xs border border-slate-300 text-slate-700 hover:bg-slate-100 font-medium"
           >
             Cancel
           </button>
+          {onSeedDemo && (
+            <button
+              type="button"
+              onClick={onSeedDemo}
+              className="px-3.5 py-2 text-xs bg-navy text-white hover:bg-navy-dark font-medium border border-navy-border flex items-center justify-center gap-1.5"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-brand" />
+              <span>Restore 5 Demo Cases</span>
+            </button>
+          )}
           <button
             type="button"
-            onClick={onConfirm}
-            className="px-4 py-2.5 sm:py-1.5 text-xs bg-brand text-paper hover:bg-brand-hover"
+            onClick={onResetZero}
+            className="px-4 py-2 text-xs bg-red-600 hover:bg-red-700 text-white font-bold flex items-center justify-center gap-1.5"
           >
-            Yes, Restore Demo Cases
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Reset Registry to 0 (Clean Fresh Class)</span>
           </button>
         </div>
       </div>
@@ -248,7 +271,7 @@ function ResetConfirmDialog({
 }
 
 /* ------------------------------------------------------------------ */
-/* Navbar                                                              */
+/* Navbar Component                                                    */
 /* ------------------------------------------------------------------ */
 export function Navbar({ onOpenIntake }: NavbarProps) {
   const {
@@ -261,7 +284,7 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
     isLive,
   } = useEMR();
 
-  const { currentUser, setAuthModalOpen, setAuthMode, logout } = useAuth();
+  const { currentUser, logout, isDemoMode, exitDemoMode } = useAuth();
 
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const signOffId = useId();
@@ -269,108 +292,113 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
   const roleSwitchAllowed = canSwitchRole(currentUser);
   const currentRoleMeta = HOSPITAL_ROLES.find((r) => r.id === activeRole) || HOSPITAL_ROLES[0];
   const activeCount = patients.filter((p) => p.status === "Active").length;
-  // Live class records can only be cleared by the instructor account
-  const canReset = !isLive || currentUser?.assignedRole === "director";
+  const isTeacherOrAdmin = currentUser?.isAdmin || currentUser?.assignedRole === "director";
 
   return (
     <>
-      <header className="bg-paper border-b border-paper-border md:sticky md:top-0 md:z-30">
+      <header className="bg-[#0B2545] border-b border-[#1E4E79] text-white md:sticky md:top-0 md:z-30 shadow-md">
         {/* Topmast Institution Bar */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-paper-border/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-[#1E4E79]/70">
           <div className="flex items-center gap-3 min-w-0">
             <img
               src="/trinity-logo.png"
               alt="Trinity University"
-              className="h-10 sm:h-12 w-auto object-contain shrink-0 rounded-[2px]"
+              className="h-10 sm:h-12 w-auto object-contain shrink-0 rounded-[2px] bg-white p-0.5 shadow-sm"
             />
             <div className="min-w-0">
-              <h1 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-charcoal leading-tight">
+              <h1 className="font-sans text-lg sm:text-xl font-bold tracking-tight text-white leading-tight">
                 Trinity University Hospital EHR
               </h1>
-              <p className="text-[11px] text-charcoal-muted tracking-wide font-sans">
-                Clinical/Hospital Data Flow
+              <p className="text-[11px] text-amber-300 font-medium tracking-wide">
+                Clinical & Hospital Data Flow Simulation
               </p>
             </div>
           </div>
 
-          {/* Global Classroom Status & Actions */}
+          {/* Global Classroom Status & Controls */}
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            {/* Live vs Demo Indicator */}
             <div
               role="status"
-              className="hidden sm:flex items-center gap-2 text-xs text-charcoal-muted md:border-r border-paper-border md:pr-3"
+              className="flex items-center gap-2 text-xs text-slate-300 md:border-r border-[#1E4E79] md:pr-3"
             >
               <Clock aria-hidden="true" className="w-3.5 h-3.5 text-brand" />
               <span
-                className={`font-mono px-1.5 py-0.5 border text-[10px] uppercase mr-1 ${
+                className={`font-mono px-1.5 py-0.5 text-[10px] uppercase font-bold ${
                   isLive
-                    ? "bg-brand text-paper border-brand"
-                    : "bg-paper-warm text-charcoal border-paper-border"
+                    ? "bg-brand text-navy-dark"
+                    : "bg-white/10 text-amber-300 border border-white/20"
                 }`}
               >
-                {isLive ? "Live records" : "Demo data"}
+                {isLive ? "Live Class Session" : "Demo Preview"}
               </span>
-              <span className="font-mono">
-                Live Registry:{" "}
-                <strong className="text-charcoal font-semibold">{activeCount}</strong> In-Clinic
+              <span className="font-mono text-white text-xs">
+                Active Cases: <strong className="text-amber-300">{activeCount}</strong>
               </span>
             </div>
 
-            {/* Student Auth Button / Profile Badge */}
-            {currentUser ? (
-              <div className="flex items-center gap-2 pl-2.5 pr-1 py-1 bg-paper-warm border border-paper-border text-xs max-w-full">
-                <User aria-hidden="true" className="w-3.5 h-3.5 text-brand shrink-0" />
+            {/* Signed-in User Identity Badge */}
+            {currentUser && (
+              <div className="flex items-center gap-2 pl-2.5 pr-1.5 py-1 bg-[#071B33] border border-[#1E4E79] text-xs text-white">
+                {currentUser.isAdmin ? (
+                  <ShieldCheck aria-hidden="true" className="w-3.5 h-3.5 text-brand shrink-0" />
+                ) : (
+                  <User aria-hidden="true" className="w-3.5 h-3.5 text-brand shrink-0" />
+                )}
                 <div className="text-left font-sans min-w-0">
-                  <span className="font-serif font-bold text-charcoal text-xs block leading-tight truncate max-w-[10rem] sm:max-w-[14rem]">
+                  <span className="font-bold text-white text-xs block leading-tight truncate max-w-[9rem] sm:max-w-[13rem]">
                     {currentUser.fullName}
                   </span>
-                  <span className="text-[10px] text-charcoal-muted font-mono">
-                    {HOSPITAL_ROLES.find((r) => r.id === currentUser.assignedRole)?.badge}
+                  <span className="text-[10px] text-amber-300 font-mono">
+                    {currentUser.isAdmin ? "TEACHER / ADMIN" : HOSPITAL_ROLES.find((r) => r.id === currentUser.assignedRole)?.badge}
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={logout}
                   aria-label={`Sign out ${currentUser.fullName}`}
-                  title="Sign out of student account"
-                  className="ml-1 text-charcoal-muted hover:text-terracotta transition-colors p-2.5 sm:p-1.5"
+                  title="Sign out to home page"
+                  className="ml-1 text-slate-400 hover:text-red-400 transition-colors p-1.5"
                 >
                   <LogOut aria-hidden="true" className="w-3.5 h-3.5" />
                 </button>
               </div>
-            ) : (
+            )}
+
+            {/* Demo Mode Exit Button */}
+            {isDemoMode && !currentUser && (
               <button
                 type="button"
-                onClick={() => {
-                  setAuthMode("signin");
-                  setAuthModalOpen(true);
-                }}
-                className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] sm:min-h-0 sm:px-2.5 sm:py-1.5 text-xs text-charcoal bg-white hover:bg-paper-warm border border-paper-border transition-colors font-mono"
+                onClick={exitDemoMode}
+                className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-white/10 hover:bg-white/20 text-white border border-white/20 font-mono transition-colors"
+                title="Exit demo mode and go to sign-in"
               >
-                <LogIn aria-hidden="true" className="w-3.5 h-3.5 text-brand" />
-                <span className="sm:hidden">Sign In</span>
-                <span className="hidden sm:inline">Student Sign In / Sign Up</span>
+                <LogOut className="w-3 h-3 text-amber-300" />
+                <span>Exit Demo & Sign In</span>
               </button>
             )}
 
-            {canReset && (
-            <button
-              type="button"
-              onClick={() => setResetConfirmOpen(true)}
-              title={isLive ? "Delete all class records and restart numbering at 1" : "Reset to the 5 sample demo cases"}
-              className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] sm:min-h-0 sm:px-2.5 sm:py-1.5 text-xs text-charcoal-muted hover:text-charcoal bg-paper hover:bg-paper-warm border border-paper-border transition-colors"
-            >
-              <RotateCcw aria-hidden="true" className="w-3.5 h-3.5" />
-              <span className="sm:hidden">{isLive ? "Clear" : "Reset"}</span>
-              <span className="hidden sm:inline">{isLive ? "Clear Class Records" : "Reset Drill Data"}</span>
-            </button>
+            {/* Admin Reset Button (Visible to Instructors or Demo View) */}
+            {(isTeacherOrAdmin || isDemoMode) && (
+              <button
+                type="button"
+                onClick={() => setResetConfirmOpen(true)}
+                title="Reset session records to zero or restore demo data"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white bg-[#0F325E] hover:bg-[#15437C] border border-[#1E4E79] hover:border-brand transition-colors"
+              >
+                <RotateCcw aria-hidden="true" className="w-3.5 h-3.5 text-brand" />
+                <span className="hidden sm:inline">Reset Session</span>
+                <span className="sm:hidden">Reset</span>
+              </button>
             )}
 
+            {/* Enroll New Patient Button */}
             <button
               type="button"
               onClick={onOpenIntake}
-              className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] sm:min-h-0 sm:py-1.5 text-xs font-medium text-paper bg-brand hover:bg-brand-hover transition-colors border border-brand"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-navy-dark bg-brand hover:bg-brand-hover transition-colors shadow-sm"
             >
-              <Plus aria-hidden="true" className="w-3.5 h-3.5" />
+              <Plus aria-hidden="true" className="w-3.5 h-3.5 text-navy-dark stroke-[3]" />
               <span className="sm:hidden">Enroll</span>
               <span className="hidden sm:inline">Enroll New Patient</span>
             </button>
@@ -378,9 +406,9 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
         </div>
 
         {/* Role Selection & Identity Banner */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between text-xs bg-paper-warm/40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between text-xs bg-[#071B33]">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-            <span className="text-charcoal-muted font-sans uppercase tracking-wider text-[11px] flex items-center gap-1">
+            <span className="text-slate-300 font-sans uppercase tracking-wider text-[11px] flex items-center gap-1">
               <UserCheck aria-hidden="true" className="w-3.5 h-3.5 text-brand" />
               {roleSwitchAllowed ? "Active Classroom Role:" : "Your Assigned Station:"}
             </span>
@@ -389,24 +417,21 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
               <RoleMenu activeRole={activeRole} onSelect={setActiveRole} />
             ) : (
               <div
-                title="Your station is fixed by the role you registered with. Sign out to use a different account."
-                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-paper-border text-charcoal text-xs w-fit max-w-full"
+                title="Your station is locked to your registered role"
+                className="flex items-center gap-2 px-3 py-1.5 bg-[#0F325E] border border-paper-border text-white text-xs w-fit max-w-full"
               >
-                <Lock aria-hidden="true" className="w-3.5 h-3.5 text-charcoal-muted shrink-0" />
-                <span className="font-mono px-1 bg-brand-light text-brand border border-brand-border text-[10px]">
+                <Lock aria-hidden="true" className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                <span className="font-mono px-1 bg-brand text-navy-dark font-bold text-[10px]">
                   {currentRoleMeta.badge}
                 </span>
-                <span className="font-serif text-sm font-semibold">{currentRoleMeta.title}</span>
-                <span className="sr-only">
-                  (locked to your registered role; sign out to use a different account)
-                </span>
+                <span className="font-sans text-xs sm:text-sm font-bold">{currentRoleMeta.title}</span>
               </div>
             )}
           </div>
 
           {/* Staff Sign-off Identity Field */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-            <label htmlFor={signOffId} className="text-charcoal-muted text-[11px]">
+            <label htmlFor={signOffId} className="text-slate-300 text-[11px]">
               Signing off as:
             </label>
             <input
@@ -417,11 +442,11 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
               onChange={(e) => setActiveStaffName(e.target.value)}
               title={
                 currentUser
-                  ? "Locked to your signed-in student account"
+                  ? "Locked to your signed-in account"
                   : "Type student name or ID for clinical log entries"
               }
-              className="px-2 py-2 sm:py-0.5 text-xs bg-white border border-paper-border focus:border-brand text-charcoal w-full sm:w-64 font-sans read-only:bg-paper-warm read-only:text-charcoal-muted"
-              placeholder="Student Name / Staff ID"
+              className="px-2.5 py-1 text-xs bg-[#0F325E] border border-paper-border focus:border-brand text-white w-full sm:w-64 font-sans read-only:bg-[#071B33] read-only:text-slate-300"
+              placeholder="Staff Name / ID"
             />
           </div>
         </div>
@@ -431,10 +456,18 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
         <ResetConfirmDialog
           live={isLive}
           onCancel={() => setResetConfirmOpen(false)}
-          onConfirm={async () => {
+          onResetZero={async () => {
             await resetToDemoCases();
             setResetConfirmOpen(false);
           }}
+          onSeedDemo={
+            !isLive
+              ? async () => {
+                  await resetToDemoCases();
+                  setResetConfirmOpen(false);
+                }
+              : undefined
+          }
         />
       )}
     </>
