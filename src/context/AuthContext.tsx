@@ -6,7 +6,7 @@ import { UserAccount, RoleId } from "@/types/emr";
 export const DEFAULT_ADMIN_TEACHER_ACCOUNTS: UserAccount[] = [
   {
     id: "adm-001",
-    fullName: "Vincent Chidiebere (Super Admin)",
+    fullName: "Chidiebere (Super Admin)",
     email: "vchidiebere.vc@gmail.com",
     assignedRole: "director",
     isAdmin: true,
@@ -16,7 +16,7 @@ export const DEFAULT_ADMIN_TEACHER_ACCOUNTS: UserAccount[] = [
   },
   {
     id: "adm-002",
-    fullName: "Dr. Vincent Chidiebere",
+    fullName: "Chidiebere",
     email: "vincent.chidiebere@outlook.com",
     assignedRole: "director",
     isAdmin: true,
@@ -25,7 +25,7 @@ export const DEFAULT_ADMIN_TEACHER_ACCOUNTS: UserAccount[] = [
   },
   {
     id: "adm-003",
-    fullName: "Nurse Rita Eze",
+    fullName: "Rita",
     email: "ritaeze53@gmail.com",
     assignedRole: "director",
     isAdmin: true,
@@ -34,7 +34,7 @@ export const DEFAULT_ADMIN_TEACHER_ACCOUNTS: UserAccount[] = [
   },
   {
     id: "adm-004",
-    fullName: "Dr. Salamah Alawiye",
+    fullName: "Salamah",
     email: "salamahalawiye@gmail.com",
     assignedRole: "director",
     isAdmin: true,
@@ -43,7 +43,7 @@ export const DEFAULT_ADMIN_TEACHER_ACCOUNTS: UserAccount[] = [
   },
   {
     id: "adm-005",
-    fullName: "Favour Falade",
+    fullName: "Favour",
     email: "faladefavour@gmail.com",
     assignedRole: "director",
     isAdmin: true,
@@ -52,7 +52,7 @@ export const DEFAULT_ADMIN_TEACHER_ACCOUNTS: UserAccount[] = [
   },
   {
     id: "adm-006",
-    fullName: "Nyta Edu",
+    fullName: "Sunita",
     email: "nytaedu@gmail.com",
     assignedRole: "director",
     isAdmin: true,
@@ -61,7 +61,7 @@ export const DEFAULT_ADMIN_TEACHER_ACCOUNTS: UserAccount[] = [
   },
   {
     id: "adm-007",
-    fullName: "Fiyin Anifowose",
+    fullName: "Fiyin",
     email: "anifowosefiyin@gmail.com",
     assignedRole: "director",
     isAdmin: true,
@@ -70,7 +70,7 @@ export const DEFAULT_ADMIN_TEACHER_ACCOUNTS: UserAccount[] = [
   },
   {
     id: "adm-008",
-    fullName: "Lotty Nanche",
+    fullName: "Nancy",
     email: "nanchelotty@gmail.com",
     assignedRole: "director",
     isAdmin: true,
