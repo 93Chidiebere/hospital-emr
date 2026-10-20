@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useAuth, DEFAULT_ADMIN_TEACHER_ACCOUNTS, DEFAULT_STUDENT_ACCOUNTS } from "@/context/AuthContext";
 import { RoleId, HOSPITAL_ROLES } from "@/types/emr";
 import {
@@ -29,6 +29,12 @@ export function HeroLanding() {
   const [signupRole, setSignupRole] = useState<RoleId>("triage_nurse");
   const [signupPassword, setSignupPassword] = useState("");
 
+    // Teacher / Admin sign-in state (kept separate so these boxes always start empty)
+  const [selectedTeacher, setSelectedTeacher] = useState("");
+  const [teacherEmail, setTeacherEmail] = useState("");
+  const [teacherPassword, setTeacherPassword] = useState("");
+  const teacherPasswordRef = useRef<HTMLInputElement>(null);
+
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -56,13 +62,25 @@ export function HeroLanding() {
     }
   };
 
-  const handleQuickTeacherLogin = async (email: string) => {
-    setLoading(true);
+
+    // A teacher picks their name, then types their own password (nothing is auto-filled)
+  const handleSelectTeacher = (fullName: string) => {
+    setSelectedTeacher(fullName);
+    setTeacherPassword("");
     setErrorMessage("");
-    const res = await login(email, "Pass@word1");
+    setTimeout(() => teacherPasswordRef.current?.focus(), 0);
+  };
+
+  const handleTeacherLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage("");
+    setLoading(true);
+    // Sign-in accepts either the full name or the email; the email is never shown on screen
+    const res = await login(selectedTeacher || teacherEmail, teacherPassword);
     setLoading(false);
     if (!res.success) {
-      setErrorMessage(res.error || "Quick teacher sign in failed.");
+      setErrorMessage(res.error || "Authentication failed.");
+      setTeacherPassword("");
     }
   };
 
@@ -312,7 +330,7 @@ export function HeroLanding() {
               </form>
             )}
 
-            {/* TAB 3: TEACHERS / ADMIN PORTAL */}
+                        {/* TAB 3: TEACHERS / ADMIN PORTAL */}
             {activeTab === "teacher" && (
               <div className="space-y-4 text-xs">
                 <div className="p-3 bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5 rounded-[2px]">
@@ -325,31 +343,88 @@ export function HeroLanding() {
                   </div>
                 </div>
 
-                <form onSubmit={handleLogin} className="space-y-3">
-                  <div>
-                    <label className="block font-mono text-[10px] uppercase text-charcoal-muted mb-1 font-bold">
-                      Teacher Email Address *
-                    </label>
-                    <input
-                      required
-                      type="email"
-                      value={loginIdentifier}
-                      onChange={(e) => setLoginIdentifier(e.target.value)}
-                      placeholder="e.g. vchidiebere.vc@gmail.com"
-                      className="w-full p-2.5 bg-white border border-slate-300 focus:border-brand focus:ring-1 focus:ring-brand text-charcoal font-sans text-xs outline-none"
-                    />
+                {/* Pick your name (no emails or passwords are shown) */}
+                <div className="space-y-2">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-charcoal-muted block">
+                    Select your name:
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-44 overflow-y-auto pr-1">
+                    {DEFAULT_ADMIN_TEACHER_ACCOUNTS.map((adm) => {
+                      const isSelected = selectedTeacher === adm.fullName;
+                      return (
+                        <button
+                          key={adm.id}
+                          type="button"
+                          aria-pressed={isSelected}
+                          onClick={() => handleSelectTeacher(adm.fullName)}
+                          className={`p-2.5 text-left border text-xs font-bold text-navy-dark truncate transition-colors ${
+                            isSelected
+                              ? "border-brand bg-amber-50"
+                              : "border-slate-200 hover:border-brand bg-white hover:bg-amber-50"
+                          }`}
+                        >
+                          {adm.fullName}
+                        </button>
+                      );
+                    })}
                   </div>
+                </div>
+
+                <form onSubmit={handleTeacherLogin} className="space-y-3">
+                  {selectedTeacher ? (
+                    <div className="flex items-center justify-between gap-2 p-2.5 bg-slate-50 border border-slate-200">
+                      <span className="text-charcoal">
+                        Signing in as <strong>{selectedTeacher}</strong>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedTeacher("");
+                          setTeacherPassword("");
+                          setErrorMessage("");
+                        }}
+                        className="underline text-[11px] text-charcoal-muted hover:text-charcoal shrink-0"
+                      >
+                        Change
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <label
+                        htmlFor="teacher-email"
+                        className="block font-mono text-[10px] uppercase text-charcoal-muted mb-1 font-bold"
+                      >
+                        Or enter your teacher email address *
+                      </label>
+                      <input
+                        id="teacher-email"
+                        required
+                        type="email"
+                        autoComplete="off"
+                        value={teacherEmail}
+                        onChange={(e) => setTeacherEmail(e.target.value)}
+                        placeholder="Enter your teacher email address"
+                        className="w-full p-2.5 bg-white border border-slate-300 focus:border-brand focus:ring-1 focus:ring-brand text-charcoal font-sans text-xs outline-none"
+                      />
+                    </div>
+                  )}
 
                   <div>
-                    <label className="block font-mono text-[10px] uppercase text-charcoal-muted mb-1 font-bold">
+                    <label
+                      htmlFor="teacher-password"
+                      className="block font-mono text-[10px] uppercase text-charcoal-muted mb-1 font-bold"
+                    >
                       Admin Password *
                     </label>
                     <input
+                      id="teacher-password"
+                      ref={teacherPasswordRef}
                       required
                       type="password"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      placeholder="Pass@word1"
+                      autoComplete="current-password"
+                      value={teacherPassword}
+                      onChange={(e) => setTeacherPassword(e.target.value)}
+                      placeholder="Enter your password"
                       className="w-full p-2.5 bg-white border border-slate-300 focus:border-brand focus:ring-1 focus:ring-brand text-charcoal font-sans text-xs outline-none"
                     />
                   </div>
@@ -363,28 +438,6 @@ export function HeroLanding() {
                     <span>{loading ? "Signing in..." : "Sign In as Teacher / Admin"}</span>
                   </button>
                 </form>
-
-                {/* 1-Click Fast Teacher Auto Sign-In */}
-                <div className="pt-2 border-t border-slate-200 space-y-2">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-charcoal-muted block">
-                    Fast 1-Click Teacher Sign-In:
-                  </span>
-                  <div className="grid grid-cols-2 gap-1.5 max-h-44 overflow-y-auto pr-1">
-                    {DEFAULT_ADMIN_TEACHER_ACCOUNTS.map((adm) => (
-                      <button
-                        key={adm.id}
-                        type="button"
-                        onClick={() => handleQuickTeacherLogin(adm.email!)}
-                        className="p-2 text-left border border-slate-200 hover:border-brand bg-white hover:bg-amber-50 text-[10px] transition-colors flex flex-col"
-                      >
-                        <span className="font-bold text-navy-dark truncate">
-                          {adm.fullName}
-                        </span>
-                        <span className="font-mono text-slate-500 truncate">{adm.email}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </div>
             )}
           </div>
@@ -396,10 +449,10 @@ export function HeroLanding() {
             Trinity University Hospital EHR
           </h1>
           <p className="text-xs sm:text-sm md:text-base text-amber-300 font-semibold tracking-wide uppercase">
-            Clinical Data Flow & Patient Journey Simulation System
+            Clinical Data Flow & Patient Journey System
           </p>
           <p className="text-xs sm:text-sm text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            Hands-on simulation for Trinity University undergraduates. Learn how health records flow seamlessly across Reception, Nurse Triage, Physician Consultation, Laboratory Diagnostics, Radiology, and Inpatient/Treatment Nursing.
+            Learn how medical records flow seamlessly across Reception, Nurse Triage, Physician Consultation, Laboratory Diagnostics, Radiology, and Inpatient/Treatment Nursing.
           </p>
 
           {/* Quick Demo Mode CTA */}
@@ -410,7 +463,7 @@ export function HeroLanding() {
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/25 hover:border-amber-400 text-xs sm:text-sm font-semibold transition-all rounded-[2px] shadow-sm backdrop-blur-sm"
             >
               <Sparkles className="w-4 h-4 text-amber-300" />
-              <span>Explore Demo Simulation (5 Sample Patients)</span>
+              <span>Explore Demo Simulation (4 Sample Patients)</span>
               <ArrowRight className="w-4 h-4 text-amber-300" />
             </button>
           </div>
