@@ -164,7 +164,24 @@ export function EMRProvider({ children }: { children: ReactNode }) {
           return;
         }
       }
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setSyncError(
+          j?.message
+            ? `Server problem: ${j.message}`
+            : `The server returned an error (${res.status}). Open /api/health to see what is missing.`
+        );
+        if (!opts?.silent) {
+          try {
+            const cached = localStorage.getItem(LIVE_CACHE_KEY);
+            setPatients(cached ? JSON.parse(cached) : []);
+          } catch {
+            setPatients([]);
+          }
+        }
+        setLoading(false);
+        return;
+      }
       const json = await res.json();
       const server: Patient[] = Array.isArray(json.data) ? json.data : [];
       revRef.current = typeof json.rev === "number" ? json.rev : null;
@@ -225,12 +242,25 @@ export function EMRProvider({ children }: { children: ReactNode }) {
           expireSession();
           return;
         }
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) {
+          const bad = await res.json().catch(() => ({}));
+          setSyncError(
+            bad?.message
+              ? `Server problem: ${bad.message}`
+              : `The server returned an error (${res.status}). Open /api/health to see what is missing.`
+          );
+          return;
+        }
         const j = await res.json();
         if (j.rev !== revRef.current || j.sessionId !== sessionIdRef.current) {
           await fetchPatients({ silent: true });
         } else {
-          setSyncError((cur) => (cur && cur.startsWith("Cannot reach") ? null : cur));
+          // the earlier problem is gone: clear its notice
+          setSyncError((cur) =>
+            cur && (cur.startsWith("Cannot reach") || cur.startsWith("Server problem") || cur.startsWith("The server returned"))
+              ? null
+              : cur
+          );
         }
       } catch {
         setSyncError("Cannot reach the server. Showing the last saved copy; new changes may not be shared.");
@@ -284,7 +314,11 @@ export function EMRProvider({ children }: { children: ReactNode }) {
         setSyncError("This class session was closed by the teacher, so your last change was not saved.");
         return;
       }
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setSyncError(j?.message ? `Could not save the last change: ${j.message}` : "The last change could not be saved to the server.");
+        return;
+      }
       recentWrites.current.set(updatedPatient.id, Date.now());
       setSyncError(null);
     } catch {
@@ -313,7 +347,10 @@ export function EMRProvider({ children }: { children: ReactNode }) {
         expireSession();
         throw new Error("Your sign-in has expired. Please sign in again.");
       }
-      if (!res.ok) throw new Error("The new patient could not be saved to the server.");
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j?.message ? `The patient could not be saved. ${j.message}` : "The new patient could not be saved to the server.");
+      }
       const json = await res.json();
       const created: Patient = json.data;
       recentWrites.current.set(created.id, Date.now());

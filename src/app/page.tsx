@@ -31,6 +31,7 @@ import {
 
 export default function Home() {
   const { activeRole, setActiveRole, setActiveStaffName, isLive, syncError, storageInfo } = useEMR();
+  const [dismissedNotice, setDismissedNotice] = useState<string>("");
   const { currentUser, isDemoMode, authReady, authWarnings } = useAuth();
 
   const [intakeOpen, setIntakeOpen] = useState(false);
@@ -90,14 +91,27 @@ export default function Home() {
         </div>
       )}
 
-      {/* Database connection warning if live storage has issues */}
-      {isLive && (syncError || storageInfo?.ephemeral) && (
+      {/* Database connection warning if live storage has issues (can be dismissed; returns if the message changes) */}
+      {isLive && (syncError || storageInfo?.ephemeral) && (syncError ?? "ephemeral") !== dismissedNotice && (
         <div
           role="alert"
-          className="bg-amber-100 border-b border-amber-300 text-amber-900 text-xs px-4 py-2 text-center font-bold"
+          className="bg-amber-100 border-b border-amber-300 text-amber-900 text-xs px-4 py-2 flex items-center justify-center gap-3 font-bold"
         >
-          {syncError ??
-            "The shared database is not connected on this host, so records may differ between devices. Ask the administrator to connect it."}
+          <span className="text-center">
+            {syncError ??
+              "The shared database is not connected on this host, so records may differ between devices. Ask the administrator to connect it."}{" "}
+            <a href="/api/health" target="_blank" rel="noreferrer" className="underline font-semibold">
+              Check setup status
+            </a>
+          </span>
+          <button
+            type="button"
+            onClick={() => setDismissedNotice(syncError ?? "ephemeral")}
+            aria-label="Dismiss this notice"
+            className="shrink-0 px-2 py-0.5 border border-amber-400 hover:bg-amber-200 text-amber-900 leading-none"
+          >
+            ×
+          </button>
         </div>
       )}
 

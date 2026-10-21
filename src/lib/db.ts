@@ -14,8 +14,11 @@ export class DbNotConfiguredError extends Error {
   }
 }
 
-const url = process.env.TURSO_DATABASE_URL;
-const authToken = process.env.TURSO_AUTH_TOKEN;
+// Values pasted into Vercel often carry stray spaces, line breaks or quote marks. Clean them.
+const clean = (v: string | undefined) => (v ? v.trim().replace(/^["']+|["']+$/g, "").trim() : undefined) || undefined;
+
+const url = clean(process.env.TURSO_DATABASE_URL);
+const authToken = clean(process.env.TURSO_AUTH_TOKEN);
 
 export const dbConfigured = Boolean(url);
 
