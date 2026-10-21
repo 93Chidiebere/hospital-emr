@@ -46,6 +46,15 @@ interface PatientRow {
   registeredAt: string;
 }
 
+interface StudentRow {
+  id: string;
+  fullName: string;
+  role: string;
+  createdAt: string;
+  lastLoginAt: string | null;
+  locked: boolean;
+}
+
 interface ReportResponse {
   success: boolean;
   scope: string;
@@ -112,6 +121,49 @@ export default function ReportsPage() {
   const [data, setData] = useState<ReportResponse | null>(null);
   const [problem, setProblem] = useState<{ title: string; detail: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [students, setStudents] = useState<StudentRow[]>([]);
+  const [studentMsg, setStudentMsg] = useState("");
+  const [weakPassword, setWeakPassword] = useState(false);
+
+  const loadStudents = useCallback(async () => {
+    try {
+      const res = await fetch("/api/students", { cache: "no-store" });
+      if (res.ok) {
+        const json = await res.json();
+        setStudents(Array.isArray(json.data) ? json.data : []);
+      }
+    } catch {
+      // ignore: the list simply stays as it was
+    }
+  }, []);
+
+  const resetStudent = async (st: StudentRow) => {
+    const pw = window.prompt(`New temporary password for ${st.fullName} (at least 6 characters):`);
+    if (pw === null) return;
+    try {
+      const res = await fetch(`/api/students/${encodeURIComponent(st.id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: pw }),
+      });
+      const json = await res.json().catch(() => ({}));
+      setStudentMsg(res.ok ? `Password reset for ${st.fullName}. Tell them the new password.` : json?.message || "Could not reset the password.");
+      if (res.ok) loadStudents();
+    } catch {
+      setStudentMsg("Could not reach the server.");
+    }
+  };
+
+  const removeStudentAccount = async (st: StudentRow) => {
+    if (!window.confirm(`Remove the account for ${st.fullName}? Their past records stay in the reports, but they will be signed out and must register again.`)) return;
+    try {
+      const res = await fetch(`/api/students/${encodeURIComponent(st.id)}`, { method: "DELETE" });
+      setStudentMsg(res.ok ? `Removed ${st.fullName}.` : "Could not remove the account.");
+      if (res.ok) loadStudents();
+    } catch {
+      setStudentMsg("Could not reach the server.");
+    }
+  };
 
   const load = useCallback(async (session?: string) => {
     setLoading(true);
@@ -153,7 +205,12 @@ export default function ReportsPage() {
 
   useEffect(() => {
     load();
-  }, [load]);
+    loadStudents();
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j) => setWeakPassword(Array.isArray(j?.warnings) && j.warnings.includes("teacher_password_weak")))
+      .catch(() => {});
+  }, [load, loadStudents]);
 
   const s = data?.summary;
   const fmt = (iso: string) => {
@@ -180,6 +237,12 @@ export default function ReportsPage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-5">
+        {weakPassword && (
+          <div role="alert" className="bg-red-700 text-white p-4 text-sm font-semibold">
+            Security warning: the teacher password is the old default (or too short) and is published in the public code.
+            Anyone who finds it can open these reports. Change TEACHER_PASSWORD in Vercel (Settings, Environment Variables) and redeploy.
+          </div>
+        )}
         {problem && (
           <div role="alert" className="bg-amber-50 border border-amber-300 p-5 flex gap-3">
             <ShieldAlert aria-hidden="true" className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
@@ -321,6 +384,66 @@ export default function ReportsPage() {
                           <td className="py-1.5 px-2 text-right">{a.imagingReports}</td>
                           <td className="py-1.5 px-2 text-right">{a.medicationsGiven}</td>
                           <td className="py-1.5 pl-2 text-right">{a.patientsRouted}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </Card>
+
+            <Card title={`Student accounts (${students.length})`}>
+              <p className="text-sm text-slate-600 mb-3">
+                Students register themselves. If someone forgets their password, set a new temporary one here and tell them. An account is
+                locked for 5 minutes after 5 wrong attempts; resetting the password unlocks it.
+              </p>
+              {studentMsg && (
+                <p role="status" className="text-sm font-semibold text-navy-dark bg-amber-50 border border-amber-200 p-2 mb-3">
+                  {studentMsg}
+                </p>
+              )}
+              {students.length === 0 ? (
+                <p className="text-sm text-slate-500">No student accounts yet.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm min-w-[40rem]">
+                    <thead>
+                      <tr className="text-left text-[11px] uppercase font-mono text-slate-600 border-b border-slate-200">
+                        <th scope="col" className="py-1.5 pr-2">Name</th>
+                        <th scope="col" className="py-1.5 pr-2">Station role</th>
+                        <th scope="col" className="py-1.5 pr-2">Registered</th>
+                        <th scope="col" className="py-1.5 pr-2">Last sign-in</th>
+                        <th scope="col" className="py-1.5 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {students.map((st) => (
+                        <tr key={st.id} className="border-b border-slate-100">
+                          <td className="py-1.5 pr-2 font-bold">
+                            {st.fullName}
+                            {st.locked && <span className="ml-2 text-[10px] font-mono bg-red-100 text-red-700 px-1.5 py-0.5">LOCKED</span>}
+                          </td>
+                          <td className="py-1.5 pr-2">{st.role}</td>
+                          <td className="py-1.5 pr-2">{fmt(st.createdAt)}</td>
+                          <td className="py-1.5 pr-2">{st.lastLoginAt ? fmt(st.lastLoginAt) : "never"}</td>
+                          <td className="py-1.5 text-right whitespace-nowrap">
+                            <button
+                              type="button"
+                              onClick={() => resetStudent(st)}
+                              aria-label={`Reset password for ${st.fullName}`}
+                              className="px-2.5 py-1 text-xs border border-slate-300 hover:border-brand hover:bg-amber-50 mr-1.5"
+                            >
+                              Reset password
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeStudentAccount(st)}
+                              aria-label={`Remove account for ${st.fullName}`}
+                              className="px-2.5 py-1 text-xs border border-red-300 text-red-700 hover:bg-red-50"
+                            >
+                              Remove
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>

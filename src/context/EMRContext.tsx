@@ -85,7 +85,7 @@ const EMRContext = createContext<EMRContextType | undefined>(undefined);
 export function EMRProvider({ children }: { children: ReactNode }) {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
-  const { currentUser, authReady } = useAuth();
+  const { currentUser, authReady, expireSession } = useAuth();
   const isLive = !!currentUser;
   const [syncError, setSyncError] = useState<string | null>(null);
   const [storageInfo, setStorageInfo] = useState<{ storage: string; ephemeral: boolean } | null>(null);
@@ -144,8 +144,19 @@ export function EMRProvider({ children }: { children: ReactNode }) {
     if (!opts?.silent) setLoading(true);
     try {
       const res = await fetch("/api/patients", { cache: "no-store" });
+      if (res.status === 401) {
+        expireSession();
+        setLoading(false);
+        return;
+      }
       if (res.status === 503) {
         const j = await res.json().catch(() => ({}));
+        if (j?.error === "AUTH_NOT_CONFIGURED") {
+          setSyncError("Sign-in is not fully set up yet. Ask the administrator to set AUTH_SECRET in Vercel.");
+          setPatients([]);
+          setLoading(false);
+          return;
+        }
         if (j?.error === "DB_NOT_CONFIGURED") {
           setSyncError("The database is not connected yet. Ask the administrator to finish the database setup.");
           setPatients([]);
@@ -210,6 +221,10 @@ export function EMRProvider({ children }: { children: ReactNode }) {
       if (document.visibilityState !== "visible") return;
       try {
         const res = await fetch("/api/rev", { cache: "no-store" });
+        if (res.status === 401) {
+          expireSession();
+          return;
+        }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const j = await res.json();
         if (j.rev !== revRef.current || j.sessionId !== sessionIdRef.current) {
@@ -261,6 +276,10 @@ export function EMRProvider({ children }: { children: ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedPatient),
       });
+      if (res.status === 401) {
+        expireSession();
+        return;
+      }
       if (res.status === 409) {
         setSyncError("This class session was closed by the teacher, so your last change was not saved.");
         return;
@@ -290,6 +309,10 @@ export function EMRProvider({ children }: { children: ReactNode }) {
           registeredBy: activeStaffName,
         }),
       });
+      if (res.status === 401) {
+        expireSession();
+        throw new Error("Your sign-in has expired. Please sign in again.");
+      }
       if (!res.ok) throw new Error("The new patient could not be saved to the server.");
       const json = await res.json();
       const created: Patient = json.data;

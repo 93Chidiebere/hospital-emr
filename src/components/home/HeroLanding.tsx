@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useRef, useState } from "react";
-import { useAuth, DEFAULT_ADMIN_TEACHER_ACCOUNTS, DEFAULT_STUDENT_ACCOUNTS } from "@/context/AuthContext";
+import React, { useRef, useState, useEffect } from "react";
+import { useAuth, DEFAULT_ADMIN_TEACHER_ACCOUNTS } from "@/context/AuthContext";
 import { RoleId, HOSPITAL_ROLES } from "@/types/emr";
 import {
   LogIn,
@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 export function HeroLanding() {
-  const { login, signup, enterDemoMode, loginTeacherVerified } = useAuth();
+  const { login, signup, loginTeacher, enterDemoMode, authNotice } = useAuth();
 
   const [activeTab, setActiveTab] = useState<"signin" | "signup" | "teacher">("signin");
 
@@ -37,6 +37,11 @@ export function HeroLanding() {
 
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // e.g. "Your sign-in has expired" after the server ended the session
+  useEffect(() => {
+    if (authNotice) setErrorMessage(authNotice);
+  }, [authNotice]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,53 +79,24 @@ export function HeroLanding() {
   const handleTeacherLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
-    setLoading(true);
-    // Sign-in accepts either the full name or the email; the email is never shown on screen
-    const who = selectedTeacher || teacherEmail;
 
-    // 1) Ask the SERVER to check the password (it also unlocks Reports and session controls)
-    try {
-      const resp = await fetch("/api/auth/teacher", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: who, password: teacherPassword }),
-      });
-      if (resp.ok) {
-        const verified = loginTeacherVerified(who);
-        setLoading(false);
-        if (!verified.success) {
-          setErrorMessage(verified.error || "Authentication failed.");
-          setTeacherPassword("");
-        }
-        return;
-      }
-      if (resp.status === 401) {
-        setLoading(false);
-        setErrorMessage("Incorrect password. Please verify your credentials.");
-        setTeacherPassword("");
-        return;
-      }
-      // 503 = the owner has not set TEACHER_PASSWORD yet; fall through to the older check
-    } catch {
-      // network problem: fall through to the older check
+    // Work out which teacher profile this is (by picked name, or by typed name / email)
+    const typed = (selectedTeacher || teacherEmail).trim().toLowerCase();
+    const profile = DEFAULT_ADMIN_TEACHER_ACCOUNTS.find(
+      (t) => t.fullName.toLowerCase() === typed || (t.email && t.email.toLowerCase() === typed)
+    );
+    if (!profile) {
+      setErrorMessage("No teacher profile found for that name or email. Pick your name from the list.");
+      return;
     }
 
-    // 2) Fallback (only when the server password is not configured / unreachable)
-    const res = await login(who, teacherPassword);
+    setLoading(true);
+    // The server checks the password and starts the teacher session
+    const res = await loginTeacher(profile.fullName, teacherPassword);
     setLoading(false);
     if (!res.success) {
       setErrorMessage(res.error || "Authentication failed.");
       setTeacherPassword("");
-    }
-  };
-
-  const handleQuickStudentLogin = async (name: string, password = "pass") => {
-    setLoading(true);
-    setErrorMessage("");
-    const res = await login(name, password);
-    setLoading(false);
-    if (!res.success) {
-      setErrorMessage(res.error || "Quick student sign in failed.");
     }
   };
 
@@ -237,27 +213,29 @@ export function HeroLanding() {
                 <div className="space-y-3">
                   <div>
                     <label className="block font-mono text-[10px] uppercase text-charcoal-muted mb-1 font-bold">
-                      Full Name or Staff Email *
+                      Full Name *
                     </label>
                     <input
                       required
                       type="text"
                       value={loginIdentifier}
                       onChange={(e) => setLoginIdentifier(e.target.value)}
-                      placeholder="e.g. Nurse Mary Okon"
+                      placeholder="e.g. Adaeze Nwafor"
                       className="w-full p-2.5 bg-white border border-slate-300 focus:border-brand focus:ring-1 focus:ring-brand text-charcoal font-sans text-xs outline-none"
                     />
                   </div>
 
                   <div>
                     <label className="block font-mono text-[10px] uppercase text-charcoal-muted mb-1 font-bold">
-                      Password or PIN
+                      Password *
                     </label>
                     <input
+                      required
                       type="password"
+                      autoComplete="current-password"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
-                      placeholder="Password or pass"
+                      placeholder="Your password"
                       className="w-full p-2.5 bg-white border border-slate-300 focus:border-brand focus:ring-1 focus:ring-brand text-charcoal font-sans text-xs outline-none"
                     />
                   </div>
@@ -271,32 +249,6 @@ export function HeroLanding() {
                   <LogIn className="w-4 h-4" />
                   <span>{loading ? "Authenticating..." : "Sign In to Hospital Workstation"}</span>
                 </button>
-
-                {/* 1-Click Test Student Logins */}
-                <div className="pt-3 border-t border-slate-200 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-charcoal-muted">
-                      Quick 1-Click Simulation Profiles:
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-mono">Password: pass</span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                    {DEFAULT_STUDENT_ACCOUNTS.filter((a) => !a.isAdmin).map((acc) => (
-                      <button
-                        key={acc.id}
-                        type="button"
-                        onClick={() => handleQuickStudentLogin(acc.fullName, acc.password)}
-                        className="p-1.5 text-left border border-slate-200 hover:border-brand bg-white hover:bg-amber-50 text-[10px] transition-colors flex flex-col"
-                      >
-                        <span className="font-bold text-navy-dark truncate">{acc.fullName}</span>
-                        <span className="font-mono text-slate-500">
-                          {HOSPITAL_ROLES.find((r) => r.id === acc.assignedRole)?.badge} &bull;{" "}
-                          {HOSPITAL_ROLES.find((r) => r.id === acc.assignedRole)?.title}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </form>
             )}
 
@@ -337,13 +289,16 @@ export function HeroLanding() {
 
                   <div>
                     <label className="block font-mono text-[10px] uppercase text-charcoal-muted mb-1 font-bold">
-                      Create Password / PIN
+                      Create Password * (at least 6 characters)
                     </label>
                     <input
+                      required
+                      minLength={6}
                       type="password"
+                      autoComplete="new-password"
                       value={signupPassword}
                       onChange={(e) => setSignupPassword(e.target.value)}
-                      placeholder="Optional password (default: pass)"
+                      placeholder="Choose a password you will remember"
                       className="w-full p-2.5 bg-white border border-slate-300 focus:border-brand focus:ring-1 focus:ring-brand text-charcoal font-sans text-xs outline-none"
                     />
                   </div>

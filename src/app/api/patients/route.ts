@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createPatient, getActiveSession, listPatients, getRev } from "@/lib/store";
 import { errorResponse } from "@/lib/api-errors";
+import { requireUser } from "@/lib/session";
 import type { Patient } from "@/types/emr";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +12,8 @@ const noStore = { "Cache-Control": "no-store" };
 
 // Live records of the ACTIVE class session
 export async function GET() {
+  const guard = await requireUser();
+  if (!guard.ok) return guard.response;
   try {
     const session = await getActiveSession();
     const [patients, { rev }] = await Promise.all([listPatients(session.id), getRev()]);
@@ -32,6 +35,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const guard = await requireUser();
+  if (!guard.ok) return guard.response;
   try {
     const body = await request.json();
 

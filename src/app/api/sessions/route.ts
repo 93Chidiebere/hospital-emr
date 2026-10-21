@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { listSessions, startNewSession } from "@/lib/store";
-import { requireTeacher } from "@/lib/teacher-auth";
+import { requireTeacher } from "@/lib/session";
 import { errorResponse } from "@/lib/api-errors";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +8,7 @@ export const fetchCache = "force-no-store";
 export const runtime = "nodejs";
 
 export async function GET() {
-  const guard = requireTeacher();
+  const guard = await requireTeacher();
   if (!guard.ok) return guard.response;
   try {
     const sessions = await listSessions();
@@ -20,7 +20,7 @@ export async function GET() {
 
 // Close the current class session (data is kept) and open a new empty one.
 export async function POST(request: Request) {
-  const guard = requireTeacher();
+  const guard = await requireTeacher();
   if (!guard.ok) return guard.response;
   try {
     const body = await request.json().catch(() => ({}));

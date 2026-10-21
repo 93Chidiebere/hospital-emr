@@ -3,6 +3,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { UserAccount, RoleId } from "@/types/emr";
 
+/**
+ * Teacher / admin PROFILES shown on the "Select your name" list.
+ * These hold no passwords: teachers type the password that the administrator set in
+ * Vercel (TEACHER_PASSWORD), and the server checks it. Student accounts live in the database.
+ */
 export const DEFAULT_ADMIN_TEACHER_ACCOUNTS: UserAccount[] = [
   {
     id: "adm-001",
@@ -11,7 +16,6 @@ export const DEFAULT_ADMIN_TEACHER_ACCOUNTS: UserAccount[] = [
     assignedRole: "director",
     isAdmin: true,
     isSuperAdmin: true,
-    password: "Pass@word1",
     createdAt: "2026-10-20T00:00:00Z",
   },
   {
@@ -20,7 +24,6 @@ export const DEFAULT_ADMIN_TEACHER_ACCOUNTS: UserAccount[] = [
     email: "vincent.chidiebere@outlook.com",
     assignedRole: "director",
     isAdmin: true,
-    password: "Pass@word1",
     createdAt: "2026-10-20T00:00:00Z",
   },
   {
@@ -29,7 +32,6 @@ export const DEFAULT_ADMIN_TEACHER_ACCOUNTS: UserAccount[] = [
     email: "ritaeze53@gmail.com",
     assignedRole: "director",
     isAdmin: true,
-    password: "Pass@word1",
     createdAt: "2026-10-20T00:00:00Z",
   },
   {
@@ -38,7 +40,6 @@ export const DEFAULT_ADMIN_TEACHER_ACCOUNTS: UserAccount[] = [
     email: "salamahalawiye@gmail.com",
     assignedRole: "director",
     isAdmin: true,
-    password: "Pass@word1",
     createdAt: "2026-10-20T00:00:00Z",
   },
   {
@@ -47,7 +48,6 @@ export const DEFAULT_ADMIN_TEACHER_ACCOUNTS: UserAccount[] = [
     email: "faladefavour@gmail.com",
     assignedRole: "director",
     isAdmin: true,
-    password: "Pass@word1",
     createdAt: "2026-10-20T00:00:00Z",
   },
   {
@@ -56,7 +56,6 @@ export const DEFAULT_ADMIN_TEACHER_ACCOUNTS: UserAccount[] = [
     email: "nytaedu@gmail.com",
     assignedRole: "director",
     isAdmin: true,
-    password: "Pass@word1",
     createdAt: "2026-10-20T00:00:00Z",
   },
   {
@@ -65,7 +64,6 @@ export const DEFAULT_ADMIN_TEACHER_ACCOUNTS: UserAccount[] = [
     email: "anifowosefiyin@gmail.com",
     assignedRole: "director",
     isAdmin: true,
-    password: "Pass@word1",
     createdAt: "2026-10-20T00:00:00Z",
   },
   {
@@ -74,193 +72,160 @@ export const DEFAULT_ADMIN_TEACHER_ACCOUNTS: UserAccount[] = [
     email: "nanchelotty@gmail.com",
     assignedRole: "director",
     isAdmin: true,
-    password: "Pass@word1",
     createdAt: "2026-10-20T00:00:00Z",
   },
 ];
 
-export const DEFAULT_STUDENT_ACCOUNTS: UserAccount[] = [
-  ...DEFAULT_ADMIN_TEACHER_ACCOUNTS,
-  {
-    id: "usr-001",
-    fullName: "Nurse Mary Okon",
-    assignedRole: "triage_nurse",
-    password: "pass",
-    createdAt: "2026-10-13T08:00:00Z",
-  },
-  {
-    id: "usr-002",
-    fullName: "Dr. Kelechi Adeyemi",
-    assignedRole: "doctor",
-    password: "pass",
-    createdAt: "2026-10-13T08:00:00Z",
-  },
-  {
-    id: "usr-003",
-    fullName: "MLS Emeka Chukwuma",
-    assignedRole: "mls",
-    password: "pass",
-    createdAt: "2026-10-13T08:00:00Z",
-  },
-  {
-    id: "usr-004",
-    fullName: "Officer Musa Bello",
-    assignedRole: "receptionist",
-    password: "pass",
-    createdAt: "2026-10-13T08:00:00Z",
-  },
-  {
-    id: "usr-005",
-    fullName: "Pharm. Titi Dike",
-    assignedRole: "treatment_nurse",
-    password: "pass",
-    createdAt: "2026-10-13T08:00:00Z",
-  },
-];
+type Result = { success: boolean; error?: string };
 
 interface AuthContextType {
   currentUser: UserAccount | null;
-  users: UserAccount[];
   authModalOpen: boolean;
   authMode: "signin" | "signup";
   authReady: boolean;
   isDemoMode: boolean;
+  /** shown on the sign-in screen, e.g. after a session expires */
+  authNotice: string;
+  /** server warnings for the signed-in user, e.g. "teacher_password_weak" */
+  authWarnings: string[];
   setAuthModalOpen: (open: boolean) => void;
   setAuthMode: (mode: "signin" | "signup") => void;
   enterDemoMode: () => void;
   exitDemoMode: () => void;
-  login: (identifier: string, password?: string) => Promise<{ success: boolean; error?: string }>;
-  signup: (
-    fullName: string,
-    role: RoleId,
-    password?: string
-  ) => Promise<{ success: boolean; error?: string }>;
+  /** Student sign-in (checked by the server). */
+  login: (name: string, password: string) => Promise<Result>;
+  /** Student registration (account is created in the database). */
+  signup: (fullName: string, role: RoleId, password: string) => Promise<Result>;
+  /** Teacher / admin sign-in (password checked by the server). */
+  loginTeacher: (name: string, password: string) => Promise<Result>;
   logout: () => void;
-  /** Used after the SERVER has checked the teacher password (no client-side password check). */
-  loginTeacherVerified: (identifier: string) => { success: boolean; error?: string };
+  /** Called when the server says the sign-in has expired or the account was removed. */
+  expireSession: (message?: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+interface ServerUser {
+  id: string;
+  fullName: string;
+  assignedRole: string;
+  isAdmin?: boolean;
+  createdAt?: string;
+}
+
+function toAccount(u: ServerUser): UserAccount {
+  // teachers: add the profile details (email / super-admin flag) from the list above
+  const profile = u.isAdmin
+    ? DEFAULT_ADMIN_TEACHER_ACCOUNTS.find((t) => t.fullName.toLowerCase() === u.fullName.toLowerCase())
+    : undefined;
+  return {
+    id: u.id,
+    fullName: u.fullName,
+    assignedRole: u.assignedRole as RoleId,
+    isAdmin: !!u.isAdmin,
+    isSuperAdmin: profile?.isSuperAdmin,
+    email: profile?.email,
+    createdAt: u.createdAt || "",
+  };
+}
+
+async function postJson(url: string, body: unknown) {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const json = await res.json().catch(() => ({}));
+  return { res, json };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [users, setUsers] = useState<UserAccount[]>(DEFAULT_STUDENT_ACCOUNTS);
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [authReady, setAuthReady] = useState(false);
   const [isDemoMode, setIsDemoMode] = useState(false);
+  const [authNotice, setAuthNotice] = useState("");
+  const [authWarnings, setAuthWarnings] = useState<string[]>([]);
 
-  // Load existing accounts and active session from localStorage
+  // Ask the server who is signed in (the sign-in is kept in a secure cookie, not in this browser's storage)
   useEffect(() => {
+    // Older versions kept accounts, with passwords, in the browser. Remove those leftovers.
     try {
-      const storedUsers = localStorage.getItem("trinity_emr_users");
-      if (storedUsers) {
-        const parsed = JSON.parse(storedUsers);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const merged = [...DEFAULT_STUDENT_ACCOUNTS];
-          parsed.forEach((p: UserAccount) => {
-            const exists = merged.some(
-              (m) =>
-                m.fullName.toLowerCase() === p.fullName.toLowerCase() ||
-                (p.email && m.email && m.email.toLowerCase() === p.email.toLowerCase())
-            );
-            if (!exists) {
-              merged.push(p);
-            }
-          });
-          setUsers(merged);
-        }
-      }
-
-      const activeSession = localStorage.getItem("trinity_emr_active_session");
-      if (activeSession) {
-        const parsedUser = JSON.parse(activeSession);
-        setCurrentUser(parsedUser);
-      }
+      localStorage.removeItem("trinity_emr_users");
+      localStorage.removeItem("trinity_emr_active_session");
     } catch {
-      // ignore parse error
+      // ignore
     }
-    setAuthReady(true);
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/me", { cache: "no-store" });
+        const json = await res.json().catch(() => ({}));
+        if (!cancelled && json?.user) {
+          setCurrentUser(toAccount(json.user));
+          setAuthWarnings(Array.isArray(json.warnings) ? json.warnings : []);
+        }
+      } catch {
+        // offline: stay signed out
+      }
+      if (!cancelled) setAuthReady(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const login = async (
-    identifier: string,
-    password?: string
-  ): Promise<{ success: boolean; error?: string }> => {
-    const clean = identifier.trim().toLowerCase();
-    if (!clean) {
-      return { success: false, error: "Please enter your email or full name." };
-    }
-
-    const found = users.find(
-      (u) =>
-        u.fullName.toLowerCase() === clean ||
-        (u.email && u.email.toLowerCase() === clean)
-    );
-
-    if (!found) {
-      return {
-        success: false,
-        error: `No staff or teacher profile found for '${identifier}'. Please check credentials or sign up.`,
-      };
-    }
-
-    if (found.password && password && found.password !== password.trim()) {
-      return { success: false, error: "Incorrect password. Please verify your credentials." };
-    }
-
-    setCurrentUser(found);
+  const finishLogin = (user: ServerUser, warnings: string[] = []) => {
+    setCurrentUser(toAccount(user));
+    setAuthWarnings(warnings);
+    setAuthNotice("");
     setIsDemoMode(false);
-    try {
-      localStorage.setItem("trinity_emr_active_session", JSON.stringify(found));
-    } catch {}
     setAuthModalOpen(false);
-    return { success: true };
   };
 
-  const signup = async (
-    fullName: string,
-    role: RoleId,
-    password?: string
-  ): Promise<{ success: boolean; error?: string }> => {
-    const cleanName = fullName.trim();
-
-    if (!cleanName) {
-      return { success: false, error: "Full Name is required for registration." };
-    }
-
-    const existing = users.find(
-      (u) => u.fullName.toLowerCase() === cleanName.toLowerCase()
-    );
-    if (existing) {
-      return {
-        success: false,
-        error: `'${cleanName}' is already registered. Please Sign In.`,
-      };
-    }
-
-    const newUser: UserAccount = {
-      id: `usr-${Date.now()}`,
-      fullName: cleanName,
-      assignedRole: role,
-      password: password?.trim() || "pass",
-      createdAt: new Date().toISOString(),
-    };
-
-    const updatedList = [newUser, ...users];
-    setUsers(updatedList);
-    setCurrentUser(newUser);
-    setIsDemoMode(false);
-
+  const login = async (name: string, password: string): Promise<Result> => {
+    if (!name.trim()) return { success: false, error: "Please enter your full name." };
+    if (!password) return { success: false, error: "Please enter your password." };
     try {
-      localStorage.setItem("trinity_emr_users", JSON.stringify(updatedList));
-      localStorage.setItem("trinity_emr_active_session", JSON.stringify(newUser));
+      const { res, json } = await postJson("/api/auth/student/login", { name, password });
+      if (res.ok && json?.user) {
+        finishLogin(json.user);
+        return { success: true };
+      }
+      return { success: false, error: json?.message || "Sign-in failed. Please try again." };
     } catch {
-      // ignore storage error
+      return { success: false, error: "Could not reach the server. Check your internet connection." };
     }
+  };
 
-    setAuthModalOpen(false);
-    return { success: true };
+  const signup = async (fullName: string, role: RoleId, password: string): Promise<Result> => {
+    if (!fullName.trim()) return { success: false, error: "Full Name is required for registration." };
+    try {
+      const { res, json } = await postJson("/api/auth/student/register", { name: fullName, role, password });
+      if (res.ok && json?.user) {
+        finishLogin(json.user);
+        return { success: true };
+      }
+      return { success: false, error: json?.message || "Registration failed. Please try again." };
+    } catch {
+      return { success: false, error: "Could not reach the server. Check your internet connection." };
+    }
+  };
+
+  const loginTeacher = async (name: string, password: string): Promise<Result> => {
+    try {
+      const { res, json } = await postJson("/api/auth/teacher", { name, password });
+      if (res.ok && json?.user) {
+        finishLogin(json.user, Array.isArray(json.warnings) ? json.warnings : []);
+        return { success: true };
+      }
+      if (res.status === 401) return { success: false, error: "Incorrect password. Please verify your credentials." };
+      return { success: false, error: json?.message || "Teacher sign-in failed. Please try again." };
+    } catch {
+      return { success: false, error: "Could not reach the server. Check your internet connection." };
+    }
   };
 
   const enterDemoMode = () => {
@@ -273,50 +238,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCurrentUser(null);
   };
 
-  const loginTeacherVerified = (identifier: string): { success: boolean; error?: string } => {
-    const clean = identifier.trim().toLowerCase();
-    const found = users.find(
-      (u) => u.isAdmin && (u.fullName.toLowerCase() === clean || (u.email && u.email.toLowerCase() === clean))
-    );
-    if (!found) {
-      return { success: false, error: `No teacher profile found for '${identifier}'.` };
-    }
-    setCurrentUser(found);
-    setIsDemoMode(false);
-    try {
-      localStorage.setItem("trinity_emr_active_session", JSON.stringify(found));
-    } catch {}
-    setAuthModalOpen(false);
-    return { success: true };
-  };
-
   const logout = () => {
-    // also clear the server-side teacher cookie (ignore failures)
     fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
     setCurrentUser(null);
+    setAuthWarnings([]);
     setIsDemoMode(false);
-    try {
-      localStorage.removeItem("trinity_emr_active_session");
-    } catch {}
+  };
+
+  const expireSession = (message = "Your sign-in has expired. Please sign in again.") => {
+    fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    setCurrentUser(null);
+    setAuthWarnings([]);
+    setIsDemoMode(false);
+    setAuthNotice(message);
   };
 
   return (
     <AuthContext.Provider
       value={{
         currentUser,
-        users,
         authModalOpen,
         authMode,
         authReady,
         isDemoMode,
+        authNotice,
+        authWarnings,
         setAuthModalOpen,
         setAuthMode,
         enterDemoMode,
         exitDemoMode,
         login,
         signup,
+        loginTeacher,
         logout,
-        loginTeacherVerified,
+        expireSession,
       }}
     >
       {children}

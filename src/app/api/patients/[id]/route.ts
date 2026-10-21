@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPatient, savePatient } from "@/lib/store";
 import { errorResponse } from "@/lib/api-errors";
+import { requireUser } from "@/lib/session";
 import type { Patient } from "@/types/emr";
 
 export const dynamic = "force-dynamic";
@@ -8,6 +9,8 @@ export const fetchCache = "force-no-store";
 export const runtime = "nodejs";
 
 export async function GET(_request: Request, { params }: { params: { id: string } }) {
+  const guard = await requireUser();
+  if (!guard.ok) return guard.response;
   try {
     const patient = await getPatient(params.id);
     if (!patient) {
@@ -20,6 +23,8 @@ export async function GET(_request: Request, { params }: { params: { id: string 
 }
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
+  const guard = await requireUser();
+  if (!guard.ok) return guard.response;
   try {
     const updated: Patient = await request.json();
     if (!updated || updated.id !== params.id) {

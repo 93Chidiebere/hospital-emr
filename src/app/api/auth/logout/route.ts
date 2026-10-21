@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { clearTeacherCookie } from "@/lib/teacher-auth";
+import { clearSessionCookie } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export async function POST() {
   const res = NextResponse.json({ success: true });
-  clearTeacherCookie(res);
+  clearSessionCookie(res);
   return res;
 }

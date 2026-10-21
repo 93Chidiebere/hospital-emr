@@ -31,7 +31,7 @@ import {
 
 export default function Home() {
   const { activeRole, setActiveRole, setActiveStaffName, isLive, syncError, storageInfo } = useEMR();
-  const { currentUser, isDemoMode, authReady } = useAuth();
+  const { currentUser, isDemoMode, authReady, authWarnings } = useAuth();
 
   const [intakeOpen, setIntakeOpen] = useState(false);
   const [dossierPatient, setDossierPatient] = useState<Patient | null>(null);
@@ -81,6 +81,14 @@ export default function Home() {
 
       {/* 1. Masthead Navbar */}
       <Navbar onOpenIntake={() => setIntakeOpen(true)} />
+
+      {/* Security warning for teachers */}
+      {currentUser?.isAdmin && authWarnings.includes("teacher_password_weak") && (
+        <div role="alert" className="bg-red-700 text-white text-xs px-4 py-2 text-center font-semibold">
+          Security warning: the teacher password is the old default (or too short) and is published in the public code. Change
+          TEACHER_PASSWORD in Vercel, then redeploy.
+        </div>
+      )}
 
       {/* Database connection warning if live storage has issues */}
       {isLive && (syncError || storageInfo?.ephemeral) && (

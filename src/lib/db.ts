@@ -130,6 +130,18 @@ const SCHEMA: string[] = [
     PRIMARY KEY (patient_id, id)
   )`,
   `CREATE INDEX IF NOT EXISTS idx_routing_session ON routing_events (session_id)`,
+
+  `CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    full_name TEXT NOT NULL,
+    name_key TEXT NOT NULL UNIQUE,
+    role TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    last_login_at TEXT,
+    failed_count INTEGER NOT NULL DEFAULT 0,
+    locked_until TEXT
+  )`,
 ];
 
 let ready: Promise<Client> | null = null;

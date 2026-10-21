@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getActiveSession, listPatientsForReport, listSessions } from "@/lib/store";
 import { buildSummary } from "@/lib/reports";
-import { requireTeacher } from "@/lib/teacher-auth";
+import { requireTeacher } from "@/lib/session";
 import { errorResponse } from "@/lib/api-errors";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +9,7 @@ export const fetchCache = "force-no-store";
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
-  const guard = requireTeacher();
+  const guard = await requireTeacher();
   if (!guard.ok) return guard.response;
   try {
     const active = await getActiveSession();

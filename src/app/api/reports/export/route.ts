@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { EXPORT_TABLES, exportCsv, getActiveSession, listPatientsForReport, listSessions } from "@/lib/store";
-import { requireTeacher } from "@/lib/teacher-auth";
+import { requireTeacher } from "@/lib/session";
 import { errorResponse } from "@/lib/api-errors";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 
 // GET /api/reports/export?table=patients|vitals|consultations|lab_orders|radiology_orders|medications|routing_events|backup&session=<id|all>
 export async function GET(request: Request) {
-  const guard = requireTeacher();
+  const guard = await requireTeacher();
   if (!guard.ok) return guard.response;
   try {
     const params = new URL(request.url).searchParams;
