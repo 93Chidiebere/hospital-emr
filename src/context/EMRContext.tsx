@@ -68,14 +68,16 @@ interface EMRContextType {
   ) => Promise<void>;
   transferPatient: (patientId: string, targetDept: Department, reason: string) => Promise<void>;
   dischargePatient: (patientId: string, dischargeReason: string) => Promise<void>;
-  resetToDemoCases: () => Promise<void>;
+  resetToDemoCases: (sessionName?: string) => Promise<void>;
+  /** name of the active class session (live mode only) */
+  sessionName: string | null;
   refresh: () => Promise<void>;
   /** true when a user is signed in: records are real, shared, and start from zero */
   isLive: boolean;
   /** set when the server could not be reached / saved */
   syncError: string | null;
   /** how the server stores live records (ephemeral = not durable on this host) */
-  storageInfo: { storage: "redis" | "memory"; ephemeral: boolean } | null;
+  storageInfo: { storage: string; ephemeral: boolean } | null;
 }
 
 const EMRContext = createContext<EMRContextType | undefined>(undefined);
@@ -86,7 +88,11 @@ export function EMRProvider({ children }: { children: ReactNode }) {
   const { currentUser, authReady } = useAuth();
   const isLive = !!currentUser;
   const [syncError, setSyncError] = useState<string | null>(null);
-  const [storageInfo, setStorageInfo] = useState<{ storage: "redis" | "memory"; ephemeral: boolean } | null>(null);
+  const [storageInfo, setStorageInfo] = useState<{ storage: string; ephemeral: boolean } | null>(null);
+  const [sessionName, setSessionName] = useState<string | null>(null);
+  // last change counter / session seen from the server (used for cheap change checks)
+  const revRef = useRef<number | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
   // patient id -> time of our last write (so a refresh can't overwrite fresh local changes)
   const recentWrites = useRef<Map<string, number>>(new Map());
   const [activeRole, setActiveRole] = useState<RoleId>("director");
@@ -138,10 +144,22 @@ export function EMRProvider({ children }: { children: ReactNode }) {
     if (!opts?.silent) setLoading(true);
     try {
       const res = await fetch("/api/patients", { cache: "no-store" });
+      if (res.status === 503) {
+        const j = await res.json().catch(() => ({}));
+        if (j?.error === "DB_NOT_CONFIGURED") {
+          setSyncError("The database is not connected yet. Ask the administrator to finish the database setup.");
+          setPatients([]);
+          setLoading(false);
+          return;
+        }
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       const server: Patient[] = Array.isArray(json.data) ? json.data : [];
-      setStorageInfo({ storage: json.storage, ephemeral: !!json.ephemeral });
+      revRef.current = typeof json.rev === "number" ? json.rev : null;
+      sessionIdRef.current = json.session?.id ?? null;
+      setSessionName(json.session?.name ?? null);
+      setStorageInfo({ storage: json.storage || "turso", ephemeral: !!json.ephemeral });
       setSyncError(null);
 
       const now = Date.now();
@@ -185,13 +203,25 @@ export function EMRProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLive, authReady]);
 
-  // While signed in, keep pulling other students' records so every station stays current
+  // While signed in, check (one tiny request) whether anything changed; reload only if it did.
   useEffect(() => {
     if (!isLive) return;
-    const tick = () => {
-      if (document.visibilityState === "visible") fetchPatients({ silent: true });
+    const tick = async () => {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const res = await fetch("/api/rev", { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const j = await res.json();
+        if (j.rev !== revRef.current || j.sessionId !== sessionIdRef.current) {
+          await fetchPatients({ silent: true });
+        } else {
+          setSyncError((cur) => (cur && cur.startsWith("Cannot reach") ? null : cur));
+        }
+      } catch {
+        setSyncError("Cannot reach the server. Showing the last saved copy; new changes may not be shared.");
+      }
     };
-    const timer = setInterval(tick, 6000);
+    const timer = setInterval(tick, 10000);
     document.addEventListener("visibilitychange", tick);
     return () => {
       clearInterval(timer);
@@ -231,6 +261,10 @@ export function EMRProvider({ children }: { children: ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedPatient),
       });
+      if (res.status === 409) {
+        setSyncError("This class session was closed by the teacher, so your last change was not saved.");
+        return;
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       recentWrites.current.set(updatedPatient.id, Date.now());
       setSyncError(null);
@@ -603,16 +637,21 @@ export function EMRProvider({ children }: { children: ReactNode }) {
     await transferPatient(patientId, "DISCHARGED", dischargeReason || "Clinical episode concluded; discharged home.");
   };
 
-  const resetToDemoCases = async () => {
-    // LIVE: wipe the class records on the server and start again from zero
+  const resetToDemoCases = async (newSessionName?: string) => {
+    // LIVE: close the current class session (its data is kept for reports) and start a new empty one
     if (isLive) {
       setLoading(true);
       try {
-        const res = await fetch("/api/patients", {
-          method: "DELETE",
+        const res = await fetch("/api/sessions", {
+          method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ confirm: "CLEAR" }),
+          body: JSON.stringify({ name: newSessionName || "" }),
         });
+        if (res.status === 401 || res.status === 503) {
+          setSyncError("Only a signed-in teacher can start a new session. Sign out and sign in again as a teacher.");
+          setLoading(false);
+          return;
+        }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         recentWrites.current.clear();
         try {
@@ -622,8 +661,9 @@ export function EMRProvider({ children }: { children: ReactNode }) {
         }
         setPatients([]);
         setSyncError(null);
+        await fetchPatients({ silent: true });
       } catch {
-        setSyncError("The class records could not be cleared. Check the connection and try again.");
+        setSyncError("A new session could not be started. Check the connection and try again.");
       }
       setLoading(false);
       return;
@@ -667,6 +707,7 @@ export function EMRProvider({ children }: { children: ReactNode }) {
         isLive,
         syncError,
         storageInfo,
+        sessionName,
       }}
     >
       {children}

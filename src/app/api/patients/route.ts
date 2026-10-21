@@ -1,21 +1,33 @@
 import { NextResponse } from "next/server";
-import { clearAllPatients, createPatient, isEphemeral, listPatients, storageKind } from "@/lib/server-store";
-import { Patient } from "@/types/emr";
+import { createPatient, getActiveSession, listPatients, getRev } from "@/lib/store";
+import { errorResponse } from "@/lib/api-errors";
+import type { Patient } from "@/types/emr";
 
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const runtime = "nodejs";
 
 const noStore = { "Cache-Control": "no-store" };
 
+// Live records of the ACTIVE class session
 export async function GET() {
   try {
-    const patients = await listPatients();
+    const session = await getActiveSession();
+    const [patients, { rev }] = await Promise.all([listPatients(session.id), getRev()]);
     return NextResponse.json(
-      { success: true, count: patients.length, data: patients, storage: storageKind, ephemeral: isEphemeral },
+      {
+        success: true,
+        count: patients.length,
+        data: patients,
+        rev,
+        session: { id: session.id, name: session.name },
+        storage: "turso",
+        ephemeral: false,
+      },
       { headers: noStore }
     );
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Storage error";
-    return NextResponse.json({ success: false, error: message }, { status: 500, headers: noStore });
+  } catch (err) {
+    return errorResponse(err);
   }
 }
 
@@ -67,23 +79,7 @@ export async function POST(request: Request) {
     );
 
     return NextResponse.json({ success: true, data: created }, { status: 201, headers: noStore });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
-  }
-}
-
-// Clears ALL live class records and restarts hospital numbers at 1.
-export async function DELETE(request: Request) {
-  try {
-    const body = await request.json().catch(() => ({}));
-    if (body?.confirm !== "CLEAR") {
-      return NextResponse.json({ success: false, error: "Confirmation required" }, { status: 400 });
-    }
-    await clearAllPatients();
-    return NextResponse.json({ success: true, count: 0, data: [] }, { headers: noStore });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+  } catch (err) {
+    return errorResponse(err);
   }
 }

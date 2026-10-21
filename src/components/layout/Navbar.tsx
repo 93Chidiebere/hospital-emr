@@ -16,6 +16,7 @@ import {
   LogOut,
   User,
   Lock,
+  BarChart3,
   Sparkles,
   ShieldCheck,
   GraduationCap,
@@ -198,11 +199,13 @@ function ResetConfirmDialog({
   live,
 }: {
   onCancel: () => void;
-  onResetZero: () => void | Promise<void>;
+  onResetZero: (sessionName?: string) => void | Promise<void>;
   onSeedDemo?: () => void | Promise<void>;
   live: boolean;
 }) {
   const dialogRef = useDialogA11y<HTMLDivElement>(onCancel);
+  const [newSessionName, setNewSessionName] = useState("");
+  const sessionInputId = useId();
   const titleId = useId();
   const descId = useId();
 
@@ -220,15 +223,33 @@ function ResetConfirmDialog({
         <div className="flex items-center gap-2 text-red-600">
           <ShieldAlert aria-hidden="true" className="w-5 h-5 shrink-0" />
           <h2 id={titleId} className="font-sans text-base sm:text-lg font-bold text-navy-dark">
-            Classroom Session Management & Reset
+            {live ? "Start a New Class Session" : "Classroom Session Management & Reset"}
           </h2>
         </div>
         <p id={descId} className="text-xs text-slate-600 leading-relaxed">
           {live
-            ? "You are signed in as an administrator/teacher. Choose whether to wipe all live student entries back to a clean zero state for a new class drill, or seed standard demo cases for demonstration."
+            ? "This closes the current class session and opens a new empty one. Every count returns to zero and hospital numbers restart at 1, but everything recorded so far is kept safely for reports and downloads."
             : "Reset the practice simulation back to initial sample cases or clean the local cache."}
         </p>
 
+        {live && (
+          <div>
+            <label htmlFor={sessionInputId} className="block text-[11px] font-bold text-slate-700 mb-1">
+              Name for the new session (optional)
+            </label>
+            <input
+              id={sessionInputId}
+              type="text"
+              value={newSessionName}
+              onChange={(e) => setNewSessionName(e.target.value)}
+              maxLength={80}
+              placeholder="e.g. Health Data Management, Week 3"
+              className="w-full p-2 border border-slate-300 focus:border-brand text-slate-900 text-xs outline-none"
+            />
+          </div>
+        )}
+
+        {!live && (
         <div className="p-3 bg-amber-50 border border-amber-200 text-[11px] text-amber-900 space-y-1">
           <p className="font-bold">Reset Options:</p>
           <ul className="list-disc list-inside space-y-0.5 text-slate-700">
@@ -236,6 +257,7 @@ function ResetConfirmDialog({
             <li><strong>Restore 5 Demo Cases:</strong> Populates the standard patient scenarios for guided classroom lectures.</li>
           </ul>
         </div>
+        )}
 
         <div className="flex flex-col sm:flex-row sm:justify-end gap-2 pt-3 border-t border-slate-200">
           <button
@@ -258,11 +280,13 @@ function ResetConfirmDialog({
           )}
           <button
             type="button"
-            onClick={onResetZero}
-            className="px-4 py-2 text-xs bg-red-600 hover:bg-red-700 text-white font-bold flex items-center justify-center gap-1.5"
+            onClick={() => onResetZero(newSessionName)}
+            className={`px-4 py-2 text-xs text-white font-bold flex items-center justify-center gap-1.5 ${
+              live ? "bg-navy hover:bg-navy-dark" : "bg-red-600 hover:bg-red-700"
+            }`}
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Reset Registry to 0 (Clean Fresh Class)</span>
+            <span>{live ? "Start New Session (keeps all data)" : "Reset Registry to 0 (Clean Fresh Class)"}</span>
           </button>
         </div>
       </div>
@@ -282,6 +306,7 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
     resetToDemoCases,
     patients,
     isLive,
+    sessionName,
   } = useEMR();
 
   const { currentUser, logout, isDemoMode, exitDemoMode } = useAuth();
@@ -324,13 +349,13 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
             >
               <Clock aria-hidden="true" className="w-3.5 h-3.5 text-brand" />
               <span
-                className={`font-mono px-1.5 py-0.5 text-[10px] uppercase font-bold ${
+                className={`font-mono px-1.5 py-0.5 text-[10px] uppercase font-bold inline-block max-w-[11rem] sm:max-w-[18rem] truncate align-bottom ${
                   isLive
                     ? "bg-brand text-navy-dark"
                     : "bg-white/10 text-amber-300 border border-white/20"
                 }`}
               >
-                {isLive ? "Live Class Session" : "Demo Preview"}
+                {isLive ? (sessionName ? `Live: ${sessionName}` : "Live Class Session") : "Demo Preview"}
               </span>
               <span className="font-mono text-white text-xs">
                 Active Cases: <strong className="text-amber-300">{activeCount}</strong>
@@ -383,13 +408,24 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
               <button
                 type="button"
                 onClick={() => setResetConfirmOpen(true)}
-                title="Reset session records to zero or restore demo data"
+                title={isLive ? "Start a new class session (keeps all earlier data)" : "Restore demo data"}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white bg-[#0F325E] hover:bg-[#15437C] border border-[#1E4E79] hover:border-brand transition-colors"
               >
                 <RotateCcw aria-hidden="true" className="w-3.5 h-3.5 text-brand" />
-                <span className="hidden sm:inline">Reset Session</span>
-                <span className="sm:hidden">Reset</span>
+                <span className="hidden sm:inline">{isLive ? "New Session" : "Reset Session"}</span>
+                <span className="sm:hidden">{isLive ? "New" : "Reset"}</span>
               </button>
+            )}
+
+            {/* Reports (teachers only; the server also checks the teacher login) */}
+            {isLive && isTeacherOrAdmin && (
+              <a
+                href="/reports"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white bg-[#0F325E] hover:bg-[#15437C] border border-[#1E4E79] hover:border-brand transition-colors"
+              >
+                <BarChart3 aria-hidden="true" className="w-3.5 h-3.5 text-brand" />
+                <span>Reports</span>
+              </a>
             )}
 
             {/* Enroll New Patient Button */}
@@ -456,8 +492,8 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
         <ResetConfirmDialog
           live={isLive}
           onCancel={() => setResetConfirmOpen(false)}
-          onResetZero={async () => {
-            await resetToDemoCases();
+          onResetZero={async (name) => {
+            await resetToDemoCases(name);
             setResetConfirmOpen(false);
           }}
           onSeedDemo={

@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 export function HeroLanding() {
-  const { login, signup, enterDemoMode } = useAuth();
+  const { login, signup, enterDemoMode, loginTeacherVerified } = useAuth();
 
   const [activeTab, setActiveTab] = useState<"signin" | "signup" | "teacher">("signin");
 
@@ -76,7 +76,37 @@ export function HeroLanding() {
     setErrorMessage("");
     setLoading(true);
     // Sign-in accepts either the full name or the email; the email is never shown on screen
-    const res = await login(selectedTeacher || teacherEmail, teacherPassword);
+    const who = selectedTeacher || teacherEmail;
+
+    // 1) Ask the SERVER to check the password (it also unlocks Reports and session controls)
+    try {
+      const resp = await fetch("/api/auth/teacher", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: who, password: teacherPassword }),
+      });
+      if (resp.ok) {
+        const verified = loginTeacherVerified(who);
+        setLoading(false);
+        if (!verified.success) {
+          setErrorMessage(verified.error || "Authentication failed.");
+          setTeacherPassword("");
+        }
+        return;
+      }
+      if (resp.status === 401) {
+        setLoading(false);
+        setErrorMessage("Incorrect password. Please verify your credentials.");
+        setTeacherPassword("");
+        return;
+      }
+      // 503 = the owner has not set TEACHER_PASSWORD yet; fall through to the older check
+    } catch {
+      // network problem: fall through to the older check
+    }
+
+    // 2) Fallback (only when the server password is not configured / unreachable)
+    const res = await login(who, teacherPassword);
     setLoading(false);
     if (!res.success) {
       setErrorMessage(res.error || "Authentication failed.");

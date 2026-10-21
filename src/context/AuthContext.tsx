@@ -136,6 +136,8 @@ interface AuthContextType {
     password?: string
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
+  /** Used after the SERVER has checked the teacher password (no client-side password check). */
+  loginTeacherVerified: (identifier: string) => { success: boolean; error?: string };
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -271,7 +273,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCurrentUser(null);
   };
 
+  const loginTeacherVerified = (identifier: string): { success: boolean; error?: string } => {
+    const clean = identifier.trim().toLowerCase();
+    const found = users.find(
+      (u) => u.isAdmin && (u.fullName.toLowerCase() === clean || (u.email && u.email.toLowerCase() === clean))
+    );
+    if (!found) {
+      return { success: false, error: `No teacher profile found for '${identifier}'.` };
+    }
+    setCurrentUser(found);
+    setIsDemoMode(false);
+    try {
+      localStorage.setItem("trinity_emr_active_session", JSON.stringify(found));
+    } catch {}
+    setAuthModalOpen(false);
+    return { success: true };
+  };
+
   const logout = () => {
+    // also clear the server-side teacher cookie (ignore failures)
+    fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
     setCurrentUser(null);
     setIsDemoMode(false);
     try {
@@ -295,6 +316,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         signup,
         logout,
+        loginTeacherVerified,
       }}
     >
       {children}
