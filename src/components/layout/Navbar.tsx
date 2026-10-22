@@ -435,7 +435,8 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
               </a>
             )}
 
-            {/* Enroll New Patient Button */}
+            {/* Enroll New Patient Button (Front Desk, teachers and demo visitors only) */}
+            {(!currentUser || currentUser.isAdmin || activeRole === "receptionist") && (
             <button
               type="button"
               onClick={onOpenIntake}
@@ -445,6 +446,7 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
               <span className="sm:hidden">Enroll</span>
               <span className="hidden sm:inline">Enroll New Patient</span>
             </button>
+            )}
           </div>
         </div>
 
@@ -453,14 +455,14 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
             <span className="text-slate-300 font-sans uppercase tracking-wider text-[11px] flex items-center gap-1">
               <UserCheck aria-hidden="true" className="w-3.5 h-3.5 text-brand" />
-              {roleSwitchAllowed ? "Active Classroom Role:" : "Your Assigned Station:"}
+              {roleSwitchAllowed ? "Active Classroom Role:" : "Your Station (fixed for this session):"}
             </span>
 
             {roleSwitchAllowed ? (
               <RoleMenu activeRole={activeRole} onSelect={setActiveRole} roles={selectableRoles} />
             ) : (
               <div
-                title="Your station is locked to your registered role"
+                title="Your station is fixed for this class session. Your teacher can start a new session to let you change."
                 className="flex items-center gap-2 px-3 py-1.5 bg-[#0F325E] border border-paper-border text-white text-xs w-fit max-w-full"
               >
                 <Lock aria-hidden="true" className="w-3.5 h-3.5 text-amber-300 shrink-0" />

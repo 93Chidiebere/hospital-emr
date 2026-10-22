@@ -285,7 +285,7 @@ export function HeroLanding() {
                         </option>
                       ))}
                     </select>
-                    <p className="mt-1 text-[11px] text-slate-500">You can switch to any other station at any time, so classmates can rotate roles.</p>
+                    <p className="mt-1 text-[11px] text-slate-500">This is only your suggested starting station. At the start of each class session you confirm the station you will act as; it stays fixed until your teacher starts a new session.</p>
                   </div>
 
                   <div>

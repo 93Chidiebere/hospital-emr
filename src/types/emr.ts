@@ -269,3 +269,16 @@ export const HOSPITAL_ROLES: RoleConfig[] = [
     badge: "DIR",
   },
 ];
+
+
+/** Personal details the Front Desk may correct after registration. */
+export interface PatientDetailsInput {
+  fullName: string;
+  age: number;
+  gender: "Female" | "Male" | "Other";
+  dateOfBirth: string;
+  phoneNumber: string;
+  address: string;
+  paymentType: string;
+  nextOfKin: { name: string; relation: string; phone: string };
+}

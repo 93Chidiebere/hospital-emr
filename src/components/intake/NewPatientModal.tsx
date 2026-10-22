@@ -12,7 +12,7 @@ interface NewPatientModalProps {
   onEnrolled?: (patient: Patient) => void;
 }
 
-const KIN_RELATIONSHIPS = [
+export const KIN_RELATIONSHIPS = [
   "Spouse",
   "Father",
   "Mother",

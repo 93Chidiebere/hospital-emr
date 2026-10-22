@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, Download, RefreshCw, ShieldAlert } from "lucide-react";
+import { HOSPITAL_ROLES } from "@/types/emr";
 
 interface SessionInfo {
   id: string;
@@ -50,6 +51,7 @@ interface StudentRow {
   id: string;
   fullName: string;
   role: string;
+  sessionRole?: string | null;
   createdAt: string;
   lastLoginAt: string | null;
   locked: boolean;
@@ -148,6 +150,17 @@ export default function ReportsPage() {
       });
       const json = await res.json().catch(() => ({}));
       setStudentMsg(res.ok ? `Password reset for ${st.fullName}. Tell them the new password.` : json?.message || "Could not reset the password.");
+      if (res.ok) loadStudents();
+    } catch {
+      setStudentMsg("Could not reach the server.");
+    }
+  };
+
+  const unlockStation = async (st: StudentRow) => {
+    if (!window.confirm(`Let ${st.fullName} choose their station again for this session?`)) return;
+    try {
+      const res = await fetch(`/api/students/${encodeURIComponent(st.id)}/session-role`, { method: "DELETE" });
+      setStudentMsg(res.ok ? `${st.fullName} can now choose a station again.` : "Could not unlock the station.");
       if (res.ok) loadStudents();
     } catch {
       setStudentMsg("Could not reach the server.");
@@ -410,7 +423,7 @@ export default function ReportsPage() {
                     <thead>
                       <tr className="text-left text-[11px] uppercase font-mono text-slate-600 border-b border-slate-200">
                         <th scope="col" className="py-1.5 pr-2">Name</th>
-                        <th scope="col" className="py-1.5 pr-2">Station role</th>
+                        <th scope="col" className="py-1.5 pr-2">Station this session</th>
                         <th scope="col" className="py-1.5 pr-2">Registered</th>
                         <th scope="col" className="py-1.5 pr-2">Last sign-in</th>
                         <th scope="col" className="py-1.5 text-right">Actions</th>
@@ -423,10 +436,26 @@ export default function ReportsPage() {
                             {st.fullName}
                             {st.locked && <span className="ml-2 text-[10px] font-mono bg-red-100 text-red-700 px-1.5 py-0.5">LOCKED</span>}
                           </td>
-                          <td className="py-1.5 pr-2">{st.role}</td>
+                          <td className="py-1.5 pr-2">
+                            {st.sessionRole ? (
+                              <span className="font-bold">{HOSPITAL_ROLES.find((r) => r.id === st.sessionRole)?.title ?? st.sessionRole}</span>
+                            ) : (
+                              <span className="text-slate-500">not chosen yet</span>
+                            )}
+                          </td>
                           <td className="py-1.5 pr-2">{fmt(st.createdAt)}</td>
                           <td className="py-1.5 pr-2">{st.lastLoginAt ? fmt(st.lastLoginAt) : "never"}</td>
                           <td className="py-1.5 text-right whitespace-nowrap">
+                            {st.sessionRole && (
+                              <button
+                                type="button"
+                                onClick={() => unlockStation(st)}
+                                aria-label={`Let ${st.fullName} choose a station again`}
+                                className="px-2.5 py-1 text-xs border border-slate-300 hover:border-brand hover:bg-amber-50 mr-1.5"
+                              >
+                                Unlock station
+                              </button>
+                            )}
                             <button
                               type="button"
                               onClick={() => resetStudent(st)}

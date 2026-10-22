@@ -13,6 +13,7 @@ import {
   RadiologyOrder,
   MedicationAdministration,
   RoutingEvent,
+  PatientDetailsInput,
 } from "@/types/emr";
 import { INITIAL_DEMO_PATIENTS } from "@/lib/demo-data";
 
@@ -71,6 +72,13 @@ interface EMRContextType {
   resetToDemoCases: (sessionName?: string) => Promise<void>;
   /** name of the active class session (live mode only) */
   sessionName: string | null;
+  /** the station a student confirmed for this class session (null for teachers and visitors) */
+  sessionRole: RoleId | null;
+  /** true while a signed-in student still has to confirm their station for this session */
+  needsRolePick: boolean;
+  chooseSessionRole: (role: RoleId) => Promise<{ success: boolean; error?: string }>;
+  /** Front Desk: correct a patient's personal details (e.g. add a missing phone number) */
+  updatePatientDetails: (patientId: string, details: PatientDetailsInput) => Promise<{ success: boolean; error?: string }>;
   refresh: () => Promise<void>;
   /** true when a user is signed in: records are real, shared, and start from zero */
   isLive: boolean;
@@ -90,6 +98,8 @@ export function EMRProvider({ children }: { children: ReactNode }) {
   const [syncError, setSyncError] = useState<string | null>(null);
   const [storageInfo, setStorageInfo] = useState<{ storage: string; ephemeral: boolean } | null>(null);
   const [sessionName, setSessionName] = useState<string | null>(null);
+  const [sessionRole, setSessionRole] = useState<RoleId | null>(null);
+  const [needsRolePick, setNeedsRolePick] = useState(false);
   // last change counter / session seen from the server (used for cheap change checks)
   const revRef = useRef<number | null>(null);
   const sessionIdRef = useRef<string | null>(null);
@@ -187,6 +197,8 @@ export function EMRProvider({ children }: { children: ReactNode }) {
       revRef.current = typeof json.rev === "number" ? json.rev : null;
       sessionIdRef.current = json.session?.id ?? null;
       setSessionName(json.session?.name ?? null);
+      setSessionRole((json.myRole as RoleId) || null);
+      setNeedsRolePick(!!json.needsRole);
       setStorageInfo({ storage: json.storage || "turso", ephemeral: !!json.ephemeral });
       setSyncError(null);
 
@@ -227,6 +239,8 @@ export function EMRProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!authReady) return;
     setSelectedPatient(null);
+    setSessionRole(null);
+    setNeedsRolePick(false);
     fetchPatients();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLive, authReady]);
@@ -697,6 +711,81 @@ export function EMRProvider({ children }: { children: ReactNode }) {
     await transferPatient(patientId, "DISCHARGED", dischargeReason || "Clinical episode concluded; discharged home.");
   };
 
+  const chooseSessionRole = async (role: RoleId): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch("/api/session-role", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
+      });
+      if (res.status === 401) {
+        expireSession();
+        return { success: false, error: "Your sign-in has expired. Please sign in again." };
+      }
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) return { success: false, error: j?.message || "Could not save your station. Please try again." };
+      setSessionRole(j.role as RoleId);
+      setNeedsRolePick(false);
+      await fetchPatients({ silent: true });
+      return { success: true };
+    } catch {
+      return { success: false, error: "Could not reach the server. Check your internet connection." };
+    }
+  };
+
+  const updatePatientDetails = async (
+    patientId: string,
+    details: PatientDetailsInput
+  ): Promise<{ success: boolean; error?: string }> => {
+    // Visitors in demo preview: change the local copy only
+    if (!isLive) {
+      setPatients((prev) => {
+        const next = prev.map((p) =>
+          p.id === patientId
+            ? {
+                ...p,
+                fullName: details.fullName,
+                age: details.age,
+                gender: details.gender,
+                dateOfBirth: details.dateOfBirth,
+                phoneNumber: details.phoneNumber,
+                address: details.address,
+                paymentType: details.paymentType as Patient["paymentType"],
+                nextOfKin: details.nextOfKin,
+                lastUpdated: new Date().toISOString(),
+              }
+            : p
+        );
+        try {
+          localStorage.setItem(DEMO_KEY, JSON.stringify(next));
+        } catch {
+          // ignore
+        }
+        return next;
+      });
+      return { success: true };
+    }
+
+    try {
+      const res = await fetch(`/api/patients/${encodeURIComponent(patientId)}/details`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(details),
+      });
+      if (res.status === 401) {
+        expireSession();
+        return { success: false, error: "Your sign-in has expired. Please sign in again." };
+      }
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) return { success: false, error: j?.message || "The details could not be saved." };
+      recentWrites.current.set(patientId, Date.now());
+      setPatients((prev) => prev.map((p) => (p.id === patientId ? (j.data as Patient) : p)));
+      return { success: true };
+    } catch {
+      return { success: false, error: "Could not reach the server. Check your internet connection." };
+    }
+  };
+
   const resetToDemoCases = async (newSessionName?: string) => {
     // LIVE: close the current class session (its data is kept for reports) and start a new empty one
     if (isLive) {
@@ -768,6 +857,10 @@ export function EMRProvider({ children }: { children: ReactNode }) {
         syncError,
         storageInfo,
         sessionName,
+        sessionRole,
+        needsRolePick,
+        chooseSessionRole,
+        updatePatientDetails,
       }}
     >
       {children}

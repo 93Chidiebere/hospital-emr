@@ -6,6 +6,8 @@ export interface StudentRecord {
   id: string;
   fullName: string;
   role: string;
+  /** station chosen for the current class session (null = not chosen yet) */
+  sessionRole?: string | null;
   createdAt: string;
   lastLoginAt: string | null;
   locked: boolean;
@@ -109,13 +111,20 @@ export async function loginStudent(rawName: string, password: string): Promise<L
 
 export async function listStudents(): Promise<StudentRecord[]> {
   const c = await db();
-  const rs = await c.execute("SELECT id, full_name, role, created_at, last_login_at, locked_until FROM users ORDER BY created_at DESC");
+  const rs = await c.execute(
+    `SELECT u.id, u.full_name, u.role, u.created_at, u.last_login_at, u.locked_until,
+            (SELECT sr.role FROM session_roles sr
+               WHERE sr.user_id = u.id
+                 AND sr.session_id = (SELECT id FROM sessions WHERE status = 'active' ORDER BY created_at DESC LIMIT 1)) AS session_role
+       FROM users u ORDER BY u.created_at DESC`
+  );
   return rs.rows.map((r) => {
     const row = r as unknown as Row;
     return {
       id: str(row.id),
       fullName: str(row.full_name),
       role: str(row.role),
+      sessionRole: row.session_role ? str(row.session_role) : null,
       createdAt: str(row.created_at),
       lastLoginAt: row.last_login_at ? str(row.last_login_at) : null,
       locked: row.locked_until ? new Date(str(row.locked_until)).getTime() > Date.now() : false,

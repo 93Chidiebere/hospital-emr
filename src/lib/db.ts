@@ -145,6 +145,24 @@ const SCHEMA: string[] = [
     failed_count INTEGER NOT NULL DEFAULT 0,
     locked_until TEXT
   )`,
+
+  // which station each student chose for each class session (fixed until the session is closed)
+  `CREATE TABLE IF NOT EXISTS session_roles (
+    session_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    role TEXT NOT NULL,
+    chosen_at TEXT NOT NULL,
+    PRIMARY KEY (session_id, user_id)
+  )`,
+
+  // who worked on which patient, so every station can look back at the patients it treated
+  `CREATE TABLE IF NOT EXISTS patient_actors (
+    patient_id TEXT NOT NULL,
+    session_id TEXT NOT NULL,
+    actor_key TEXT NOT NULL,
+    PRIMARY KEY (patient_id, actor_key)
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_actors_lookup ON patient_actors (session_id, actor_key)`,
 ];
 
 let ready: Promise<Client> | null = null;

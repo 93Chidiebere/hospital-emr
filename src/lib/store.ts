@@ -2,6 +2,7 @@ import type { InStatement } from "@libsql/client/web";
 import { db } from "./db";
 import { toCsv } from "./csv";
 import type { Patient } from "@/types/emr";
+import { collectActorKeys } from "./actors";
 
 export class SessionClosedError extends Error {
   constructor() {
@@ -236,8 +237,123 @@ function patientStatements(p: Patient, sessionId: string): InStatement[] {
     });
   }
 
+  // who worked on this patient (lets each station look back at the patients it treated)
+  stmts.push({ sql: "DELETE FROM patient_actors WHERE patient_id = ?", args: [p.id] });
+  for (const key of collectActorKeys(p)) {
+    stmts.push({
+      sql: "INSERT OR IGNORE INTO patient_actors (patient_id, session_id, actor_key) VALUES (?, ?, ?)",
+      args: [p.id, sessionId, key],
+    });
+  }
+
   stmts.push(BUMP_REV);
   return stmts;
+}
+
+let actorsBackfilled: Promise<void> | null = null;
+/** One-time fill for patients saved before this feature existed. */
+export function ensureActorsBackfilled(): Promise<void> {
+  if (!actorsBackfilled) {
+    actorsBackfilled = (async () => {
+      const c = await db();
+      const have = Number(((await c.execute("SELECT COUNT(*) AS n FROM patient_actors")).rows[0] as unknown as Row).n);
+      const patients = Number(((await c.execute("SELECT COUNT(*) AS n FROM patients")).rows[0] as unknown as Row).n);
+      if (have > 0 || patients === 0) return;
+      const rs = await c.execute("SELECT id, session_id, data FROM patients");
+      const stmts: InStatement[] = [];
+      for (const r of rs.rows) {
+        const row = r as unknown as Row;
+        try {
+          const p = JSON.parse(str(row.data)) as Patient;
+          for (const key of collectActorKeys(p)) {
+            stmts.push({
+              sql: "INSERT OR IGNORE INTO patient_actors (patient_id, session_id, actor_key) VALUES (?, ?, ?)",
+              args: [str(row.id), str(row.session_id), key],
+            });
+          }
+        } catch {
+          // skip a corrupted row
+        }
+      }
+      if (stmts.length) await c.batch(stmts, "write");
+    })().catch((err) => {
+      actorsBackfilled = null;
+      throw err;
+    });
+  }
+  return actorsBackfilled;
+}
+
+/** Patients with these ids (used for a student's station-limited view). */
+export async function listPatientsByIds(ids: string[]): Promise<Patient[]> {
+  if (ids.length === 0) return [];
+  const c = await db();
+  const out: Patient[] = [];
+  for (let i = 0; i < ids.length; i += 90) {
+    const chunk = ids.slice(i, i + 90);
+    const rs = await c.execute({
+      sql: `SELECT data FROM patients WHERE id IN (${chunk.map(() => "?").join(", ")})`,
+      args: chunk,
+    });
+    for (const r of rs.rows) {
+      try {
+        out.push(JSON.parse(str((r as unknown as Row).data)) as Patient);
+      } catch {
+        // skip corrupted row
+      }
+    }
+  }
+  return out.sort((a, b) => new Date(b.registeredAt).getTime() - new Date(a.registeredAt).getTime());
+}
+
+export interface PatientDetails {
+  fullName: string;
+  age: number;
+  gender: string;
+  dateOfBirth: string;
+  phoneNumber: string;
+  address: string;
+  paymentType: string;
+  nextOfKin: { name: string; relation: string; phone: string };
+}
+
+/**
+ * Changes ONLY the personal details of a patient, inside the database, so a Front Desk correction
+ * can never overwrite clinical entries that another station saved at the same moment.
+ */
+export async function updatePatientDetails(id: string, d: PatientDetails): Promise<Patient | undefined> {
+  const c = await db();
+  const exists = await c.execute({
+    sql: "SELECT p.session_id AS session_id, s.status AS status FROM patients p JOIN sessions s ON s.id = p.session_id WHERE p.id = ?",
+    args: [id],
+  });
+  if (!exists.rows.length) return undefined;
+  if (str((exists.rows[0] as unknown as Row).status) !== "active") throw new SessionClosedError();
+
+  const now = nowIso();
+  await c.batch(
+    [
+      {
+        sql: `UPDATE patients SET
+                full_name = ?, age = ?, gender = ?, payment_type = ?, last_updated = ?,
+                next_of_kin_name = ?, next_of_kin_relation = ?, next_of_kin_phone = ?,
+                data = json_set(data,
+                  '$.fullName', ?, '$.age', ?, '$.gender', ?, '$.dateOfBirth', ?, '$.phoneNumber', ?,
+                  '$.address', ?, '$.paymentType', ?, '$.nextOfKin', json(?), '$.lastUpdated', ?)
+              WHERE id = ?`,
+        args: [
+          d.fullName, d.age, d.gender, d.paymentType, now,
+          d.nextOfKin.name, d.nextOfKin.relation, d.nextOfKin.phone,
+          d.fullName, d.age, d.gender, d.dateOfBirth, d.phoneNumber,
+          d.address, d.paymentType, JSON.stringify(d.nextOfKin), now,
+          id,
+        ],
+      },
+      BUMP_REV,
+    ],
+    "write"
+  );
+  return getPatient(id);
 }
 
 /** Creates a patient in the active session. The hospital number starts at 1 for each session. */

@@ -22,9 +22,11 @@ import {
 interface PatientDossierModalProps {
   patient: Patient;
   onClose: () => void;
+  /** true when the patient is no longer at this station: the chart can be read but not routed */
+  readOnly?: boolean;
 }
 
-export function PatientDossierModal({ patient, onClose }: PatientDossierModalProps) {
+export function PatientDossierModal({ patient, onClose, readOnly = false }: PatientDossierModalProps) {
   const dialogRef = useDialogA11y<HTMLDivElement>(onClose);
   const [activeTab, setActiveTab] = useState<
     "journey" | "vitals" | "doctor" | "labs" | "radiology" | "meds"
@@ -78,13 +80,19 @@ export function PatientDossierModal({ patient, onClose }: PatientDossierModalPro
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setTransferModalOpen(true)}
-              className="px-3 py-1.5 text-xs font-medium bg-brand hover:bg-brand-hover text-paper flex items-center gap-1.5 transition-colors"
-            >
-              <ArrowRightLeft className="w-3.5 h-3.5 text-brand-light" />
-              <span>Route / Transfer</span>
-            </button>
+            {readOnly ? (
+              <span className="px-3 py-1.5 text-xs font-mono bg-paper-warm border border-paper-border text-charcoal-muted">
+                Read-only view
+              </span>
+            ) : (
+              <button
+                onClick={() => setTransferModalOpen(true)}
+                className="px-3 py-1.5 text-xs font-medium bg-brand hover:bg-brand-hover text-paper flex items-center gap-1.5 transition-colors"
+              >
+                <ArrowRightLeft className="w-3.5 h-3.5 text-brand-light" />
+                <span>Route / Transfer</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={onClose}

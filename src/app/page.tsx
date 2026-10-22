@@ -16,6 +16,9 @@ import { TreatmentWorkstation } from "@/components/workstations/TreatmentWorksta
 import { MasterDirectoryWorkstation } from "@/components/workstations/MasterDirectoryWorkstation";
 import { NewPatientModal } from "@/components/intake/NewPatientModal";
 import { PatientDossierModal } from "@/components/dossier/PatientDossierModal";
+import { MyPatientsPanel } from "@/components/shared/MyPatientsPanel";
+import { EditPatientDetailsModal } from "@/components/intake/EditPatientDetailsModal";
+import { RolePickerDialog } from "@/components/auth/RolePickerDialog";
 import { TransferModal } from "@/components/shared/TransferModal";
 import { HeroLanding } from "@/components/home/HeroLanding";
 import {
@@ -30,7 +33,7 @@ import {
 } from "lucide-react";
 
 export default function Home() {
-  const { activeRole, setActiveRole, setActiveStaffName, isLive, syncError, storageInfo } = useEMR();
+  const { activeRole, setActiveRole, setActiveStaffName, isLive, syncError, storageInfo, sessionRole, needsRolePick } = useEMR();
   const [dismissedNotice, setDismissedNotice] = useState<string>("");
   const { currentUser, isDemoMode, authReady, authWarnings } = useAuth();
 
@@ -38,11 +41,26 @@ export default function Home() {
   const [dossierPatient, setDossierPatient] = useState<Patient | null>(null);
   const [transferPatient, setTransferPatient] = useState<Patient | null>(null);
 
-  // On sign-in, start at the station the person registered for (they can switch at any time)
+  const isStudent = !!currentUser && !currentUser.isAdmin;
+
+  // Teachers start in Master View. Students act as the station they confirmed for this class
+  // session (until they confirm, they sit on their registered station behind the choice screen).
   useEffect(() => {
-    if (currentUser) setActiveRole(currentUser.assignedRole);
+    if (currentUser) setActiveRole(isStudent ? sessionRole ?? (currentUser.assignedRole as RoleId) : currentUser.assignedRole);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser?.id]);
+  }, [currentUser?.id, isStudent, sessionRole]);
+
+  // A student can never leave the station fixed for the session
+  useEffect(() => {
+    if (isStudent && sessionRole && activeRole !== sessionRole) setActiveRole(sessionRole);
+  }, [isStudent, sessionRole, activeRole, setActiveRole]);
+
+  const [dossierReadOnly, setDossierReadOnly] = useState(false);
+  const [editPatient, setEditPatient] = useState<Patient | null>(null);
+  const openChart = (p: Patient) => {
+    setDossierReadOnly(false);
+    setDossierPatient(p);
+  };
 
   // The signing name always shows the station currently being used, e.g. "Ada Obi (REC)"
   useEffect(() => {
@@ -139,7 +157,7 @@ export default function Home() {
           {/* Station Locked Notice for Students */}
           {!roleSwitchAllowed && (
             <p className="text-[11px] text-slate-300">
-              Station locked to your registered role. Sign out to switch station.
+              Your station is fixed for this class session. Your teacher can start a new session to let you change.
             </p>
           )}
 
@@ -189,50 +207,62 @@ export default function Home() {
         {activeRole === "receptionist" && (
           <ReceptionWorkstation
             onOpenIntake={() => setIntakeOpen(true)}
-            onOpenDossier={(p) => setDossierPatient(p)}
+            onEditDetails={(p) => setEditPatient(p)}
+            onOpenDossier={openChart}
             onOpenTransfer={(p) => setTransferPatient(p)}
           />
         )}
 
         {activeRole === "triage_nurse" && (
           <TriageWorkstation
-            onOpenDossier={(p) => setDossierPatient(p)}
+            onOpenDossier={openChart}
             onOpenTransfer={(p) => setTransferPatient(p)}
           />
         )}
 
         {activeRole === "doctor" && (
           <DoctorWorkstation
-            onOpenDossier={(p) => setDossierPatient(p)}
+            onOpenDossier={openChart}
             onOpenTransfer={(p) => setTransferPatient(p)}
           />
         )}
 
         {activeRole === "mls" && (
           <LabWorkstation
-            onOpenDossier={(p) => setDossierPatient(p)}
+            onOpenDossier={openChart}
             onOpenTransfer={(p) => setTransferPatient(p)}
           />
         )}
 
         {activeRole === "radiographer" && (
           <RadiologyWorkstation
-            onOpenDossier={(p) => setDossierPatient(p)}
+            onOpenDossier={openChart}
             onOpenTransfer={(p) => setTransferPatient(p)}
           />
         )}
 
         {activeRole === "treatment_nurse" && (
           <TreatmentWorkstation
-            onOpenDossier={(p) => setDossierPatient(p)}
+            onOpenDossier={openChart}
             onOpenTransfer={(p) => setTransferPatient(p)}
           />
         )}
 
         {activeRole === "director" && (
           <MasterDirectoryWorkstation
-            onOpenDossier={(p) => setDossierPatient(p)}
+            onOpenDossier={openChart}
             onOpenTransfer={(p) => setTransferPatient(p)}
+          />
+        )}
+
+        {/* Look back at the patients this student worked on (read-only; Front Desk can edit details) */}
+        {isLive && isStudent && sessionRole && (
+          <MyPatientsPanel
+            onOpenChart={(p) => {
+              setDossierReadOnly(true);
+              setDossierPatient(p);
+            }}
+            onEditDetails={(p) => setEditPatient(p)}
           />
         )}
       </main>
@@ -297,9 +327,15 @@ export default function Home() {
       {dossierPatient && (
         <PatientDossierModal
           patient={dossierPatient}
+          readOnly={dossierReadOnly}
           onClose={() => setDossierPatient(null)}
         />
       )}
+
+      {editPatient && <EditPatientDetailsModal patient={editPatient} onClose={() => setEditPatient(null)} />}
+
+      {/* Students confirm their station at the start of each class session */}
+      {isLive && isStudent && needsRolePick && <RolePickerDialog />}
 
       {transferPatient && (
         <TransferModal

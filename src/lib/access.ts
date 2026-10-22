@@ -1,0 +1,106 @@
+import { db } from "./db";
+import { HOSPITAL_ROLES, type Department } from "@/types/emr";
+import { getActiveSession, type SessionInfo } from "./store";
+import type { SessionUser } from "./session";
+import { actorKey } from "./actors";
+
+/**
+ * Station rules, enforced on the SERVER (so they cannot be bypassed from the browser):
+ *  - A student picks ONE station per class session. It is saved and stays fixed until the teacher
+ *    starts a new session (or unlocks that student).
+ *  - A student can read/change only patients currently at their own station. The Front Desk also
+ *    handles returning (discharged) patients.
+ *  - Every student can READ the patients they personally worked on, wherever those patients are now.
+ *  - Only the Front Desk can enroll patients and edit patient details.
+ *  - Teachers can see and do everything.
+ */
+
+type Row = Record<string, unknown>;
+const str = (v: unknown) => (v === null || v === undefined ? "" : String(v));
+
+export const STATION_ROLE_IDS: string[] = HOSPITAL_ROLES.filter((r) => r.id !== "director").map((r) => r.id);
+
+export function stationDepartments(role: string): Department[] {
+  const base = HOSPITAL_ROLES.find((r) => r.id === role)?.department;
+  if (!base) return [];
+  return role === "receptionist" ? ["RECEPTION", "DISCHARGED"] : [base];
+}
+
+export async function getSessionRole(sessionId: string, userId: string): Promise<string | null> {
+  const c = await db();
+  const rs = await c.execute({ sql: "SELECT role FROM session_roles WHERE session_id = ? AND user_id = ?", args: [sessionId, userId] });
+  return rs.rows.length ? str((rs.rows[0] as unknown as Row).role) : null;
+}
+
+/** Saves the choice the first time only. A second attempt returns the role already chosen. */
+export async function chooseSessionRole(
+  sessionId: string,
+  userId: string,
+  role: string
+): Promise<{ role: string; alreadyChosen: boolean }> {
+  const c = await db();
+  await c.execute({
+    sql: "INSERT OR IGNORE INTO session_roles (session_id, user_id, role, chosen_at) VALUES (?, ?, ?, ?)",
+    args: [sessionId, userId, role, new Date().toISOString()],
+  });
+  const saved = (await getSessionRole(sessionId, userId)) || role;
+  return { role: saved, alreadyChosen: saved !== role };
+}
+
+export async function clearSessionRole(sessionId: string, userId: string): Promise<void> {
+  const c = await db();
+  await c.batch(
+    [
+      { sql: "DELETE FROM session_roles WHERE session_id = ? AND user_id = ?", args: [sessionId, userId] },
+      // tell every open screen that something changed, so the student's screen asks them to choose again
+      "UPDATE meta SET value = value + 1 WHERE key = 'rev'",
+    ],
+    "write"
+  );
+}
+
+export interface StudentAccess {
+  session: SessionInfo;
+  role: string | null;
+  key: string;
+}
+
+export async function studentAccess(user: SessionUser): Promise<StudentAccess> {
+  const session = await getActiveSession();
+  const role = await getSessionRole(session.id, user.id);
+  return { session, role, key: actorKey(user.name) };
+}
+
+/** Rows a student may read: patients at their station plus patients they personally worked on. */
+export async function visiblePatientIds(access: StudentAccess): Promise<Array<{ id: string; dept: string }>> {
+  if (!access.role) return [];
+  const depts = stationDepartments(access.role);
+  const c = await db();
+  const marks = depts.map(() => "?").join(", ");
+  const rs = await c.execute({
+    sql: `SELECT id, current_department FROM patients
+           WHERE session_id = ?
+             AND (current_department IN (${marks})
+                  OR id IN (SELECT patient_id FROM patient_actors WHERE session_id = ? AND actor_key = ?))`,
+    args: [access.session.id, ...depts, access.session.id, access.key],
+  });
+  return rs.rows.map((r) => ({ id: str((r as unknown as Row).id), dept: str((r as unknown as Row).current_department) }));
+}
+
+export async function studentCanRead(access: StudentAccess, patientId: string): Promise<boolean> {
+  return (await visiblePatientIds(access)).some((p) => p.id === patientId);
+}
+
+/** Writes are allowed only while the patient is at the student's own station. */
+export async function studentCanWrite(access: StudentAccess, patientId: string): Promise<boolean> {
+  if (!access.role) return false;
+  const depts = stationDepartments(access.role);
+  const c = await db();
+  const rs = await c.execute({
+    sql: "SELECT current_department, session_id FROM patients WHERE id = ?",
+    args: [patientId],
+  });
+  if (!rs.rows.length) return false;
+  const row = rs.rows[0] as unknown as Row;
+  return str(row.session_id) === access.session.id && (depts as string[]).includes(str(row.current_department));
+}

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { createPatient, getActiveSession, listPatients, getRev } from "@/lib/store";
+import { createPatient, ensureActorsBackfilled, getActiveSession, getRev, listPatients, listPatientsByIds } from "@/lib/store";
+import { studentAccess, visiblePatientIds } from "@/lib/access";
 import { errorResponse } from "@/lib/api-errors";
 import { requireUser } from "@/lib/session";
 import type { Patient } from "@/types/emr";
@@ -10,25 +11,30 @@ export const runtime = "nodejs";
 
 const noStore = { "Cache-Control": "no-store" };
 
-// Live records of the ACTIVE class session
+// Teachers get every patient of the active class session.
+// Students get only the patients at their own station plus the patients they personally worked on.
 export async function GET() {
   const guard = await requireUser();
   if (!guard.ok) return guard.response;
   try {
     const session = await getActiveSession();
-    const [patients, { rev }] = await Promise.all([listPatients(session.id), getRev()]);
-    return NextResponse.json(
-      {
-        success: true,
-        count: patients.length,
-        data: patients,
-        rev,
-        session: { id: session.id, name: session.name },
-        storage: "turso",
-        ephemeral: false,
-      },
-      { headers: noStore }
-    );
+    const { rev } = await getRev();
+    const base = { success: true, rev, session: { id: session.id, name: session.name }, storage: "turso", ephemeral: false };
+
+    if (guard.user.kind === "teacher") {
+      const patients = await listPatients(session.id);
+      return NextResponse.json({ ...base, count: patients.length, data: patients, myRole: null, needsRole: false }, { headers: noStore });
+    }
+
+    await ensureActorsBackfilled();
+    const access = await studentAccess(guard.user);
+    if (!access.role) {
+      // the student has not chosen a station for this class session yet
+      return NextResponse.json({ ...base, count: 0, data: [], myRole: null, needsRole: true }, { headers: noStore });
+    }
+    const ids = (await visiblePatientIds(access)).map((p) => p.id);
+    const patients = await listPatientsByIds(ids);
+    return NextResponse.json({ ...base, count: patients.length, data: patients, myRole: access.role, needsRole: false }, { headers: noStore });
   } catch (err) {
     return errorResponse(err);
   }
@@ -38,8 +44,20 @@ export async function POST(request: Request) {
   const guard = await requireUser();
   if (!guard.ok) return guard.response;
   try {
-    const body = await request.json();
+    if (guard.user.kind === "student") {
+      const access = await studentAccess(guard.user);
+      if (!access.role) {
+        return NextResponse.json({ success: false, error: "ROLE_NOT_CHOSEN", message: "Choose your station for this session first." }, { status: 409 });
+      }
+      if (access.role !== "receptionist") {
+        return NextResponse.json(
+          { success: false, error: "NOT_ALLOWED", message: "Only the Front Desk can enroll new patients." },
+          { status: 403 }
+        );
+      }
+    }
 
+    const body = await request.json();
     if (!body.fullName || !String(body.fullName).trim()) {
       return NextResponse.json({ success: false, error: "Full name is required" }, { status: 400 });
     }
