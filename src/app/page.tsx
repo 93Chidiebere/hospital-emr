@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { useEMR } from "@/context/EMRContext";
 import { useAuth } from "@/context/AuthContext";
-import { Patient, RoleId, HOSPITAL_ROLES } from "@/types/emr";
+import { Patient, RoleId, HOSPITAL_ROLES, DEPARTMENTS_METADATA } from "@/types/emr";
 import { Navbar } from "@/components/layout/Navbar";
-import { canSwitchRole } from "@/lib/role-access";
+import { canSwitchRole, canUseMasterView } from "@/lib/role-access";
 import { HospitalPipelineBar } from "@/components/pipeline/HospitalPipelineBar";
 import { ReceptionWorkstation } from "@/components/workstations/ReceptionWorkstation";
 import { TriageWorkstation } from "@/components/workstations/TriageWorkstation";
@@ -38,21 +38,27 @@ export default function Home() {
   const [dossierPatient, setDossierPatient] = useState<Patient | null>(null);
   const [transferPatient, setTransferPatient] = useState<Patient | null>(null);
 
-  // Sync role & staff name whenever student/teacher logs in
+  // On sign-in, start at the station the person registered for (they can switch at any time)
+  useEffect(() => {
+    if (currentUser) setActiveRole(currentUser.assignedRole);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.id]);
+
+  // The signing name always shows the station currently being used, e.g. "Ada Obi (REC)"
   useEffect(() => {
     if (currentUser) {
-      setActiveRole(currentUser.assignedRole);
-      const badge = HOSPITAL_ROLES.find((r) => r.id === currentUser.assignedRole)?.badge;
+      const badge = HOSPITAL_ROLES.find((r) => r.id === activeRole)?.badge;
       setActiveStaffName(badge ? `${currentUser.fullName} (${badge})` : currentUser.fullName);
     }
-  }, [currentUser, setActiveRole, setActiveStaffName]);
+  }, [currentUser, activeRole, setActiveStaffName]);
 
-  // Enforce role lock: students cannot leave the station they registered with
+  // Confirmation after enrolling (the patient moves on, so it leaves the Front Desk list)
+  const [enrolledNote, setEnrolledNote] = useState("");
   useEffect(() => {
-    if (currentUser && !canSwitchRole(currentUser) && activeRole !== currentUser.assignedRole) {
-      setActiveRole(currentUser.assignedRole);
-    }
-  }, [currentUser, activeRole, setActiveRole]);
+    if (!enrolledNote) return;
+    const t = setTimeout(() => setEnrolledNote(""), 9000);
+    return () => clearTimeout(t);
+  }, [enrolledNote]);
 
   // Don't render until localStorage auth state has been read
   if (!authReady) {
@@ -151,7 +157,9 @@ export default function Home() {
                 { id: "radiographer" as RoleId, label: "Radiology", icon: Scan },
                 { id: "treatment_nurse" as RoleId, label: "Pharmacy", icon: Syringe },
                 { id: "director" as RoleId, label: "Master Registry", icon: Layers },
-              ].map((tab) => {
+              ]
+                .filter((tab) => tab.id !== "director" || canUseMasterView(currentUser))
+                .map((tab) => {
                 const Icon = tab.icon;
                 const isCurrent = activeRole === tab.id;
                 return (
@@ -267,7 +275,24 @@ export default function Home() {
       </footer>
 
       {/* 6. Modals */}
-      {intakeOpen && <NewPatientModal onClose={() => setIntakeOpen(false)} />}
+      {intakeOpen && (
+        <NewPatientModal
+          onClose={() => setIntakeOpen(false)}
+          onEnrolled={(p) =>
+            setEnrolledNote(
+              `${p.fullName} (${p.hospitalNumber}) was enrolled and sent to ${DEPARTMENTS_METADATA[p.currentDepartment]?.shortName ?? p.currentDepartment}.`
+            )
+          }
+        />
+      )}
+      {enrolledNote && (
+        <div
+          role="status"
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] max-w-[92vw] bg-navy-dark text-amber-300 border border-brand px-4 py-3 text-sm font-semibold shadow-lg"
+        >
+          {enrolledNote}
+        </div>
+      )}
 
       {dossierPatient && (
         <PatientDossierModal

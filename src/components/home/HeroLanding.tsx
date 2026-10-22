@@ -272,7 +272,7 @@ export function HeroLanding() {
 
                   <div>
                     <label className="block font-mono text-[10px] uppercase text-charcoal-muted mb-1 font-bold">
-                      Assigned Clinical Station Role *
+                      Starting Station *
                     </label>
                     <select
                       value={signupRole}
@@ -285,6 +285,7 @@ export function HeroLanding() {
                         </option>
                       ))}
                     </select>
+                    <p className="mt-1 text-[11px] text-slate-500">You can switch to any other station at any time, so classmates can rotate roles.</p>
                   </div>
 
                   <div>

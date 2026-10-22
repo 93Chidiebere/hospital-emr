@@ -71,7 +71,8 @@ export function buildSummary(patients: Patient[]): ReportSummary {
   let uncoded = 0;
   const activity = new Map<string, ReportSummary["activity"][number]>();
   const person = (raw: string | undefined) => {
-    const name = (raw || "").trim();
+    // "Ada Obi (REC)" and "Ada Obi (TRG)" are the same student at different stations
+    const name = (raw || "").trim().replace(/\s*\([A-Za-z]{2,5}\)\s*$/, "");
     if (!name) return null;
     if (!activity.has(name)) {
       activity.set(name, {

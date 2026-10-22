@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useEMR } from "@/context/EMRContext";
-import { Department, DEPARTMENTS_METADATA } from "@/types/emr";
+import { Department, DEPARTMENTS_METADATA, HOSPITAL_ROLES } from "@/types/emr";
 import {
   FileText,
   Activity,
@@ -26,7 +26,12 @@ const PIPELINE_ORDER: { dept: Department; icon: React.ElementType }[] = [
 ];
 
 export function HospitalPipelineBar() {
-  const { patients, filterDepartment, setFilterDepartment } = useEMR();
+  const { patients, filterDepartment, setFilterDepartment, activeRole } = useEMR();
+
+  // Only the Master View sees every station. A working station sees just its own.
+  const isMasterView = activeRole === "director";
+  const ownDept = HOSPITAL_ROLES.find((r) => r.id === activeRole)?.department;
+  const stations = isMasterView ? PIPELINE_ORDER : PIPELINE_ORDER.filter((s) => s.dept === ownDept);
 
   const getCount = (dept: Department) =>
     patients.filter((p) => p.currentDepartment === dept).length;
@@ -37,12 +42,15 @@ export function HospitalPipelineBar() {
         <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-mono uppercase tracking-wider text-amber-300 font-bold">
-              Live Clinical Flow Pipeline:
+              {isMasterView ? "Live Clinical Flow Pipeline:" : "Your Station:"}
             </span>
-            <span className="hidden sm:inline text-[10px] text-slate-300 italic">
-              Click any station to filter its queue
-            </span>
+            {isMasterView && (
+              <span className="hidden sm:inline text-[10px] text-slate-300 italic">
+                Click any station to filter its queue
+              </span>
+            )}
           </div>
+          {isMasterView && (
           <button
             type="button"
             aria-pressed={filterDepartment === "ALL"}
@@ -55,11 +63,12 @@ export function HospitalPipelineBar() {
           >
             All Stations ({patients.length})
           </button>
+          )}
         </div>
 
         {/* Horizontal Pipeline Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1.5">
-          {PIPELINE_ORDER.map(({ dept, icon: Icon }) => {
+        <div className={`grid gap-1.5 ${isMasterView ? "grid-cols-2 sm:grid-cols-4 lg:grid-cols-8" : "grid-cols-1 max-w-xs"}`}>
+          {stations.map(({ dept, icon: Icon }) => {
             const count = getCount(dept);
             const isSelected = filterDepartment === dept;
             const meta = DEPARTMENTS_METADATA[dept];

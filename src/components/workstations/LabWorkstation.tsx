@@ -16,13 +16,8 @@ export function LabWorkstation({
 }: LabWorkstationProps) {
   const { patients, completeLabOrder, activeStaffName } = useEMR();
 
-  // Find all patients currently at LABORATORY, or patients who have pending lab orders
-  const labQueue = patients.filter(
-    (p) =>
-      (p.currentDepartment === "LABORATORY" ||
-        p.labOrders.some((lo) => lo.status !== "completed")) &&
-      p.status === "Active"
-  );
+  // Only patients currently at the LABORATORY station
+  const labQueue = patients.filter((p) => p.currentDepartment === "LABORATORY" && p.status === "Active");
 
   const [selectedPatientId, setSelectedPatientId] = useState<string>(
     labQueue[0]?.id || ""
@@ -359,9 +354,10 @@ export function LabWorkstation({
                     <label className="block font-mono text-[10px] uppercase text-charcoal font-semibold">
                       Route Patient Upon Lab Validation:
                     </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                       {[
                         { dept: "CONSULTATION" as Department, name: "Back to Doctor (Standard)", reason: "Specimen analysis validated; patient routed back to Doctor for review." },
+                        { dept: "RADIOLOGY" as Department, name: "Send for Imaging (Radiology)", reason: "Laboratory work completed; patient referred to Radiology for imaging." },
                         { dept: "TREATMENT" as Department, name: "Direct to Pharmacy", reason: "Direct transfer to Pharmacy for medication." },
                         { dept: "WARD" as Department, name: "Inpatient Ward", reason: "Direct transfer to Inpatient Ward." },
                         { dept: "RECEPTION" as Department, name: "Front Desk (Outpatient Wait)", reason: "Patient waiting at Reception for printed results." },

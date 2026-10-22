@@ -19,10 +19,13 @@ export function ReceptionWorkstation({
   const { patients } = useEMR();
   const [searchTerm, setSearchTerm] = useState("");
 
+  // The Front Desk sees patients waiting at the Front Desk. Its returning-patient search can
+  // only find patients who have already been discharged, never patients at another station.
   const receptionPatients = patients.filter(
     (p) =>
       p.currentDepartment === "RECEPTION" ||
       (searchTerm &&
+        p.currentDepartment === "DISCHARGED" &&
         (p.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
           p.hospitalNumber.toLowerCase().includes(searchTerm.toLowerCase())))
   );

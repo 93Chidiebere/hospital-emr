@@ -1,11 +1,16 @@
 import { UserAccount } from "@/types/emr";
 
 /**
- * Role policy for the simulator:
- *  - Guests (not signed in): can freely switch stations (sandbox / demo mode).
- *  - Instructors (account assigned the "director" role): can switch stations.
- *  - Students (any other signed-in account): locked to the role they registered with.
+ * Role policy for the training simulator:
+ *  - EVERYONE can switch to any working station (Front Desk, Triage, Doctor, Lab, Radiology,
+ *    Pharmacy), so classmates can rotate roles and share the stations between them.
+ *  - Only teachers (and visitors in demo preview) can open the Master View, because it shows
+ *    every patient at every station.
  */
-export function canSwitchRole(user: UserAccount | null): boolean {
-  return !user || user.assignedRole === "director";
+export function canSwitchRole(_user: UserAccount | null): boolean {
+  return true;
+}
+
+export function canUseMasterView(user: UserAccount | null): boolean {
+  return !user || !!user.isAdmin || user.assignedRole === "director";
 }

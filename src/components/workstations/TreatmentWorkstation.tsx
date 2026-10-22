@@ -26,13 +26,8 @@ export function TreatmentWorkstation({
 }: TreatmentWorkstationProps) {
   const { patients, administerMedication, dischargePatient } = useEMR();
 
-  // Find all patients currently at TREATMENT or with pending medications
-  const treatmentQueue = patients.filter(
-    (p) =>
-      (p.currentDepartment === "TREATMENT" ||
-        p.medications.some((m) => m.status !== "administered")) &&
-      p.status === "Active"
-  );
+  // Only patients currently at the PHARMACY station
+  const treatmentQueue = patients.filter((p) => p.currentDepartment === "TREATMENT" && p.status === "Active");
 
   const [selectedPatientId, setSelectedPatientId] = useState<string>(
     treatmentQueue[0]?.id || ""

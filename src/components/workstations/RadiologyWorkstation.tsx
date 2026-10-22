@@ -16,12 +16,8 @@ export function RadiologyWorkstation({
 }: RadiologyWorkstationProps) {
   const { patients, completeRadiologyOrder } = useEMR();
 
-  const radQueue = patients.filter(
-    (p) =>
-      (p.currentDepartment === "RADIOLOGY" ||
-        p.radiologyOrders.some((ro) => ro.status !== "completed")) &&
-      p.status === "Active"
-  );
+  // Only patients currently at the RADIOLOGY station
+  const radQueue = patients.filter((p) => p.currentDepartment === "RADIOLOGY" && p.status === "Active");
 
   const [selectedPatientId, setSelectedPatientId] = useState<string>(
     radQueue[0]?.id || ""

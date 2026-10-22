@@ -2,12 +2,14 @@
 
 import React, { useState } from "react";
 import { useEMR } from "@/context/EMRContext";
-import { Department } from "@/types/emr";
+import { Department, Patient } from "@/types/emr";
 import { UserPlus, X, Check } from "lucide-react";
 import { useDialogA11y } from "@/hooks/useDialogA11y";
 
 interface NewPatientModalProps {
   onClose: () => void;
+  /** called with the saved patient so the screen can confirm where they were sent */
+  onEnrolled?: (patient: Patient) => void;
 }
 
 const KIN_RELATIONSHIPS = [
@@ -28,7 +30,7 @@ const KIN_RELATIONSHIPS = [
   "Other",
 ];
 
-export function NewPatientModal({ onClose }: NewPatientModalProps) {
+export function NewPatientModal({ onClose, onEnrolled }: NewPatientModalProps) {
   const { registerPatient } = useEMR();
   const dialogRef = useDialogA11y<HTMLDivElement>(onClose);
   const [fullName, setFullName] = useState("");
@@ -65,8 +67,9 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
 
     setSubmitting(true);
     setKinError("");
+    let saved: Patient;
     try {
-    await registerPatient(
+    saved = await registerPatient(
       {
         fullName,
         age: Number(age) || 0,
@@ -90,6 +93,7 @@ export function NewPatientModal({ onClose }: NewPatientModalProps) {
       return;
     }
     setSubmitting(false);
+    onEnrolled?.(saved);
     onClose();
   };
 

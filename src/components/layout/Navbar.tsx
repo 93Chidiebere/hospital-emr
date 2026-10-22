@@ -4,7 +4,7 @@ import React, { useEffect, useId, useRef, useState } from "react";
 import { useEMR } from "@/context/EMRContext";
 import { useAuth } from "@/context/AuthContext";
 import { HOSPITAL_ROLES, RoleId } from "@/types/emr";
-import { canSwitchRole } from "@/lib/role-access";
+import { canSwitchRole, canUseMasterView } from "@/lib/role-access";
 import { useDialogA11y } from "@/hooks/useDialogA11y";
 import {
   UserCheck,
@@ -32,9 +32,11 @@ interface NavbarProps {
 function RoleMenu({
   activeRole,
   onSelect,
+  roles,
 }: {
   activeRole: RoleId;
   onSelect: (id: RoleId) => void;
+  roles: typeof HOSPITAL_ROLES;
 }) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -54,7 +56,7 @@ function RoleMenu({
 
     const activeIndex = Math.max(
       0,
-      HOSPITAL_ROLES.findIndex((r) => r.id === activeRole)
+      roles.findIndex((r) => r.id === activeRole)
     );
     itemRefs.current[activeIndex]?.focus();
 
@@ -146,7 +148,7 @@ function RoleMenu({
           >
             Switch Active Workstation Station:
           </div>
-          {HOSPITAL_ROLES.map((r, i) => {
+          {roles.map((r, i) => {
             const selected = activeRole === r.id;
             return (
               <button
@@ -316,7 +318,12 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
 
   const roleSwitchAllowed = canSwitchRole(currentUser);
   const currentRoleMeta = HOSPITAL_ROLES.find((r) => r.id === activeRole) || HOSPITAL_ROLES[0];
-  const activeCount = patients.filter((p) => p.status === "Active").length;
+  // Teachers in Master View see every patient; everyone else only sees the patients at their own station
+  const selectableRoles = HOSPITAL_ROLES.filter((r) => r.id !== "director" || canUseMasterView(currentUser));
+  const isMasterView = activeRole === "director";
+  const activeCount = patients.filter(
+    (p) => p.status === "Active" && (isMasterView || p.currentDepartment === currentRoleMeta.department)
+  ).length;
   const isTeacherOrAdmin = currentUser?.isAdmin || currentUser?.assignedRole === "director";
 
   return (
@@ -358,7 +365,7 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
                 {isLive ? (sessionName ? `Live: ${sessionName}` : "Live Class Session") : "Demo Preview"}
               </span>
               <span className="font-mono text-white text-xs">
-                Active Cases: <strong className="text-amber-300">{activeCount}</strong>
+                {isMasterView ? "Active Cases" : "At your station"}: <strong className="text-amber-300">{activeCount}</strong>
               </span>
             </div>
 
@@ -450,7 +457,7 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
             </span>
 
             {roleSwitchAllowed ? (
-              <RoleMenu activeRole={activeRole} onSelect={setActiveRole} />
+              <RoleMenu activeRole={activeRole} onSelect={setActiveRole} roles={selectableRoles} />
             ) : (
               <div
                 title="Your station is locked to your registered role"
