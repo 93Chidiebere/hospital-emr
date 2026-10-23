@@ -1,6 +1,9 @@
 import { db } from "./db";
 import { hashPassword, verifyPassword } from "./passwords";
 import { HOSPITAL_ROLES } from "@/types/emr";
+import { actorKey } from "./actors";
+import { rewriteActorNames } from "./store";
+import { toCsv } from "./csv";
 
 export interface StudentRecord {
   id: string;
@@ -42,6 +45,10 @@ export async function registerStudent(rawName: string, role: string, password: s
   if (pwProblem) return { ok: false, code: "BAD_PASSWORD", message: pwProblem };
 
   const c = await db();
+  const reserved = await c.execute({ sql: "SELECT 1 AS x FROM user_aliases WHERE alias_key = ?", args: [nameKey(name)] });
+  if (reserved.rows.length) {
+    return { ok: false, code: "NAME_TAKEN", message: `'${name}' was used by another account and cannot be taken. Please use a different name.` };
+  }
   const id = `usr-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
   const created = new Date().toISOString();
   const hash = await hashPassword(password);
@@ -144,6 +151,116 @@ export async function resetStudentPassword(id: string, newPassword: string): Pro
 
 export async function removeStudent(id: string): Promise<boolean> {
   const c = await db();
+  await c.execute({ sql: "DELETE FROM user_aliases WHERE user_id = ?", args: [id] });
   const rs = await c.execute({ sql: "DELETE FROM users WHERE id = ?", args: [id] });
   return rs.rowsAffected > 0;
+}
+
+export type RenameResult =
+  | { ok: true; user: StudentRecord; recordsUpdated: number }
+  | { ok: false; code: "BAD_NAME" | "NAME_TAKEN" | "BAD_PASSWORD" | "NOT_FOUND" | "SAME_NAME"; message: string };
+
+/**
+ * Renames a student account. The new name is used for sign-in from now on, every record that
+ * carried the old name is updated to the new one, and the old name is kept as a reserved alias
+ * so the student's history stays linked to them and nobody else can take it.
+ * Pass `confirmPassword` for a self-service rename; omit it when a teacher does the rename.
+ */
+export async function renameStudent(userId: string, rawNewName: string, confirmPassword?: string): Promise<RenameResult> {
+  const newName = cleanName(rawNewName);
+  if (newName.length < 2 || newName.length > 80) {
+    return { ok: false, code: "BAD_NAME", message: "Enter the full name (2 to 80 characters)." };
+  }
+  const c = await db();
+  const cur = await c.execute({ sql: "SELECT id, full_name, name_key, role, password_hash, created_at FROM users WHERE id = ?", args: [userId] });
+  if (!cur.rows.length) return { ok: false, code: "NOT_FOUND", message: "This account no longer exists." };
+  const row = cur.rows[0] as unknown as Row;
+  const oldName = str(row.full_name);
+  const oldKey = str(row.name_key);
+  const newKey = nameKey(newName);
+
+  if (confirmPassword !== undefined) {
+    const okPw = await verifyPassword(confirmPassword, str(row.password_hash));
+    if (!okPw) return { ok: false, code: "BAD_PASSWORD", message: "Incorrect password. Your name was not changed." };
+  }
+  if (newName === oldName) return { ok: false, code: "SAME_NAME", message: "That is already your name." };
+
+  // the new name must not belong to anybody else, now or in the past
+  const taken = await c.execute({ sql: "SELECT 1 AS x FROM users WHERE name_key = ? AND id <> ?", args: [newKey, userId] });
+  const reserved = await c.execute({ sql: "SELECT 1 AS x FROM user_aliases WHERE alias_key = ? AND user_id <> ?", args: [newKey, userId] });
+  if (taken.rows.length || reserved.rows.length) {
+    return { ok: false, code: "NAME_TAKEN", message: `'${newName}' is already used by another account. Please choose a different name.` };
+  }
+
+  const aliasRs = await c.execute({ sql: "SELECT alias_key FROM user_aliases WHERE user_id = ?", args: [userId] });
+  const formerKeys = aliasRs.rows.map((r) => str((r as unknown as Row).alias_key));
+  const now = new Date().toISOString();
+
+  const stmts: Array<string | { sql: string; args: Array<string | number | null> }> = [
+    { sql: "UPDATE users SET full_name = ?, name_key = ? WHERE id = ?", args: [newName, newKey, userId] },
+    { sql: "DELETE FROM user_aliases WHERE user_id = ? AND alias_key = ?", args: [userId, newKey] }, // renaming back to an old name
+  ];
+  if (oldKey !== newKey) {
+    stmts.push({
+      sql: "INSERT OR REPLACE INTO user_aliases (alias_key, user_id, former_name, created_at) VALUES (?, ?, ?, ?)",
+      args: [oldKey, userId, oldName, now],
+    });
+  }
+  try {
+    await c.batch(stmts, "write");
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "";
+    if (/unique|constraint/i.test(msg)) {
+      return { ok: false, code: "NAME_TAKEN", message: `'${newName}' is already used by another account. Please choose a different name.` };
+    }
+    throw err;
+  }
+
+  // every former name (old and older) now reads as the new name in the records
+  const recordsUpdated = await rewriteActorNames(Array.from(new Set([oldKey, ...formerKeys])), newName);
+
+  return {
+    ok: true,
+    recordsUpdated,
+    user: { id: userId, fullName: newName, role: str(row.role), createdAt: str(row.created_at), lastLoginAt: null, locked: false },
+  };
+}
+
+/** key (current or former name) -> the student's CURRENT name. Used to group reports by person. */
+export async function loadNameResolver(): Promise<(key: string) => string | undefined> {
+  const c = await db();
+  const map = new Map<string, string>();
+  const users = await c.execute("SELECT full_name, name_key FROM users");
+  for (const r of users.rows) {
+    const row = r as unknown as Row;
+    map.set(str(row.name_key), str(row.full_name));
+  }
+  const aliases = await c.execute("SELECT a.alias_key AS alias_key, u.full_name AS full_name FROM user_aliases a JOIN users u ON u.id = a.user_id");
+  for (const r of aliases.rows) {
+    const row = r as unknown as Row;
+    map.set(str(row.alias_key), str(row.full_name));
+  }
+  return (key: string) => map.get(key);
+}
+
+/** Student accounts with their former names, for analysis (links old names in the records to one person). */
+export async function exportStudentsCsv(): Promise<string> {
+  const c = await db();
+  const rs = await c.execute(
+    `SELECT u.full_name, u.role, u.created_at, u.last_login_at,
+            (SELECT group_concat(a.former_name, '; ') FROM user_aliases a WHERE a.user_id = u.id) AS former_names
+       FROM users u ORDER BY u.created_at`
+  );
+  const columns = ["full_name", "former_names", "registered_station", "created_at", "last_login_at"];
+  const rows = rs.rows.map((r) => {
+    const row = r as unknown as Row;
+    return {
+      full_name: row.full_name,
+      former_names: row.former_names,
+      registered_station: row.role,
+      created_at: row.created_at,
+      last_login_at: row.last_login_at,
+    };
+  });
+  return toCsv(columns, rows);
 }

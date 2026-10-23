@@ -99,6 +99,8 @@ interface AuthContextType {
   /** Teacher / admin sign-in (password checked by the server). */
   loginTeacher: (name: string, password: string) => Promise<Result>;
   logout: () => void;
+  /** A student changes their own name (confirmed with their password). */
+  renameAccount: (newName: string, password: string) => Promise<Result>;
   /** Called when the server says the sign-in has expired or the account was removed. */
   expireSession: (message?: string) => void;
 }
@@ -228,6 +230,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const renameAccount = async (newName: string, password: string): Promise<Result> => {
+    try {
+      const res = await fetch("/api/auth/student/name", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newName, password }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok && json?.user) {
+        setCurrentUser((prev) => (prev ? { ...prev, fullName: json.user.fullName } : prev));
+        return { success: true };
+      }
+      return { success: false, error: json?.message || "Your name could not be changed. Please try again." };
+    } catch {
+      return { success: false, error: "Could not reach the server. Check your internet connection." };
+    }
+  };
+
   const enterDemoMode = () => {
     setIsDemoMode(true);
     setCurrentUser(null);
@@ -271,6 +291,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signup,
         loginTeacher,
         logout,
+        renameAccount,
         expireSession,
       }}
     >

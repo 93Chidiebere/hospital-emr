@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { HOSPITAL_ROLES, RoleId } from "@/types/emr";
 import { canSwitchRole, canUseMasterView } from "@/lib/role-access";
 import { useDialogA11y } from "@/hooks/useDialogA11y";
+import { RenameAccountModal } from "@/components/auth/RenameAccountModal";
 import {
   UserCheck,
   RotateCcw,
@@ -17,6 +18,7 @@ import {
   User,
   Lock,
   BarChart3,
+  Pencil,
   Sparkles,
   ShieldCheck,
   GraduationCap,
@@ -314,6 +316,7 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
   const { currentUser, logout, isDemoMode, exitDemoMode } = useAuth();
 
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
   const signOffId = useId();
 
   const roleSwitchAllowed = canSwitchRole(currentUser);
@@ -385,6 +388,17 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
                     {currentUser.isAdmin ? "TEACHER / ADMIN" : HOSPITAL_ROLES.find((r) => r.id === currentUser.assignedRole)?.badge}
                   </span>
                 </div>
+                {!currentUser.isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setRenameOpen(true)}
+                    aria-label="Change my name"
+                    title="Change my name"
+                    className="ml-1 text-slate-400 hover:text-amber-300 transition-colors p-1.5"
+                  >
+                    <Pencil aria-hidden="true" className="w-3.5 h-3.5" />
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={logout}
@@ -496,6 +510,8 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
           </div>
         </div>
       </header>
+
+      {renameOpen && <RenameAccountModal onClose={() => setRenameOpen(false)} />}
 
       {resetConfirmOpen && (
         <ResetConfirmDialog

@@ -2,7 +2,7 @@ import type { InStatement } from "@libsql/client/web";
 import { db } from "./db";
 import { toCsv } from "./csv";
 import type { Patient } from "@/types/emr";
-import { collectActorKeys } from "./actors";
+import { collectActorKeys, renameActorInPatient } from "./actors";
 
 export class SessionClosedError extends Error {
   constructor() {
@@ -146,6 +146,7 @@ function patientStatements(p: Patient, sessionId: string): InStatement[] {
             hospital_number = excluded.hospital_number, full_name = excluded.full_name, age = excluded.age,
             gender = excluded.gender, payment_type = excluded.payment_type,
             current_department = excluded.current_department, status = excluded.status,
+            registered_by = excluded.registered_by,
             last_updated = excluded.last_updated, next_of_kin_name = excluded.next_of_kin_name,
             next_of_kin_relation = excluded.next_of_kin_relation, next_of_kin_phone = excluded.next_of_kin_phone,
             data = excluded.data`,
@@ -304,6 +305,47 @@ export async function listPatientsByIds(ids: string[]): Promise<Patient[]> {
     }
   }
   return out.sort((a, b) => new Date(b.registeredAt).getTime() - new Date(a.registeredAt).getTime());
+}
+
+/**
+ * After a student is renamed: every record that carries one of their former names now carries the
+ * new name (in closed sessions too, so the history stays consistent). Returns how many were updated.
+ */
+export async function rewriteActorNames(fromKeys: string[], newName: string): Promise<number> {
+  if (fromKeys.length === 0) return 0;
+  const c = await db();
+  const found = await c.execute({
+    sql: `SELECT DISTINCT patient_id, session_id FROM patient_actors WHERE actor_key IN (${fromKeys.map(() => "?").join(", ")})`,
+    args: fromKeys,
+  });
+
+  let updated = 0;
+  let pending: InStatement[] = [];
+  let pendingPatients = 0;
+  const flush = async () => {
+    if (pending.length) await c.batch(pending, "write");
+    pending = [];
+    pendingPatients = 0;
+  };
+
+  for (const row of found.rows) {
+    const r = row as unknown as Row;
+    const stored = await c.execute({ sql: "SELECT data FROM patients WHERE id = ?", args: [str(r.patient_id)] });
+    if (!stored.rows.length) continue;
+    let patient: Patient;
+    try {
+      patient = JSON.parse(str((stored.rows[0] as unknown as Row).data)) as Patient;
+    } catch {
+      continue;
+    }
+    if (!renameActorInPatient(patient, fromKeys, newName)) continue;
+    pending.push(...patientStatements(patient, str(r.session_id)));
+    updated += 1;
+    pendingPatients += 1;
+    if (pendingPatients >= 4) await flush();
+  }
+  await flush();
+  return updated;
 }
 
 export interface PatientDetails {

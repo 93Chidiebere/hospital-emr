@@ -163,6 +163,15 @@ const SCHEMA: string[] = [
     PRIMARY KEY (patient_id, actor_key)
   )`,
   `CREATE INDEX IF NOT EXISTS idx_actors_lookup ON patient_actors (session_id, actor_key)`,
+
+  // names a student used before renaming (so history stays linked and nobody else can take them)
+  `CREATE TABLE IF NOT EXISTS user_aliases (
+    alias_key TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    former_name TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_aliases_user ON user_aliases (user_id)`,
 ];
 
 let ready: Promise<Client> | null = null;

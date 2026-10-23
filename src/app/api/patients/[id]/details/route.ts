@@ -4,6 +4,7 @@ import { studentAccess, studentCanRead, stationDepartments } from "@/lib/access"
 import { errorResponse } from "@/lib/api-errors";
 import { requireUser } from "@/lib/session";
 import { db } from "@/lib/db";
+import { actorKey } from "@/lib/actors";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -30,7 +31,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         if (rs.rows.length) {
           const row = rs.rows[0] as unknown as Record<string, unknown>;
           const atDesk = (stationDepartments("receptionist") as string[]).includes(String(row.current_department));
-          const mine = String(row.registered_by || "").toLowerCase().replace(/\s*\([a-z]{2,5}\)\s*$/, "").replace(/\s+/g, " ").trim() === access.key;
+          const mine = access.keys.includes(actorKey(String(row.registered_by || "")));
           allowed = atDesk || mine;
         } else allowed = false;
       }

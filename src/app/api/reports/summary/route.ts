@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getActiveSession, listPatientsForReport, listSessions } from "@/lib/store";
 import { buildSummary } from "@/lib/reports";
+import { loadNameResolver } from "@/lib/users";
 import { requireTeacher } from "@/lib/session";
 import { errorResponse } from "@/lib/api-errors";
 
@@ -23,7 +24,7 @@ export async function GET(request: Request) {
         scope,
         activeSessionId: active.id,
         sessions,
-        summary: buildSummary(patients),
+        summary: buildSummary(patients, await loadNameResolver()),
         patients: patients.map((p) => ({
           hospitalNumber: p.hospitalNumber,
           fullName: p.fullName,

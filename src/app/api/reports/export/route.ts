@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { EXPORT_TABLES, exportCsv, getActiveSession, listPatientsForReport, listSessions } from "@/lib/store";
 import { requireTeacher } from "@/lib/session";
+import { exportStudentsCsv } from "@/lib/users";
 import { errorResponse } from "@/lib/api-errors";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +28,16 @@ export async function GET(request: Request) {
         headers: {
           "Content-Type": "application/json; charset=utf-8",
           "Content-Disposition": `attachment; filename="trinity-backup-${stamp}.json"`,
+          "Cache-Control": "no-store",
+        },
+      });
+    }
+
+    if (table === "students") {
+      return new NextResponse(await exportStudentsCsv(), {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="student_accounts-${stamp}.csv"`,
           "Cache-Control": "no-store",
         },
       });

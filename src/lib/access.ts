@@ -62,13 +62,20 @@ export async function clearSessionRole(sessionId: string, userId: string): Promi
 export interface StudentAccess {
   session: SessionInfo;
   role: string | null;
-  key: string;
+  /** the student's current name and every former name (as comparison keys) */
+  keys: string[];
 }
 
 export async function studentAccess(user: SessionUser): Promise<StudentAccess> {
   const session = await getActiveSession();
   const role = await getSessionRole(session.id, user.id);
-  return { session, role, key: actorKey(user.name) };
+  const c = await db();
+  // use the name stored in the database, not the one inside the sign-in cookie (it may be out of date after a rename)
+  const nameRs = await c.execute({ sql: "SELECT full_name FROM users WHERE id = ?", args: [user.id] });
+  const current = nameRs.rows.length ? str((nameRs.rows[0] as unknown as Row).full_name) : user.name;
+  const aliasRs = await c.execute({ sql: "SELECT alias_key FROM user_aliases WHERE user_id = ?", args: [user.id] });
+  const keys = Array.from(new Set([actorKey(current), ...aliasRs.rows.map((r) => str((r as unknown as Row).alias_key))]));
+  return { session, role, keys };
 }
 
 /** Rows a student may read: patients at their station plus patients they personally worked on. */
@@ -81,8 +88,8 @@ export async function visiblePatientIds(access: StudentAccess): Promise<Array<{ 
     sql: `SELECT id, current_department FROM patients
            WHERE session_id = ?
              AND (current_department IN (${marks})
-                  OR id IN (SELECT patient_id FROM patient_actors WHERE session_id = ? AND actor_key = ?))`,
-    args: [access.session.id, ...depts, access.session.id, access.key],
+                  OR id IN (SELECT patient_id FROM patient_actors WHERE session_id = ? AND actor_key IN (${access.keys.map(() => "?").join(", ")})))`,
+    args: [access.session.id, ...depts, access.session.id, ...access.keys],
   });
   return rs.rows.map((r) => ({ id: str((r as unknown as Row).id), dept: str((r as unknown as Row).current_department) }));
 }

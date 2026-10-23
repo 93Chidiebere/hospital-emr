@@ -74,6 +74,7 @@ const EXPORTS: Array<{ table: string; label: string; hint: string }> = [
   { table: "radiology_orders", label: "Imaging orders", hint: "Studies and reports" },
   { table: "medications", label: "Pharmacy / medications", hint: "Orders and administration" },
   { table: "routing_events", label: "Patient flow", hint: "Every move between stations" },
+  { table: "students", label: "Student accounts", hint: "With former names, for linking old records" },
 ];
 
 function Bars({ rows, unit = "" }: { rows: Array<{ label: string; value: number }>; unit?: string }) {
@@ -151,6 +152,30 @@ export default function ReportsPage() {
       const json = await res.json().catch(() => ({}));
       setStudentMsg(res.ok ? `Password reset for ${st.fullName}. Tell them the new password.` : json?.message || "Could not reset the password.");
       if (res.ok) loadStudents();
+    } catch {
+      setStudentMsg("Could not reach the server.");
+    }
+  };
+
+  const renameStudentAccount = async (st: StudentRow) => {
+    const next = window.prompt(`New name for ${st.fullName}:`, st.fullName);
+    if (next === null || !next.trim() || next.trim() === st.fullName) return;
+    try {
+      const res = await fetch(`/api/students/${encodeURIComponent(st.id)}/name`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: next }),
+      });
+      const json = await res.json().catch(() => ({}));
+      setStudentMsg(
+        res.ok
+          ? `Renamed ${st.fullName} to ${json.name}. ${json.recordsUpdated} patient record(s) updated.`
+          : json?.message || "Could not rename the account."
+      );
+      if (res.ok) {
+        loadStudents();
+        load(scope);
+      }
     } catch {
       setStudentMsg("Could not reach the server.");
     }
@@ -456,6 +481,14 @@ export default function ReportsPage() {
                                 Unlock station
                               </button>
                             )}
+                            <button
+                              type="button"
+                              onClick={() => renameStudentAccount(st)}
+                              aria-label={`Rename ${st.fullName}`}
+                              className="px-2.5 py-1 text-xs border border-slate-300 hover:border-brand hover:bg-amber-50 mr-1.5"
+                            >
+                              Rename
+                            </button>
                             <button
                               type="button"
                               onClick={() => resetStudent(st)}

@@ -50,7 +50,7 @@ function countBy<T>(items: T[], key: (t: T) => string): Array<{ label: string; c
     .sort((a, b) => b.count - a.count);
 }
 
-export function buildSummary(patients: Patient[]): ReportSummary {
+export function buildSummary(patients: Patient[], resolveName?: (key: string) => string | undefined): ReportSummary {
   const totals = {
     patients: patients.length,
     active: patients.filter((p) => p.status === "Active").length,
@@ -72,8 +72,10 @@ export function buildSummary(patients: Patient[]): ReportSummary {
   const activity = new Map<string, ReportSummary["activity"][number]>();
   const person = (raw: string | undefined) => {
     // "Ada Obi (REC)" and "Ada Obi (TRG)" are the same student at different stations
-    const name = (raw || "").trim().replace(/\s*\([A-Za-z]{2,5}\)\s*$/, "");
-    if (!name) return null;
+    const base = (raw || "").trim().replace(/\s*\([A-Za-z]{2,5}\)\s*$/, "");
+    if (!base) return null;
+    // a student who was renamed is counted once, under the current name
+    const name = resolveName?.(base.replace(/\s+/g, " ").toLowerCase()) ?? base;
     if (!activity.has(name)) {
       activity.set(name, {
         name, patientsRegistered: 0, vitalsRecorded: 0, consultations: 0, labResults: 0,
