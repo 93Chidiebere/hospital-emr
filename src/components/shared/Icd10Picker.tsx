@@ -184,7 +184,7 @@ export function Icd10Picker({ label, value, onChange, required, error, hint }: I
               }}
               onFocus={ensureLoaded}
               onKeyDown={onKeyDown}
-              placeholder="Type a code (e.g. B50) or a word (e.g. malaria)"
+              placeholder="Search: B50 or malaria"
               className="w-full p-2 pl-8 bg-paper-warm border border-paper-border focus:border-brand text-charcoal"
             />
           </div>

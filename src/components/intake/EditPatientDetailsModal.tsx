@@ -71,7 +71,7 @@ export function EditPatientDetailsModal({ patient, onClose }: Props) {
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="bg-white border border-brand max-w-2xl w-full p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto outline-none"
+        className="bg-white border border-brand max-w-2xl w-full p-5 sm:p-6 space-y-4 max-h-[92dvh] overflow-y-auto outline-none"
       >
         <div className="flex items-start justify-between gap-3">
           <div>

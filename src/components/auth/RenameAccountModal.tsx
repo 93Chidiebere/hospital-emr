@@ -48,7 +48,7 @@ export function RenameAccountModal({ onClose }: Props) {
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="bg-white text-slate-900 border border-brand max-w-md w-full p-5 sm:p-6 space-y-4 outline-none max-h-[92vh] overflow-y-auto"
+        className="bg-white text-slate-900 border border-brand max-w-md w-full p-5 sm:p-6 space-y-4 outline-none max-h-[92dvh] overflow-y-auto"
       >
         <div className="flex items-start justify-between gap-3">
           <h2 id={titleId} className="font-sans text-lg font-bold text-navy-dark">

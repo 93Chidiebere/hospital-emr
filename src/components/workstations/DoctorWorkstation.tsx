@@ -236,7 +236,7 @@ export function DoctorWorkstation({
               Physician Consultation & Clinical Decision Station
             </h2>
           </div>
-          <p className="text-xs text-charcoal-muted mt-0.5">
+          <p className="hidden sm:block text-xs text-charcoal-muted mt-0.5">
             Evaluate triage vitals, review laboratory & imaging results, document and ICD-10 code diagnoses, and order treatment.
           </p>
         </div>
@@ -249,7 +249,7 @@ export function DoctorWorkstation({
         {/* Left: Queue */}
         <div className="lg:col-span-4 space-y-3">
           <div className="flex items-center justify-between border-b border-paper-border pb-1">
-            <span className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold">
+            <span className="font-mono text-[11px] uppercase tracking-wider text-amber-300 font-bold">
               Waiting for Doctor ({consultQueue.length})
             </span>
           </div>
@@ -471,7 +471,7 @@ export function DoctorWorkstation({
               <form onSubmit={handleSubmitConsult} className="space-y-4 text-xs">
                 {/* Clinical Notes Inputs */}
                 <div className="space-y-3">
-                  <h4 className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold border-b border-paper-border pb-1">
+                  <h4 className="font-mono text-[11px] uppercase tracking-wider text-amber-300 font-bold border-b border-paper-border pb-1">
                     1. Physician Clinical Evaluation
                   </h4>
 
@@ -580,7 +580,7 @@ export function DoctorWorkstation({
 
                 {/* Investigations Ordering */}
                 <div className="space-y-3 pt-2">
-                  <h4 className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold border-b border-paper-border pb-1 flex items-center justify-between">
+                  <h4 className="font-mono text-[11px] uppercase tracking-wider text-amber-300 font-bold border-b border-paper-border pb-1 flex items-center justify-between">
                     <span>2. Order Laboratory & Imaging Investigations</span>
                     <span className="text-[10px] font-normal text-charcoal-muted">Click panel to append</span>
                   </h4>
@@ -650,7 +650,7 @@ export function DoctorWorkstation({
                         aria-label="Clinical indication for imaging"
                         value={imagingIndication}
                         onChange={(e) => setImagingIndication(e.target.value)}
-                        placeholder="Clinical indication (e.g. cough 2/52, ?pneumonia)"
+                        placeholder="Clinical indication"
                         className="p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal"
                       />
                       <div className="flex gap-2">
@@ -666,7 +666,7 @@ export function DoctorWorkstation({
                               setCustomStudy("");
                             }
                           }}
-                          placeholder="Other study (e.g. Echocardiogram)"
+                          placeholder="Other study"
                           className="flex-1 min-w-0 p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal"
                         />
                         <button
@@ -720,7 +720,7 @@ export function DoctorWorkstation({
 
                 {/* Medications & Injections */}
                 <div className="space-y-3 pt-2">
-                  <h4 className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold border-b border-paper-border pb-1 flex items-center justify-between">
+                  <h4 className="font-mono text-[11px] uppercase tracking-wider text-amber-300 font-bold border-b border-paper-border pb-1 flex items-center justify-between">
                     <span>3. Prescribe Injections & Medications</span>
                     <span className="text-[10px] font-normal text-charcoal-muted">Stat injections route to Pharmacy</span>
                   </h4>
@@ -824,7 +824,7 @@ export function DoctorWorkstation({
             </div>
           ) : (
             <div className="p-12 text-center text-charcoal-muted bg-white border border-paper-border text-xs">
-              Select a patient from the left consultation queue to conduct physician review.
+              Select a patient from the consultation queue to conduct physician review.
             </div>
           )}
         </div>

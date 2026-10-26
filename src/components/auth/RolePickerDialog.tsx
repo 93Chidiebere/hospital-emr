@@ -41,20 +41,20 @@ export function RolePickerDialog() {
         aria-labelledby={titleId}
         aria-describedby={descId}
         tabIndex={-1}
-        className="bg-white text-slate-900 w-full max-w-xl max-h-[94vh] overflow-y-auto border-2 border-brand p-5 sm:p-6 space-y-4 outline-none"
+        className="bg-white text-slate-900 w-full max-w-xl max-h-[94dvh] flex flex-col border-2 border-brand outline-none"
       >
-        <div>
-          <h2 id={titleId} className="font-sans text-xl font-bold text-navy-dark">
+        <div className="p-4 sm:p-6 pb-2 sm:pb-3 shrink-0">
+          <h2 id={titleId} className="font-sans text-lg sm:text-xl font-bold text-navy-dark">
             Choose your station for this class session
           </h2>
           {sessionName && <p className="text-xs font-mono text-slate-500 mt-0.5">Session: {sessionName}</p>}
-          <p id={descId} className="text-sm text-slate-700 mt-2">
+          <p id={descId} className="text-xs sm:text-sm text-slate-700 mt-1.5 [@media(max-height:500px)]:hidden">
             You will act as this station until the session is closed. Your teacher can then start a new session, and you may
             keep the same station or pick another one.
           </p>
         </div>
 
-        <div role="radiogroup" aria-label="Stations" className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div role="radiogroup" aria-label="Stations" className="flex flex-col sm:flex-row sm:flex-wrap sm:content-start gap-2 overflow-y-auto px-4 sm:px-6 py-1 flex-1 min-h-0">
           {roles.map((r) => {
             const on = selected === r.id;
             return (
@@ -64,7 +64,7 @@ export function RolePickerDialog() {
                 role="radio"
                 aria-checked={on}
                 onClick={() => setSelected(r.id)}
-                className={`text-left p-3 border-2 transition-colors ${
+                className={`text-left p-3 border-2 transition-colors shrink-0 sm:basis-[calc(50%-0.25rem)] ${
                   on ? "border-brand bg-amber-50" : "border-slate-200 hover:border-navy bg-white"
                 }`}
               >
@@ -72,19 +72,19 @@ export function RolePickerDialog() {
                   <span className="font-mono text-[10px] px-1.5 py-0.5 bg-navy text-white">{r.badge}</span>
                   <span className="font-bold text-sm text-navy-dark">{r.title}</span>
                 </span>
-                <span className="block text-xs text-slate-600 mt-1 line-clamp-2">{r.description}</span>
+                <span className="hidden sm:block [@media(max-height:500px)]:hidden text-xs text-slate-600 mt-1 line-clamp-2">{r.description}</span>
               </button>
             );
           })}
         </div>
 
         {error && (
-          <p role="alert" className="text-sm font-semibold text-red-700">
+          <p role="alert" className="text-sm font-semibold text-red-700 px-4 sm:px-6 pt-2 shrink-0">
             {error}
           </p>
         )}
 
-        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-2 border-t border-slate-200">
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 p-4 sm:p-6 pt-3 border-t border-slate-200 shrink-0 bg-white">
           <button type="button" onClick={logout} className="text-xs underline text-slate-600 hover:text-slate-900 self-start">
             Sign out
           </button>

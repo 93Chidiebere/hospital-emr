@@ -37,8 +37,8 @@ export function HospitalPipelineBar() {
     patients.filter((p) => p.currentDepartment === dept).length;
 
   return (
-    <section aria-label="Live clinical flow pipeline" className="bg-[#071B33] border-b border-[#1E4E79] text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
+    <section aria-label="Live clinical flow pipeline" className={`${isMasterView ? "" : "hidden sm:block"} bg-[#071B33] border-b border-[#1E4E79] text-white`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-mono uppercase tracking-wider text-amber-300 font-bold">
@@ -67,7 +67,7 @@ export function HospitalPipelineBar() {
         </div>
 
         {/* Horizontal Pipeline Strip */}
-        <div className={`grid gap-1.5 ${isMasterView ? "grid-cols-2 sm:grid-cols-4 lg:grid-cols-8" : "grid-cols-1 max-w-xs"}`}>
+        <div className={`grid gap-1.5 ${isMasterView ? "grid-cols-4 lg:grid-cols-8" : "grid-cols-1 max-w-xs"}`}>
           {stations.map(({ dept, icon: Icon }) => {
             const count = getCount(dept);
             const isSelected = filterDepartment === dept;
@@ -80,7 +80,7 @@ export function HospitalPipelineBar() {
                 aria-pressed={isSelected}
                 aria-label={`${meta.name}: ${count} ${count === 1 ? "patient" : "patients"}`}
                 onClick={() => setFilterDepartment(dept)}
-                className={`p-2.5 sm:p-2 min-h-[58px] text-left transition-all border flex flex-col justify-between rounded-[2px] ${
+                className={`p-1.5 sm:p-2 min-h-[52px] sm:min-h-[58px] text-left transition-all border flex flex-col justify-between rounded-[2px] ${
                   isSelected
                     ? "bg-[#0F325E] border-brand text-white shadow-md ring-1 ring-brand"
                     : "bg-[#0B2545] border-[#1E4E79] hover:bg-[#0F325E] text-slate-300"
@@ -90,7 +90,7 @@ export function HospitalPipelineBar() {
                   <div className="flex items-center gap-1.5">
                     <Icon
                       aria-hidden="true"
-                      className={`w-3.5 h-3.5 ${
+                      className={`hidden sm:block w-3.5 h-3.5 ${
                         isSelected ? "text-brand" : "text-slate-400"
                       }`}
                     />
@@ -100,7 +100,7 @@ export function HospitalPipelineBar() {
                   </div>
                   <span
                     aria-hidden="true"
-                    className={`font-mono text-xs px-1.5 py-0.5 rounded-[2px] ${
+                    className={`font-mono text-xs px-1 sm:px-1.5 py-0.5 rounded-[2px] ${
                       count > 0
                         ? "bg-brand text-navy-dark font-bold"
                         : "bg-[#071B33] text-slate-400 border border-[#1E4E79]"
@@ -110,7 +110,7 @@ export function HospitalPipelineBar() {
                   </span>
                 </div>
                 <div className="mt-1.5">
-                  <p className="font-sans text-xs font-bold leading-tight text-white line-clamp-1">
+                  <p className="font-sans text-[11px] sm:text-xs font-bold leading-tight text-white truncate">
                     {meta.shortName}
                   </p>
                 </div>

@@ -105,7 +105,7 @@ export function NewPatientModal({ onClose, onEnrolled }: NewPatientModalProps) {
         aria-modal="true"
         aria-labelledby="intake-dialog-title"
         tabIndex={-1}
-        className="bg-white border border-brand max-w-2xl w-full p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto outline-none"
+        className="bg-white border border-brand max-w-2xl w-full p-5 sm:p-6 space-y-4 max-h-[92dvh] overflow-y-auto outline-none"
       >
         <div className="flex items-start justify-between border-b border-paper-border pb-3">
           <div>

@@ -60,7 +60,7 @@ export function TransferModal({ patient, onClose }: TransferModalProps) {
         aria-modal="true"
         aria-labelledby="transfer-dialog-title"
         tabIndex={-1}
-        className="bg-white border border-brand max-w-xl w-full max-h-[92vh] overflow-y-auto p-5 sm:p-6 space-y-5 outline-none"
+        className="bg-white border border-brand max-w-xl w-full max-h-[92dvh] overflow-y-auto p-5 sm:p-6 space-y-5 outline-none"
       >
         {/* Header */}
         <div className="flex items-start justify-between border-b border-paper-border pb-3">

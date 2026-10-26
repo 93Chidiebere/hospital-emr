@@ -114,7 +114,7 @@ export function TreatmentWorkstation({
               Pharmacy & Medication Administration Station
             </h2>
           </div>
-          <p className="text-xs text-charcoal-muted mt-0.5">
+          <p className="hidden sm:block text-xs text-charcoal-muted mt-0.5">
             Administer physician-prescribed IV/IM injections, log anatomical injection sites, record nursing observations, and finalize discharge.
           </p>
         </div>
@@ -127,7 +127,7 @@ export function TreatmentWorkstation({
         {/* Left: Queue */}
         <div className="lg:col-span-4 space-y-3">
           <div className="flex items-center justify-between border-b border-paper-border pb-1">
-            <span className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold">
+            <span className="font-mono text-[11px] uppercase tracking-wider text-amber-300 font-bold">
               Waiting at Pharmacy ({treatmentQueue.length})
             </span>
           </div>
@@ -240,7 +240,7 @@ export function TreatmentWorkstation({
 
               {/* Medication Selection */}
               <div className="space-y-2">
-                <span className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold block">
+                <span className="font-mono text-[11px] uppercase tracking-wider text-amber-300 font-bold block">
                   Prescribed Pharmacotherapy to Administer:
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -395,7 +395,7 @@ export function TreatmentWorkstation({
             </div>
           ) : (
             <div className="p-12 text-center text-charcoal-muted bg-white border border-paper-border text-xs">
-              Select a patient from the left queue to dispense and administer prescribed medication.
+              Select a patient from the queue to dispense and administer prescribed medication.
             </div>
           )}
         </div>

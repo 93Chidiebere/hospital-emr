@@ -142,7 +142,7 @@ function RoleMenu({
           role="menu"
           aria-label="Select simulated department post"
           onKeyDown={handleMenuKeyDown}
-          className="absolute left-0 mt-1 w-[min(20rem,calc(100vw-2rem))] max-h-[70vh] overflow-y-auto bg-white border border-brand shadow-2xl z-50 divide-y divide-slate-100 rounded-[2px]"
+          className="absolute left-0 mt-1 w-[min(20rem,calc(100vw-2rem))] max-h-[70dvh] overflow-y-auto bg-white border border-brand shadow-2xl z-50 divide-y divide-slate-100 rounded-[2px]"
         >
           <div
             aria-hidden="true"
@@ -222,7 +222,7 @@ function ResetConfirmDialog({
         aria-labelledby={titleId}
         aria-describedby={descId}
         tabIndex={-1}
-        className="bg-white border-2 border-brand max-w-lg w-full max-h-[90vh] overflow-y-auto p-5 sm:p-6 space-y-4 outline-none shadow-2xl rounded-[2px]"
+        className="bg-white border-2 border-brand max-w-lg w-full max-h-[90dvh] overflow-y-auto p-5 sm:p-6 space-y-4 outline-none shadow-2xl rounded-[2px]"
       >
         <div className="flex items-center gap-2 text-red-600">
           <ShieldAlert aria-hidden="true" className="w-5 h-5 shrink-0" />
@@ -338,13 +338,13 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
             <img
               src="/trinity-logo.png"
               alt="Trinity University"
-              className="h-10 sm:h-12 w-auto object-contain shrink-0 rounded-[2px] bg-white p-0.5 shadow-sm"
+              className="h-9 sm:h-12 w-auto object-contain shrink-0 rounded-[2px] bg-white p-0.5 shadow-sm"
             />
             <div className="min-w-0">
-              <h1 className="font-sans text-lg sm:text-xl font-bold tracking-tight text-white leading-tight">
+              <h1 className="font-sans text-base sm:text-xl font-bold tracking-tight text-white leading-tight">
                 Trinity University Hospital EHR
               </h1>
-              <p className="text-[11px] text-amber-300 font-medium tracking-wide">
+              <p className="text-[10px] sm:text-[11px] text-amber-300 font-medium tracking-wide">
                 Clinical & Hospital Data Flow Simulation
               </p>
             </div>
@@ -355,9 +355,9 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
             {/* Live vs Demo Indicator */}
             <div
               role="status"
-              className="flex items-center gap-2 text-xs text-slate-300 md:border-r border-[#1E4E79] md:pr-3"
+              className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-300 md:border-r border-[#1E4E79] md:pr-3"
             >
-              <Clock aria-hidden="true" className="w-3.5 h-3.5 text-brand" />
+              <Clock aria-hidden="true" className="hidden sm:block w-3.5 h-3.5 text-brand" />
               <span
                 className={`font-mono px-1.5 py-0.5 text-[10px] uppercase font-bold inline-block max-w-[11rem] sm:max-w-[18rem] truncate align-bottom ${
                   isLive
@@ -381,7 +381,7 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
                   <User aria-hidden="true" className="w-3.5 h-3.5 text-brand shrink-0" />
                 )}
                 <div className="text-left font-sans min-w-0">
-                  <span className="font-bold text-white text-xs block leading-tight truncate max-w-[9rem] sm:max-w-[13rem]">
+                  <span className="font-bold text-white text-xs block leading-tight truncate max-w-[7rem] sm:max-w-[13rem]">
                     {currentUser.fullName}
                   </span>
                   <span className="text-[10px] text-amber-300 font-mono">
@@ -430,7 +430,7 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
                 type="button"
                 onClick={() => setResetConfirmOpen(true)}
                 title={isLive ? "Start a new class session (keeps all earlier data)" : "Restore demo data"}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white bg-[#0F325E] hover:bg-[#15437C] border border-[#1E4E79] hover:border-brand transition-colors"
+                className="flex items-center gap-1.5 px-2.5 py-2 sm:px-3 sm:py-1.5 text-xs text-white bg-[#0F325E] hover:bg-[#15437C] border border-[#1E4E79] hover:border-brand transition-colors"
               >
                 <RotateCcw aria-hidden="true" className="w-3.5 h-3.5 text-brand" />
                 <span className="hidden sm:inline">{isLive ? "New Session" : "Reset Session"}</span>
@@ -442,7 +442,7 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
             {isLive && isTeacherOrAdmin && (
               <a
                 href="/reports"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white bg-[#0F325E] hover:bg-[#15437C] border border-[#1E4E79] hover:border-brand transition-colors"
+                className="flex items-center gap-1.5 px-2.5 py-2 sm:px-3 sm:py-1.5 text-xs text-white bg-[#0F325E] hover:bg-[#15437C] border border-[#1E4E79] hover:border-brand transition-colors"
               >
                 <BarChart3 aria-hidden="true" className="w-3.5 h-3.5 text-brand" />
                 <span>Reports</span>
@@ -454,7 +454,7 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
             <button
               type="button"
               onClick={onOpenIntake}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-navy-dark bg-brand hover:bg-brand-hover transition-colors shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-1.5 text-xs font-bold text-navy-dark bg-brand hover:bg-brand-hover transition-colors shadow-sm"
             >
               <Plus aria-hidden="true" className="w-3.5 h-3.5 text-navy-dark stroke-[3]" />
               <span className="sm:hidden">Enroll</span>
@@ -465,9 +465,9 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
         </div>
 
         {/* Role Selection & Identity Banner */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between text-xs bg-[#071B33]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 flex flex-col gap-2 sm:gap-3 md:flex-row md:items-center md:justify-between text-xs bg-[#071B33]">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-            <span className="text-slate-300 font-sans uppercase tracking-wider text-[11px] flex items-center gap-1">
+            <span className={`text-slate-300 font-sans uppercase tracking-wider text-[11px] items-center gap-1 ${roleSwitchAllowed ? "flex" : "hidden sm:flex"}`}>
               <UserCheck aria-hidden="true" className="w-3.5 h-3.5 text-brand" />
               {roleSwitchAllowed ? "Active Classroom Role:" : "Your Station (fixed for this session):"}
             </span>
@@ -484,12 +484,18 @@ export function Navbar({ onOpenIntake }: NavbarProps) {
                   {currentRoleMeta.badge}
                 </span>
                 <span className="font-sans text-xs sm:text-sm font-bold">{currentRoleMeta.title}</span>
+                <span className="sm:hidden text-[10px] text-amber-300 font-mono">· fixed</span>
               </div>
             )}
           </div>
 
-          {/* Staff Sign-off Identity Field */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+          {/* Staff Sign-off Identity Field (on phones a signed-in user just sees a one-line note) */}
+          {currentUser && (
+            <p className="sm:hidden text-[11px] text-slate-300">
+              Signing off as <strong className="text-white">{activeStaffName}</strong>
+            </p>
+          )}
+          <div className={`flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 ${currentUser ? "hidden sm:flex" : "flex"}`}>
             <label htmlFor={signOffId} className="text-slate-300 text-[11px]">
               Signing off as:
             </label>

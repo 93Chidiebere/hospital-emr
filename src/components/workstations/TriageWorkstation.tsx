@@ -123,7 +123,7 @@ export function TriageWorkstation({
               Nurse Triage & Vital Signs Station
             </h2>
           </div>
-          <p className="text-xs text-charcoal-muted mt-0.5">
+          <p className="hidden sm:block text-xs text-charcoal-muted mt-0.5">
             Measure physiological parameters, calculate BMI, classify clinical urgency, and route to destination.
           </p>
         </div>
@@ -136,7 +136,7 @@ export function TriageWorkstation({
         {/* Left Column: Triage Waiting Queue */}
         <div className="lg:col-span-4 space-y-3">
           <div className="flex items-center justify-between border-b border-paper-border pb-1">
-            <span className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold">
+            <span className="font-mono text-[11px] uppercase tracking-wider text-amber-300 font-bold">
               Waiting in Triage Queue ({triageQueue.length})
             </span>
           </div>
@@ -474,7 +474,7 @@ export function TriageWorkstation({
             </div>
           ) : (
             <div className="p-12 text-center text-charcoal-muted bg-white border border-paper-border text-xs">
-              Select a patient from the left queue to record their vitals.
+              Select a patient from the queue to record their vitals.
             </div>
           )}
         </div>

@@ -43,7 +43,7 @@ export function ReceptionWorkstation({
               Front Desk & Medical Records Station
             </h2>
           </div>
-          <p className="text-xs text-charcoal-muted mt-0.5">
+          <p className="hidden sm:block text-xs text-charcoal-muted mt-0.5">
             Register new patient charts, issue Trinity University Hospital EHR numbers, and route returning patients directly to any station.
           </p>
         </div>
@@ -61,13 +61,13 @@ export function ReceptionWorkstation({
 
       {/* Returning Patient Search Bar */}
       <div className="bg-white border border-paper-border p-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-charcoal-muted absolute left-3 top-2.5" />
+        <div className="relative w-full sm:flex-1 sm:max-w-md">
+          <Search className="w-4 h-4 text-charcoal-muted absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Lookup returning patient by name or Hospital ID (e.g. TPH-2026-00101)..."
+            placeholder="Find a returning patient by name or ID"
             className="w-full pl-9 pr-3 py-2 text-xs bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-sans"
           />
         </div>

@@ -118,12 +118,12 @@ export function HeroLanding() {
               alt="Trinity University"
               className="h-11 sm:h-12 w-auto object-contain rounded-[2px] shadow-sm bg-white/95 p-0.5"
             />
-            <div>
+            <div className="min-w-0">
               <p className="font-sans text-sm sm:text-base font-bold text-white tracking-wide">
                 Trinity University
               </p>
               <p className="text-[11px] sm:text-xs text-amber-300 font-medium">
-                Faculty of Nursing & Health Sciences &bull; Yaba, Lagos
+                Faculty of Nursing & Health Sciences<span className="hidden sm:inline"> &bull; Yaba, Lagos</span>
               </p>
             </div>
           </div>
@@ -281,7 +281,7 @@ export function HeroLanding() {
                     >
                       {HOSPITAL_ROLES.filter((r) => r.id !== "director").map((r) => (
                         <option key={r.id} value={r.id}>
-                          {r.title} ({r.badge}) &mdash; {r.cadre}
+                          {r.title} ({r.badge})
                         </option>
                       ))}
                     </select>

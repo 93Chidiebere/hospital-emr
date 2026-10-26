@@ -39,7 +39,7 @@ export function MasterDirectoryWorkstation({
               Trinity University Hospital EHR — Master Clinical Directory
             </h2>
           </div>
-          <p className="text-xs text-charcoal-muted mt-0.5">
+          <p className="hidden sm:block text-xs text-charcoal-muted mt-0.5">
             Hospital-wide centralized registry of all patient charts, clinical movement pipelines, and active queues.
           </p>
         </div>
@@ -108,7 +108,7 @@ export function MasterDirectoryWorkstation({
       {/* Master Table */}
       <div className="bg-white border border-paper-border overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="responsive-table w-full text-left text-xs border-collapse">
+          <table className="responsive-table-lg w-full text-left text-xs border-collapse">
             <caption className="sr-only">Master clinical directory of all registered patients</caption>
             <thead>
               <tr className="bg-paper-warm border-b border-paper-border text-charcoal font-mono uppercase tracking-wider text-[10px]">

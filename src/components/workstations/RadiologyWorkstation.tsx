@@ -103,7 +103,7 @@ export function RadiologyWorkstation({
               Radiology & Diagnostic Imaging Suite
             </h2>
           </div>
-          <p className="text-xs text-charcoal-muted mt-0.5">
+          <p className="hidden sm:block text-xs text-charcoal-muted mt-0.5">
             Conduct radiographic scans, compile anatomical observations and diagnostic radiological impressions.
           </p>
         </div>
@@ -116,7 +116,7 @@ export function RadiologyWorkstation({
         {/* Left: Queue */}
         <div className="lg:col-span-4 space-y-3">
           <div className="flex items-center justify-between border-b border-paper-border pb-1">
-            <span className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold">
+            <span className="font-mono text-[11px] uppercase tracking-wider text-amber-300 font-bold">
               Imaging Requests ({radQueue.length})
             </span>
           </div>
@@ -226,7 +226,7 @@ export function RadiologyWorkstation({
 
               {/* Study Selection */}
               <div className="space-y-2">
-                <span className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold block">
+                <span className="font-mono text-[11px] uppercase tracking-wider text-amber-300 font-bold block">
                   Select Study to Interpret:
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

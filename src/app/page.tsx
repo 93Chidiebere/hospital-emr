@@ -143,7 +143,7 @@ export default function Home() {
       <HospitalPipelineBar />
 
       {/* 3. Station Switcher Strip */}
-      <div className="bg-[#0B2545] border-b border-[#1E4E79] text-white">
+      <div className={`bg-[#0B2545] border-b border-[#1E4E79] text-white ${roleSwitchAllowed ? "" : "hidden sm:block"}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-2">
             <span className="font-mono text-[10px] uppercase tracking-wider text-amber-300 font-bold">

@@ -43,7 +43,7 @@ export function PatientDossierModal({ patient, onClose, readOnly = false }: Pati
         aria-modal="true"
         aria-labelledby="dossier-dialog-title"
         tabIndex={-1}
-        className="bg-white border border-brand max-w-4xl w-full h-[92dvh] max-h-[92vh] flex flex-col shadow-lg overflow-hidden outline-none"
+        className="bg-white border border-brand max-w-4xl w-full h-[92dvh] max-h-[92dvh] flex flex-col shadow-lg overflow-hidden outline-none"
       >
         {/* Dossier Header / Docket Jacket */}
         <div className="p-4 sm:p-5 bg-paper border-b border-paper-border flex flex-wrap items-start justify-between gap-3">

@@ -118,7 +118,7 @@ export function LabWorkstation({
               Medical Laboratory Services (MLS) Workbench
             </h2>
           </div>
-          <p className="text-xs text-charcoal-muted mt-0.5">
+          <p className="hidden sm:block text-xs text-charcoal-muted mt-0.5">
             Process specimen requisitions, enter qualitative & quantitative diagnostic parameters, and transmit validated reports.
           </p>
         </div>
@@ -131,7 +131,7 @@ export function LabWorkstation({
         {/* Left: Queue */}
         <div className="lg:col-span-4 space-y-3">
           <div className="flex items-center justify-between border-b border-paper-border pb-1">
-            <span className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold">
+            <span className="font-mono text-[11px] uppercase tracking-wider text-amber-300 font-bold">
               Laboratory Patients ({labQueue.length})
             </span>
           </div>
@@ -247,7 +247,7 @@ export function LabWorkstation({
 
               {/* Order Selection Pill */}
               <div className="space-y-2">
-                <span className="font-mono text-[11px] uppercase tracking-wider text-charcoal font-semibold block">
+                <span className="font-mono text-[11px] uppercase tracking-wider text-amber-300 font-bold block">
                   Select Investigation to Process:
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -420,7 +420,7 @@ export function LabWorkstation({
             </div>
           ) : (
             <div className="p-12 text-center text-charcoal-muted bg-white border border-paper-border text-xs">
-              Select a patient from the left queue to conduct diagnostic lab specimen analysis.
+              Select a patient from the queue to conduct diagnostic lab specimen analysis.
             </div>
           )}
         </div>
