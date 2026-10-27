@@ -95,7 +95,8 @@ interface AuthContextType {
   /** Student sign-in (checked by the server). */
   login: (name: string, password: string) => Promise<Result>;
   /** Student registration (account is created in the database). */
-  signup: (fullName: string, role: RoleId, password: string) => Promise<Result>;
+  signup: (fullName: string, role: RoleId, password: string, email: string) => Promise<Result>;
+  updateEmail: (email: string) => Promise<Result>;
   /** Teacher / admin sign-in (password checked by the server). */
   loginTeacher: (name: string, password: string) => Promise<Result>;
   logout: () => void;
@@ -113,6 +114,7 @@ interface ServerUser {
   assignedRole: string;
   isAdmin?: boolean;
   createdAt?: string;
+  email?: string | null;
 }
 
 function toAccount(u: ServerUser): UserAccount {
@@ -126,7 +128,7 @@ function toAccount(u: ServerUser): UserAccount {
     assignedRole: u.assignedRole as RoleId,
     isAdmin: !!u.isAdmin,
     isSuperAdmin: profile?.isSuperAdmin,
-    email: profile?.email,
+    email: u.isAdmin ? profile?.email : u.email || undefined,
     createdAt: u.createdAt || "",
   };
 }
@@ -202,15 +204,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signup = async (fullName: string, role: RoleId, password: string): Promise<Result> => {
+  const signup = async (fullName: string, role: RoleId, password: string, email: string): Promise<Result> => {
     if (!fullName.trim()) return { success: false, error: "Full Name is required for registration." };
     try {
-      const { res, json } = await postJson("/api/auth/student/register", { name: fullName, role, password });
+      const { res, json } = await postJson("/api/auth/student/register", { name: fullName, role, password, email });
       if (res.ok && json?.user) {
         finishLogin(json.user);
         return { success: true };
       }
       return { success: false, error: json?.message || "Registration failed. Please try again." };
+    } catch {
+      return { success: false, error: "Could not reach the server. Check your internet connection." };
+    }
+  };
+
+  const updateEmail = async (email: string): Promise<Result> => {
+    try {
+      const res = await fetch("/api/auth/student/email", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok && json?.email) {
+        setCurrentUser((prev) => (prev ? { ...prev, email: json.email } : prev));
+        return { success: true };
+      }
+      return { success: false, error: json?.message || "Email could not be saved. Please try again." };
     } catch {
       return { success: false, error: "Could not reach the server. Check your internet connection." };
     }
@@ -289,6 +309,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         exitDemoMode,
         login,
         signup,
+        updateEmail,
         loginTeacher,
         logout,
         renameAccount,

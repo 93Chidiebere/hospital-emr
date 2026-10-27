@@ -19,6 +19,7 @@ import { PatientDossierModal } from "@/components/dossier/PatientDossierModal";
 import { MyPatientsPanel } from "@/components/shared/MyPatientsPanel";
 import { EditPatientDetailsModal } from "@/components/intake/EditPatientDetailsModal";
 import { RolePickerDialog } from "@/components/auth/RolePickerDialog";
+import { RequiredEmailDialog } from "@/components/auth/RequiredEmailDialog";
 import { TransferModal } from "@/components/shared/TransferModal";
 import { HeroLanding } from "@/components/home/HeroLanding";
 import {
@@ -106,6 +107,8 @@ export default function Home() {
 
       {/* 1. Masthead Navbar */}
       <Navbar onOpenIntake={() => setIntakeOpen(true)} />
+
+      <RequiredEmailDialog />
 
       {/* Security warning for teachers */}
       {currentUser?.isAdmin && authWarnings.includes("teacher_password_weak") && (

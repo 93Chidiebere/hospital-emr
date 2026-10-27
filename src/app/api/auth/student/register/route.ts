@@ -13,14 +13,14 @@ export async function POST(request: Request) {
   }
   try {
     const body = await request.json().catch(() => ({}));
-    const result = await registerStudent(String(body?.name || ""), String(body?.role || ""), String(body?.password || ""));
+    const result = await registerStudent(String(body?.name || ""), String(body?.role || ""), String(body?.password || ""), String(body?.email || ""));
     if (!result.ok) {
       const status = result.code === "NAME_TAKEN" ? 409 : 400;
       return NextResponse.json({ success: false, error: result.code, message: result.message }, { status });
     }
     const res = NextResponse.json({
       success: true,
-      user: { id: result.user.id, fullName: result.user.fullName, assignedRole: result.user.role, createdAt: result.user.createdAt },
+      user: { id: result.user.id, fullName: result.user.fullName, assignedRole: result.user.role, email: result.user.email, createdAt: result.user.createdAt },
     });
     setSessionCookie(res, { kind: "student", id: result.user.id, name: result.user.fullName, role: result.user.role });
     return res;

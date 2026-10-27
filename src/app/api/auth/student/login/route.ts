@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     }
     const res = NextResponse.json({
       success: true,
-      user: { id: result.user.id, fullName: result.user.fullName, assignedRole: result.user.role, createdAt: result.user.createdAt },
+      user: { id: result.user.id, fullName: result.user.fullName, assignedRole: result.user.role, email: result.user.email, createdAt: result.user.createdAt },
     });
     setSessionCookie(res, { kind: "student", id: result.user.id, name: result.user.fullName, role: result.user.role });
     return res;

@@ -9,6 +9,7 @@ export interface StudentRecord {
   id: string;
   fullName: string;
   role: string;
+  email?: string | null;
   /** station chosen for the current class session (null = not chosen yet) */
   sessionRole?: string | null;
   createdAt: string;
@@ -24,12 +25,20 @@ const LOCK_MINUTES = 5;
 
 export const nameKey = (name: string) => name.trim().replace(/\s+/g, " ").toLowerCase();
 export const cleanName = (name: string) => name.trim().replace(/\s+/g, " ");
+export const cleanEmail = (email: string) => email.trim().toLowerCase();
+export function validateEmail(email: string): string | null {
+  const normalized = cleanEmail(email);
+  if (!normalized || normalized.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
+    return "Enter a valid email address.";
+  }
+  return null;
+}
 
 export const STUDENT_ROLE_IDS: string[] = HOSPITAL_ROLES.filter((r) => r.id !== "director").map((r) => r.id);
 
 export type RegisterResult =
   | { ok: true; user: StudentRecord }
-  | { ok: false; code: "NAME_TAKEN" | "BAD_NAME" | "BAD_ROLE" | "BAD_PASSWORD"; message: string };
+  | { ok: false; code: "NAME_TAKEN" | "BAD_NAME" | "BAD_ROLE" | "BAD_PASSWORD" | "BAD_EMAIL"; message: string };
 
 export function validatePassword(pw: string): string | null {
   if (pw.length < 6) return "Password must be at least 6 characters.";
@@ -37,8 +46,11 @@ export function validatePassword(pw: string): string | null {
   return null;
 }
 
-export async function registerStudent(rawName: string, role: string, password: string): Promise<RegisterResult> {
+export async function registerStudent(rawName: string, role: string, password: string, rawEmail: string): Promise<RegisterResult> {
   const name = cleanName(rawName);
+  const emailProblem = validateEmail(rawEmail);
+  if (emailProblem) return { ok: false, code: "BAD_EMAIL", message: emailProblem };
+  const email = cleanEmail(rawEmail);
   if (name.length < 2 || name.length > 80) return { ok: false, code: "BAD_NAME", message: "Enter your full name (2 to 80 characters)." };
   if (!STUDENT_ROLE_IDS.includes(role)) return { ok: false, code: "BAD_ROLE", message: "Choose a valid station role." };
   const pwProblem = validatePassword(password);
@@ -54,8 +66,8 @@ export async function registerStudent(rawName: string, role: string, password: s
   const hash = await hashPassword(password);
   try {
     await c.execute({
-      sql: "INSERT INTO users (id, full_name, name_key, role, password_hash, created_at, last_login_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      args: [id, name, nameKey(name), role, hash, created, created],
+      sql: "INSERT INTO users (id, full_name, name_key, role, password_hash, email, created_at, last_login_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      args: [id, name, nameKey(name), role, hash, email, created, created],
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "";
@@ -64,7 +76,7 @@ export async function registerStudent(rawName: string, role: string, password: s
     }
     throw err;
   }
-  return { ok: true, user: { id, fullName: name, role, createdAt: created, lastLoginAt: created, locked: false } };
+  return { ok: true, user: { id, fullName: name, role, email, createdAt: created, lastLoginAt: created, locked: false } };
 }
 
 export type LoginResult =
@@ -74,7 +86,7 @@ export type LoginResult =
 export async function loginStudent(rawName: string, password: string): Promise<LoginResult> {
   const c = await db();
   const rs = await c.execute({
-    sql: "SELECT id, full_name, role, password_hash, created_at, failed_count, locked_until FROM users WHERE name_key = ?",
+    sql: "SELECT id, full_name, role, email, password_hash, created_at, failed_count, locked_until FROM users WHERE name_key = ?",
     args: [nameKey(rawName)],
   });
   const bad: LoginResult = { ok: false, code: "BAD_LOGIN", message: "Incorrect name or password." };
@@ -112,8 +124,18 @@ export async function loginStudent(rawName: string, password: string): Promise<L
   });
   return {
     ok: true,
-    user: { id: str(row.id), fullName: str(row.full_name), role: str(row.role), createdAt: str(row.created_at), lastLoginAt: now, locked: false },
+    user: { id: str(row.id), fullName: str(row.full_name), role: str(row.role), email: row.email ? str(row.email) : null, createdAt: str(row.created_at), lastLoginAt: now, locked: false },
   };
+}
+
+export async function updateStudentEmail(userId: string, rawEmail: string): Promise<{ ok: true; email: string } | { ok: false; message: string }> {
+  const problem = validateEmail(rawEmail);
+  if (problem) return { ok: false, message: problem };
+  const email = cleanEmail(rawEmail);
+  const c = await db();
+  const rs = await c.execute({ sql: "UPDATE users SET email = ? WHERE id = ?", args: [email, userId] });
+  if (!rs.rowsAffected) return { ok: false, message: "This account no longer exists. Please sign in again." };
+  return { ok: true, email };
 }
 
 export async function listStudents(): Promise<StudentRecord[]> {

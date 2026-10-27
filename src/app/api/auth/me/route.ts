@@ -28,13 +28,13 @@ export async function GET() {
 
   try {
     const c = await db();
-    const rs = await c.execute({ sql: "SELECT id, full_name, role, created_at FROM users WHERE id = ?", args: [s.id] });
+    const rs = await c.execute({ sql: "SELECT id, full_name, role, email, created_at FROM users WHERE id = ?", args: [s.id] });
     if (rs.rows.length === 0) return NextResponse.json({ configured: true, user: null, warnings: [] }, { headers: noStore });
     const r = rs.rows[0] as unknown as Record<string, unknown>;
     return NextResponse.json(
       {
         configured: true,
-        user: { id: String(r.id), fullName: String(r.full_name), assignedRole: String(r.role), createdAt: String(r.created_at) },
+        user: { id: String(r.id), fullName: String(r.full_name), assignedRole: String(r.role), email: r.email ? String(r.email) : null, createdAt: String(r.created_at) },
         warnings: [],
       },
       { headers: noStore }

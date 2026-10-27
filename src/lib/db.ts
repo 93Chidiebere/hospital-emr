@@ -140,6 +140,7 @@ const SCHEMA: string[] = [
     name_key TEXT NOT NULL UNIQUE,
     role TEXT NOT NULL,
     password_hash TEXT NOT NULL,
+    email TEXT,
     created_at TEXT NOT NULL,
     last_login_at TEXT,
     failed_count INTEGER NOT NULL DEFAULT 0,
@@ -183,6 +184,10 @@ export function db(): Promise<Client> {
     ready = (async () => {
       const c = getClient();
       await c.batch(SCHEMA, "write");
+      const userColumns = await c.execute("PRAGMA table_info(users)");
+      if (!userColumns.rows.some((row) => String((row as Record<string, unknown>).name) === "email")) {
+        await c.execute("ALTER TABLE users ADD COLUMN email TEXT");
+      }
       return c;
     })().catch((err) => {
       ready = null; // try again on the next request
