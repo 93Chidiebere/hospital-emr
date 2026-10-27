@@ -8,9 +8,8 @@ import { actorKey } from "./actors";
  * Station rules, enforced on the SERVER (so they cannot be bypassed from the browser):
  *  - A student picks ONE station per class session. It is saved and stays fixed until the teacher
  *    starts a new session (or unlocks that student).
- *  - A student can read/change only patients currently at their own station. The Front Desk also
- *    handles returning (discharged) patients.
- *  - Every student can READ the patients they personally worked on, wherever those patients are now.
+ *  - Every student can read patients in the active class session, so the current queue is visible
+ *    across accounts and stations. Writes remain restricted to the student's own station.
  *  - Only the Front Desk can enroll patients and edit patient details.
  *  - Teachers can see and do everything.
  */
@@ -78,18 +77,13 @@ export async function studentAccess(user: SessionUser): Promise<StudentAccess> {
   return { session, role, keys };
 }
 
-/** Rows a student may read: patients at their station plus patients they personally worked on. */
+/** All patients in the active session are readable, so station queues stay shared across accounts. */
 export async function visiblePatientIds(access: StudentAccess): Promise<Array<{ id: string; dept: string }>> {
   if (!access.role) return [];
-  const depts = stationDepartments(access.role);
   const c = await db();
-  const marks = depts.map(() => "?").join(", ");
   const rs = await c.execute({
-    sql: `SELECT id, current_department FROM patients
-           WHERE session_id = ?
-             AND (current_department IN (${marks})
-                  OR id IN (SELECT patient_id FROM patient_actors WHERE session_id = ? AND actor_key IN (${access.keys.map(() => "?").join(", ")})))`,
-    args: [access.session.id, ...depts, access.session.id, ...access.keys],
+    sql: "SELECT id, current_department FROM patients WHERE session_id = ? ORDER BY registered_at DESC",
+    args: [access.session.id],
   });
   return rs.rows.map((r) => ({ id: str((r as unknown as Row).id), dept: str((r as unknown as Row).current_department) }));
 }
