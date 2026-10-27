@@ -228,21 +228,6 @@ export function HeroLanding() {
 
                   <div>
                     <label className="block font-mono text-[10px] uppercase text-charcoal-muted mb-1 font-bold">
-                      Email Address *
-                    </label>
-                    <input
-                      required
-                      type="email"
-                      autoComplete="email"
-                      value={signupEmail}
-                      onChange={(e) => setSignupEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      className="w-full p-2.5 bg-white border border-slate-300 focus:border-brand focus:ring-1 focus:ring-brand text-charcoal font-sans text-xs outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-mono text-[10px] uppercase text-charcoal-muted mb-1 font-bold">
                       Password *
                     </label>
                     <input
@@ -282,6 +267,21 @@ export function HeroLanding() {
                       value={signupFullName}
                       onChange={(e) => setSignupFullName(e.target.value)}
                       placeholder="e.g. Adaeze Nwafor"
+                      className="w-full p-2.5 bg-white border border-slate-300 focus:border-brand focus:ring-1 focus:ring-brand text-charcoal font-sans text-xs outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-mono text-[10px] uppercase text-charcoal-muted mb-1 font-bold">
+                      Email Address *
+                    </label>
+                    <input
+                      required
+                      type="email"
+                      autoComplete="email"
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
+                      placeholder="you@example.com"
                       className="w-full p-2.5 bg-white border border-slate-300 focus:border-brand focus:ring-1 focus:ring-brand text-charcoal font-sans text-xs outline-none"
                     />
                   </div>
