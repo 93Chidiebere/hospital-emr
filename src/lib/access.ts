@@ -8,8 +8,8 @@ import { actorKey } from "./actors";
  * Station rules, enforced on the SERVER (so they cannot be bypassed from the browser):
  *  - A student picks ONE station per class session. It is saved and stays fixed until the teacher
  *    starts a new session (or unlocks that student).
- *  - Every student can read patients in the active class session, so the current queue is visible
- *    across accounts and stations. Writes remain restricted to the student's own station.
+ *  - Students can read patients in every session, so existing queues remain visible after a new
+ *    session starts. Writes remain restricted to the student's current station.
  *  - Only the Front Desk can enroll patients and edit patient details.
  *  - Teachers can see and do everything.
  */
@@ -77,13 +77,13 @@ export async function studentAccess(user: SessionUser): Promise<StudentAccess> {
   return { session, role, keys };
 }
 
-/** All patients in the active session are readable, so station queues stay shared across accounts. */
+/** Patient queues persist across sessions; station components filter these records by location. */
 export async function visiblePatientIds(access: StudentAccess): Promise<Array<{ id: string; dept: string }>> {
   if (!access.role) return [];
   const c = await db();
   const rs = await c.execute({
-    sql: "SELECT id, current_department FROM patients WHERE session_id = ? ORDER BY registered_at DESC",
-    args: [access.session.id],
+    sql: "SELECT id, current_department FROM patients ORDER BY registered_at DESC",
+    args: [],
   });
   return rs.rows.map((r) => ({ id: str((r as unknown as Row).id), dept: str((r as unknown as Row).current_department) }));
 }
@@ -98,10 +98,10 @@ export async function studentCanWrite(access: StudentAccess, patientId: string):
   const depts = stationDepartments(access.role);
   const c = await db();
   const rs = await c.execute({
-    sql: "SELECT current_department, session_id FROM patients WHERE id = ?",
+    sql: "SELECT current_department FROM patients WHERE id = ?",
     args: [patientId],
   });
   if (!rs.rows.length) return false;
   const row = rs.rows[0] as unknown as Row;
-  return str(row.session_id) === access.session.id && (depts as string[]).includes(str(row.current_department));
+  return (depts as string[]).includes(str(row.current_department));
 }

@@ -72,7 +72,7 @@ export async function listSessions(): Promise<SessionInfo[]> {
   return rs.rows.map((r) => toSession(r as unknown as Row));
 }
 
-/** Closes the current class session (its data is KEPT) and opens a new, empty one. */
+/** Archives the current class session and opens a new session without deleting or moving its data. */
 export async function startNewSession(name: string | undefined, createdBy: string): Promise<SessionInfo> {
   const c = await db();
   const created = nowIso();
@@ -366,12 +366,10 @@ export interface PatientDetails {
 export async function updatePatientDetails(id: string, d: PatientDetails): Promise<Patient | undefined> {
   const c = await db();
   const exists = await c.execute({
-    sql: "SELECT p.session_id AS session_id, s.status AS status FROM patients p JOIN sessions s ON s.id = p.session_id WHERE p.id = ?",
+    sql: "SELECT id FROM patients WHERE id = ?",
     args: [id],
   });
   if (!exists.rows.length) return undefined;
-  if (str((exists.rows[0] as unknown as Row).status) !== "active") throw new SessionClosedError();
-
   const now = nowIso();
   await c.batch(
     [
@@ -416,18 +414,17 @@ export async function createPatient(build: (hospitalNumber: string, id: string) 
   return patient;
 }
 
-/** Saves a patient. Patients of a closed (archived) session can no longer be changed. */
+/** Saves a patient into the session where it was originally registered, including archived sessions. */
 export async function savePatient(patient: Patient): Promise<Patient> {
   const c = await db();
   const rs = await c.execute({
-    sql: "SELECT p.session_id AS session_id, s.status AS status FROM patients p JOIN sessions s ON s.id = p.session_id WHERE p.id = ?",
+    sql: "SELECT session_id FROM patients WHERE id = ?",
     args: [patient.id],
   });
 
   let sessionId: string;
   if (rs.rows.length) {
     const row = rs.rows[0] as unknown as Row;
-    if (str(row.status) !== "active") throw new SessionClosedError();
     sessionId = str(row.session_id);
   } else {
     sessionId = (await getActiveSession()).id;

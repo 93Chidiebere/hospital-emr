@@ -5,6 +5,7 @@ import { useEMR } from "@/context/EMRContext";
 import { Department, Patient } from "@/types/emr";
 import { UserPlus, X, Check } from "lucide-react";
 import { useDialogA11y } from "@/hooks/useDialogA11y";
+import { ageFromDateOfBirth, localDateString } from "@/lib/patient-age";
 
 interface NewPatientModalProps {
   onClose: () => void;
@@ -34,9 +35,9 @@ export function NewPatientModal({ onClose, onEnrolled }: NewPatientModalProps) {
   const { registerPatient } = useEMR();
   const dialogRef = useDialogA11y<HTMLDivElement>(onClose);
   const [fullName, setFullName] = useState("");
-  const [age, setAge] = useState("");
   const [gender, setGender] = useState<"Female" | "Male" | "Other">("Female");
-  const [dateOfBirth, setDateOfBirth] = useState("1995-05-15");
+  const [dateOfBirth, setDateOfBirth] = useState(() => localDateString());
+  const age = ageFromDateOfBirth(dateOfBirth);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
   const [kinName, setKinName] = useState("");
@@ -72,7 +73,7 @@ export function NewPatientModal({ onClose, onEnrolled }: NewPatientModalProps) {
     saved = await registerPatient(
       {
         fullName,
-        age: Number(age) || 0,
+        age: age ?? 0,
         gender,
         dateOfBirth,
         phoneNumber,
@@ -167,28 +168,31 @@ export function NewPatientModal({ onClose, onEnrolled }: NewPatientModalProps) {
 
               <div>
                 <label className="block text-charcoal-muted mb-1 font-mono text-[10px] uppercase">
-                  Age (Years) *
+                  Age (Years) (calculated)
                 </label>
                 <input
                   required
                   type="number"
                   min="0"
                   max="125"
-                  value={age}
-                  onChange={(e) => setAge(e.target.value)}
-                  placeholder="e.g. 29"
+                  value={age ?? ""}
+                  readOnly
+                  aria-readonly="true"
+                  placeholder="Enter date of birth"
                   className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal"
                 />
               </div>
 
               <div>
                 <label className="block text-charcoal-muted mb-1 font-mono text-[10px] uppercase">
-                  Date of Birth
+                  Date of Birth *
                 </label>
                 <input
+                  required
                   type="date"
                   value={dateOfBirth}
                   onChange={(e) => setDateOfBirth(e.target.value)}
+                  max={localDateString()}
                   className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal"
                 />
               </div>

@@ -802,13 +802,6 @@ export function EMRProvider({ children }: { children: ReactNode }) {
           return;
         }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        recentWrites.current.clear();
-        try {
-          localStorage.removeItem(LIVE_CACHE_KEY);
-        } catch {
-          // ignore
-        }
-        setPatients([]);
         setSyncError(null);
         await fetchPatients({ silent: true });
       } catch {

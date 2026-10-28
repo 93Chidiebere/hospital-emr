@@ -232,7 +232,7 @@ function ResetConfirmDialog({
         </div>
         <p id={descId} className="text-xs text-slate-600 leading-relaxed">
           {live
-            ? "This closes the current class session and opens a new empty one. Every count returns to zero and hospital numbers restart at 1, but everything recorded so far is kept safely for reports and downloads."
+            ? "This starts a new class session without clearing patient queues. Patients still waiting at a station remain visible to students in the matching station, and all records, movements, notes, results, medications, and edits remain saved. Historical reports are available under All sessions. New patients receive a new session number sequence."
             : "Reset the practice simulation back to initial sample cases or clean the local cache."}
         </p>
 

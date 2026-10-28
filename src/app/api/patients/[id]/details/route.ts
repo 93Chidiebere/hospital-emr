@@ -5,6 +5,7 @@ import { errorResponse } from "@/lib/api-errors";
 import { requireUser } from "@/lib/session";
 import { db } from "@/lib/db";
 import { actorKey } from "@/lib/actors";
+import { ageFromDateOfBirth } from "@/lib/patient-age";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -42,11 +43,16 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
     const b = await request.json().catch(() => ({}));
     const kin = (b?.nextOfKin || {}) as Record<string, unknown>;
+    const dateOfBirth = clip(b?.dateOfBirth, 20);
+    const age = ageFromDateOfBirth(dateOfBirth);
+    if (age === null) {
+      return NextResponse.json({ success: false, error: "BAD_DATE_OF_BIRTH", message: "Enter a valid date of birth that is not in the future." }, { status: 400 });
+    }
     const details: PatientDetails = {
       fullName: clip(b?.fullName, 120),
-      age: Math.max(0, Math.min(130, Number(b?.age) || 0)),
+      age,
       gender: ["Female", "Male", "Other"].includes(String(b?.gender)) ? String(b.gender) : "Other",
-      dateOfBirth: clip(b?.dateOfBirth, 20) || "2000-01-01",
+      dateOfBirth,
       phoneNumber: clip(b?.phoneNumber, 30),
       address: clip(b?.address, 250),
       paymentType: clip(b?.paymentType, 60) || "Out-of-Pocket / Cash",

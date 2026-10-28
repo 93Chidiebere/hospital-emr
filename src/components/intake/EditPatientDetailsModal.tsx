@@ -6,6 +6,7 @@ import { Patient } from "@/types/emr";
 import { KIN_RELATIONSHIPS } from "@/components/intake/NewPatientModal";
 import { useDialogA11y } from "@/hooks/useDialogA11y";
 import { X, Check } from "lucide-react";
+import { ageFromDateOfBirth, localDateString } from "@/lib/patient-age";
 
 interface Props {
   patient: Patient;
@@ -23,9 +24,9 @@ export function EditPatientDetailsModal({ patient, onClose }: Props) {
 
   const knownRelation = KIN_RELATIONSHIPS.includes(patient.nextOfKin?.relation || "");
   const [fullName, setFullName] = useState(patient.fullName);
-  const [age, setAge] = useState(String(patient.age ?? ""));
   const [gender, setGender] = useState<"Female" | "Male" | "Other">((patient.gender as "Female" | "Male" | "Other") || "Other");
   const [dateOfBirth, setDateOfBirth] = useState(patient.dateOfBirth || "");
+  const age = ageFromDateOfBirth(dateOfBirth);
   const [phoneNumber, setPhoneNumber] = useState(patient.phoneNumber || "");
   const [address, setAddress] = useState(patient.address || "");
   const [paymentType, setPaymentType] = useState<string>(patient.paymentType || "Out-of-Pocket / Cash");
@@ -47,7 +48,7 @@ export function EditPatientDetailsModal({ patient, onClose }: Props) {
     setError("");
     const res = await updatePatientDetails(patient.id, {
       fullName: fullName.trim(),
-      age: Number(age) || 0,
+      age: age ?? 0,
       gender,
       dateOfBirth,
       phoneNumber: phoneNumber.trim(),
@@ -94,8 +95,8 @@ export function EditPatientDetailsModal({ patient, onClose }: Props) {
               <input id="ed-name" required className={input} value={fullName} onChange={(e) => setFullName(e.target.value)} />
             </div>
             <div>
-              <label htmlFor="ed-age" className={labelCls}>Age</label>
-              <input id="ed-age" type="number" min={0} max={130} className={input} value={age} onChange={(e) => setAge(e.target.value)} />
+              <label htmlFor="ed-age" className={labelCls}>Age (calculated)</label>
+              <input id="ed-age" type="number" className={input} value={age ?? ""} readOnly aria-readonly="true" placeholder="Enter date of birth" />
             </div>
             <div>
               <label htmlFor="ed-gender" className={labelCls}>Gender</label>
@@ -107,7 +108,7 @@ export function EditPatientDetailsModal({ patient, onClose }: Props) {
             </div>
             <div>
               <label htmlFor="ed-dob" className={labelCls}>Date of birth</label>
-              <input id="ed-dob" type="date" className={input} value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} />
+              <input id="ed-dob" required type="date" max={localDateString()} className={input} value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} />
             </div>
             <div>
               <label htmlFor="ed-phone" className={labelCls}>Patient phone number</label>
