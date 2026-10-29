@@ -58,11 +58,8 @@ export function DoctorWorkstation({
   // Form State
   const [hpi, setHpi] = useState("");
   const [exam, setExam] = useState("");
-  const [provisionalDx, setProvisionalDx] = useState("");
   const [definitiveDx, setDefinitiveDx] = useState("");
-  const [provisionalIcd, setProvisionalIcd] = useState<Icd10Code | null>(null);
   const [definitiveIcd, setDefinitiveIcd] = useState<Icd10Code | null>(null);
-  const [provisionalIcdError, setProvisionalIcdError] = useState("");
   const [definitiveIcdError, setDefinitiveIcdError] = useState("");
   const [clinicalPlan, setClinicalPlan] = useState("");
 
@@ -94,11 +91,8 @@ export function DoctorWorkstation({
   const resetForm = () => {
     setHpi("");
     setExam("");
-    setProvisionalDx("");
     setDefinitiveDx("");
-    setProvisionalIcd(null);
     setDefinitiveIcd(null);
-    setProvisionalIcdError("");
     setDefinitiveIcdError("");
     setClinicalPlan("");
     setLabOrders([]);
@@ -125,6 +119,18 @@ export function DoctorWorkstation({
     setSelectedPatientId(id);
   };
 
+  React.useEffect(() => {
+    const draft = consultQueue.find((patient) => patient.id === selectedPatientId)?.doctorNotes.find((note) => note.status === "saved");
+    if (!draft) return;
+    setHpi(draft.historyOfPresentIllness || "");
+    setExam(draft.physicalExamFindings || "");
+    setDefinitiveDx(draft.definitiveDiagnosis || "");
+    setDefinitiveIcd(draft.definitiveIcd10 || null);
+    setClinicalPlan(draft.clinicalPlan || "");
+  // A draft is loaded when a patient is selected; subsequent edits stay in the form.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPatientId]);
+
   const handleAddLab = (testName: string) => {
     if (labOrders.some((l) => l.testName === testName)) return;
     setLabOrders([
@@ -132,11 +138,9 @@ export function DoctorWorkstation({
       {
         testName,
         priority: "urgent",
-        clinicalIndication: provisionalDx || "Diagnostic workup in febrile/acute presentation",
+        clinicalIndication: definitiveDx || "Diagnostic workup to support clinical assessment",
       },
     ]);
-    setTargetDept("LABORATORY");
-    setRoutingReason(`Referred to Medical Laboratory (MLS) for ${testName}.`);
   };
 
   const handleAddImaging = (rawStudy: string) => {
@@ -147,22 +151,15 @@ export function DoctorWorkstation({
       {
         studyType,
         indication:
-          imagingIndication.trim() || provisionalDx || "Diagnostic imaging to support the clinical diagnosis",
+          imagingIndication.trim() || definitiveDx || "Diagnostic imaging to support the clinical assessment",
       },
     ]);
     setImagingError("");
-    setTargetDept("RADIOLOGY");
-    setRoutingReason(`Referred to Diagnostic Imaging for ${studyType}.`);
   };
 
   const handleRemoveImaging = (index: number) => {
     const remaining = radiologyOrders.filter((_, idx) => idx !== index);
     setRadiologyOrders(remaining);
-    // If the last imaging request is removed, don't leave the patient routed to Radiology
-    if (remaining.length === 0 && targetDept === "RADIOLOGY") {
-      setTargetDept("LABORATORY");
-      setRoutingReason("Referred to Medical Laboratory for urgent diagnostic investigations.");
-    }
   };
 
   const handleAddMed = (med: typeof COMMON_MEDICATIONS[0]) => {
@@ -176,28 +173,14 @@ export function DoctorWorkstation({
         instructions: "Administer as prescribed under clinical nurse supervision.",
       },
     ]);
-    if (med.route === "IV" || med.route === "IM") {
-      setTargetDept("TREATMENT");
-      setRoutingReason(`Transferred to Pharmacy for stat administration of ${med.name}.`);
-    }
   };
 
-  const handleSubmitConsult = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmitConsult = async (action: "save" | "route" | "complete") => {
     if (!selectedPatient) return;
 
-    // ICD-10 coding is part of the documentation
-    const missingProvisional = !provisionalIcd;
     const missingDefinitive = !!definitiveDx.trim() && !definitiveIcd;
-    setProvisionalIcdError(missingProvisional ? "Select the ICD-10 code that matches the provisional diagnosis." : "");
     setDefinitiveIcdError(missingDefinitive ? "Select the ICD-10 code that matches the definitive diagnosis." : "");
-    if (missingProvisional || missingDefinitive) return;
-
-    // Routing to Radiology only makes sense with at least one imaging request
-    if (targetDept === "RADIOLOGY" && radiologyOrders.length === 0) {
-      setImagingError("Add at least one imaging request before routing the patient to Radiology.");
-      return;
-    }
+    if (missingDefinitive) return;
     setImagingError("");
 
     setSubmitting(true);
@@ -206,8 +189,7 @@ export function DoctorWorkstation({
       {
         historyOfPresentIllness: hpi || "Patient reviewed in consultation room.",
         physicalExamFindings: exam || "General physical exam recorded.",
-        provisionalDiagnosis: provisionalDx || "Clinical Evaluation Underway",
-        provisionalIcd10: provisionalIcd || undefined,
+        provisionalDiagnosis: "",
         definitiveDiagnosis: definitiveDx || undefined,
         definitiveIcd10: definitiveIcd || undefined,
         clinicalPlan: clinicalPlan || "Continue diagnostic & therapeutic steps as ordered.",
@@ -215,14 +197,20 @@ export function DoctorWorkstation({
       labOrders,
       radiologyOrders,
       medications,
+      action,
       targetDept,
       routingReason
     );
     setSubmitting(false);
 
-    // Consultation complete: clear the form and the screen
-    resetForm();
-    setSelectedPatientId("");
+    if (action === "save") {
+      setLabOrders([]);
+      setRadiologyOrders([]);
+      setMedications([]);
+    } else {
+      resetForm();
+      setSelectedPatientId("");
+    }
   };
 
   return (
@@ -468,7 +456,7 @@ export function DoctorWorkstation({
                 </div>
               )}
 
-              <form onSubmit={handleSubmitConsult} className="space-y-4 text-xs">
+              <form onSubmit={(event) => { event.preventDefault(); void handleSubmitConsult("route"); }} className="space-y-4 text-xs">
                 {/* Clinical Notes Inputs */}
                 <div className="space-y-3">
                   <h4 className="font-mono text-[11px] uppercase tracking-wider text-amber-300 font-bold border-b border-paper-border pb-1">
@@ -503,33 +491,17 @@ export function DoctorWorkstation({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block font-mono text-[10px] uppercase text-charcoal-muted mb-1">
-                        Provisional / Working Diagnosis *
-                      </label>
-                      <input
-                        required
-                        type="text"
-                        value={provisionalDx}
-                        onChange={(e) => setProvisionalDx(e.target.value)}
-                        placeholder="e.g. Severe Malaria vs Enteric Fever"
-                        className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-serif font-bold"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-mono text-[10px] uppercase text-brand font-bold mb-1">
-                        Definitive Diagnosis (Post-Lab / Imaging)
-                      </label>
-                      <input
-                        type="text"
-                        value={definitiveDx}
-                        onChange={(e) => setDefinitiveDx(e.target.value)}
-                        placeholder="e.g. Acute Plasmodium Falciparum Malaria (confirmed)"
-                        className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-serif font-bold"
-                      />
-                    </div>
+                  <div>
+                    <label className="block font-mono text-[10px] uppercase text-brand font-bold mb-1">
+                      Diagnosis (after available investigations)
+                    </label>
+                    <input
+                      type="text"
+                      value={definitiveDx}
+                      onChange={(e) => setDefinitiveDx(e.target.value)}
+                      placeholder="e.g. Acute Plasmodium Falciparum Malaria"
+                      className="w-full p-2 bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-serif font-bold"
+                    />
                   </div>
 
                   {/* ICD-10 medical coding */}
@@ -538,21 +510,11 @@ export function DoctorWorkstation({
                       Medical Coding (ICD-10)
                     </p>
                     <p className="text-[11px] text-charcoal-muted">
-                      Choose the most specific code that matches each diagnosis. Search by code or by word.
+                      Choose the most specific code that matches the diagnosis. Search by code or by word.
                     </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-3">
                       <Icd10Picker
-                        label="ICD-10 for Provisional Diagnosis"
-                        required
-                        value={provisionalIcd}
-                        onChange={(v) => {
-                          setProvisionalIcd(v);
-                          if (v) setProvisionalIcdError("");
-                        }}
-                        error={provisionalIcdError}
-                      />
-                      <Icd10Picker
-                        label="ICD-10 for Definitive Diagnosis"
+                        label="ICD-10 diagnosis code"
                         value={definitiveIcd}
                         onChange={(v) => {
                           setDefinitiveIcd(v);
@@ -772,7 +734,7 @@ export function DoctorWorkstation({
                 {/* Flexible Next Destination Routing */}
                 <div className="p-3.5 bg-paper border border-paper-border space-y-2">
                   <label className="block font-mono text-[10px] uppercase text-charcoal font-semibold">
-                    Flexible Patient Routing Post-Consultation:
+                    Patient&apos;s Primary Next Stop (service orders also enter their own queues):
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                     {[
@@ -810,14 +772,30 @@ export function DoctorWorkstation({
                 </div>
 
                 {/* Submit */}
-                <div className="flex justify-end pt-2 border-t border-paper-border">
+                <div className="flex flex-wrap justify-end gap-2 pt-2 border-t border-paper-border">
+                  <button
+                    type="button"
+                    disabled={submitting}
+                    onClick={() => void handleSubmitConsult("save")}
+                    className="px-4 py-2.5 bg-white hover:bg-paper-warm text-charcoal text-xs font-semibold border border-paper-border disabled:opacity-50"
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    disabled={submitting}
+                    onClick={() => void handleSubmitConsult("complete")}
+                    className="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold border border-emerald-800 disabled:opacity-50"
+                  >
+                    Completed
+                  </button>
                   <button
                     type="submit"
                     disabled={submitting}
                     className="px-6 py-2.5 bg-brand hover:bg-brand-hover text-paper text-xs font-semibold flex items-center gap-2 border border-brand transition-colors"
                   >
                     <Check className="w-4 h-4" />
-                    <span>{submitting ? "Signing Consultation..." : "Sign Clinical Encounter & Route Patient"}</span>
+                    <span>{submitting ? "Saving..." : "Route Patient"}</span>
                   </button>
                 </div>
               </form>

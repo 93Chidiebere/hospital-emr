@@ -16,8 +16,8 @@ export function LabWorkstation({
 }: LabWorkstationProps) {
   const { patients, completeLabOrder, activeStaffName } = useEMR();
 
-  // Only patients currently at the LABORATORY station
-  const labQueue = patients.filter((p) => p.currentDepartment === "LABORATORY" && p.status === "Active");
+  // Each test is queued independently, even when the patient is also waiting at another service.
+  const labQueue = patients.filter((p) => p.labOrders.some((order) => order.status !== "completed"));
 
   const [selectedPatientId, setSelectedPatientId] = useState<string>(
     labQueue[0]?.id || ""

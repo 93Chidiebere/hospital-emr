@@ -73,6 +73,8 @@ export interface DoctorNote {
   definitiveDiagnosis?: string;
   definitiveIcd10?: Icd10Code;
   clinicalPlan: string;
+  /** Saved notes stay in the consultation queue; completed notes are locked. */
+  status?: "saved" | "completed";
 }
 
 export interface LabOrder {

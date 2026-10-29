@@ -38,6 +38,7 @@ interface EMRContextType {
     labOrders: Omit<LabOrder, "id" | "timestampOrdered" | "doctorName" | "status">[],
     radiologyOrders: Omit<RadiologyOrder, "id" | "timestampOrdered" | "doctorName" | "status">[],
     medications: Omit<MedicationAdministration, "id" | "timestampOrdered" | "doctorName" | "status">[],
+    action: "save" | "route" | "complete",
     routeToDept?: Department,
     routingReason?: string
   ) => Promise<void>;
@@ -465,17 +466,21 @@ export function EMRProvider({ children }: { children: ReactNode }) {
     newLabOrders: Omit<LabOrder, "id" | "timestampOrdered" | "doctorName" | "status">[],
     newRadiologyOrders: Omit<RadiologyOrder, "id" | "timestampOrdered" | "doctorName" | "status">[],
     newMedications: Omit<MedicationAdministration, "id" | "timestampOrdered" | "doctorName" | "status">[],
+    action: "save" | "route" | "complete",
     routeToDept?: Department,
     routingReason?: string
   ) => {
     const p = patients.find((pat) => pat.id === patientId);
     if (!p) return;
 
+    const existingDraft = p.doctorNotes.find((note) => note.status === "saved");
+    const noteTimestamp = new Date().toISOString();
     const newNote: DoctorNote = {
       ...notes,
-      id: `doc-${Date.now()}`,
-      timestamp: new Date().toISOString(),
+      id: existingDraft?.id || `doc-${Date.now()}`,
+      timestamp: noteTimestamp,
       doctorName: activeStaffName,
+      status: action === "complete" ? "completed" : "saved",
     };
 
     const createdLabs: LabOrder[] = newLabOrders.map((lo, idx) => ({
@@ -502,21 +507,12 @@ export function EMRProvider({ children }: { children: ReactNode }) {
       status: "pending",
     }));
 
-    // Determine target department automatically if not explicitly given
-    let target = routeToDept || p.currentDepartment;
-    let defReason = routingReason || "Doctor consultation completed.";
-    if (!routeToDept) {
-      if (createdLabs.length > 0) {
-        target = "LABORATORY";
-        defReason = `Referred to Medical Laboratory for ${createdLabs.length} investigation(s).`;
-      } else if (createdRads.length > 0) {
-        target = "RADIOLOGY";
-        defReason = `Referred to Diagnostic Imaging for ${createdRads.length} study(ies).`;
-      } else if (createdMeds.length > 0) {
-        target = "TREATMENT";
-        defReason = `Referred to Pharmacy for dispensing and administration of prescribed therapy.`;
-      }
-    }
+    const target = action === "save" ? "CONSULTATION" : action === "complete" ? "DISCHARGED" : routeToDept || p.currentDepartment;
+    const defReason = action === "save"
+      ? "Consultation documentation saved; patient remains in the consultation queue."
+      : action === "complete"
+        ? "Consultation completed and closed by the physician."
+        : routingReason || "Doctor consultation routed.";
 
     const newRouting: RoutingEvent = {
       id: `rt-${Date.now()}`,
@@ -529,12 +525,15 @@ export function EMRProvider({ children }: { children: ReactNode }) {
 
     const updated: Patient = {
       ...p,
-      doctorNotes: [newNote, ...p.doctorNotes],
+      doctorNotes: existingDraft
+        ? [newNote, ...p.doctorNotes.filter((note) => note.id !== existingDraft.id)]
+        : [newNote, ...p.doctorNotes],
       labOrders: [...p.labOrders, ...createdLabs],
       radiologyOrders: [...p.radiologyOrders, ...createdRads],
       medications: [...p.medications, ...createdMeds],
       currentDepartment: target,
-      routingHistory: [...p.routingHistory, newRouting],
+      status: action === "save" ? p.status : target === "DISCHARGED" ? "Discharged" : "Active",
+      routingHistory: action === "save" ? p.routingHistory : [...p.routingHistory, newRouting],
       lastUpdated: new Date().toISOString(),
     };
 
@@ -573,7 +572,7 @@ export function EMRProvider({ children }: { children: ReactNode }) {
     const newRouting: RoutingEvent = {
       id: `rt-${Date.now()}`,
       timestamp: new Date().toISOString(),
-      fromDepartment: p.currentDepartment,
+      fromDepartment: "LABORATORY",
       toDepartment: routeToDept,
       authorizedBy: activeStaffName,
       reason: routingReason,
@@ -583,6 +582,7 @@ export function EMRProvider({ children }: { children: ReactNode }) {
       ...p,
       labOrders: updatedOrders,
       currentDepartment: routeToDept,
+      status: routeToDept === "DISCHARGED" ? "Discharged" : "Active",
       routingHistory: [...p.routingHistory, newRouting],
       lastUpdated: new Date().toISOString(),
     };
@@ -618,7 +618,7 @@ export function EMRProvider({ children }: { children: ReactNode }) {
     const newRouting: RoutingEvent = {
       id: `rt-${Date.now()}`,
       timestamp: new Date().toISOString(),
-      fromDepartment: p.currentDepartment,
+      fromDepartment: "RADIOLOGY",
       toDepartment: routeToDept,
       authorizedBy: activeStaffName,
       reason: routingReason,
@@ -628,6 +628,7 @@ export function EMRProvider({ children }: { children: ReactNode }) {
       ...p,
       radiologyOrders: updatedRads,
       currentDepartment: routeToDept,
+      status: routeToDept === "DISCHARGED" ? "Discharged" : "Active",
       routingHistory: [...p.routingHistory, newRouting],
       lastUpdated: new Date().toISOString(),
     };
@@ -676,6 +677,7 @@ export function EMRProvider({ children }: { children: ReactNode }) {
       ...p,
       medications: updatedMeds,
       currentDepartment: targetDept,
+      status: targetDept === "DISCHARGED" ? "Discharged" : "Active",
       routingHistory: [...p.routingHistory, newRouting],
       lastUpdated: new Date().toISOString(),
     };

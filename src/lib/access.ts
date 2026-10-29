@@ -98,10 +98,26 @@ export async function studentCanWrite(access: StudentAccess, patientId: string):
   const depts = stationDepartments(access.role);
   const c = await db();
   const rs = await c.execute({
-    sql: "SELECT current_department FROM patients WHERE id = ?",
+    sql: "SELECT current_department, data FROM patients WHERE id = ?",
     args: [patientId],
   });
   if (!rs.rows.length) return false;
   const row = rs.rows[0] as unknown as Row;
-  return (depts as string[]).includes(str(row.current_department));
+  if ((depts as string[]).includes(str(row.current_department))) return true;
+  let patient: Record<string, unknown>;
+  try {
+    patient = JSON.parse(str(row.data)) as Record<string, unknown>;
+  } catch {
+    return false;
+  }
+  if (access.role === "mls") {
+    return Array.isArray(patient.labOrders) && patient.labOrders.some((order) => (order as Row).status !== "completed");
+  }
+  if (access.role === "radiographer") {
+    return Array.isArray(patient.radiologyOrders) && patient.radiologyOrders.some((order) => (order as Row).status !== "completed");
+  }
+  if (access.role === "treatment_nurse") {
+    return Array.isArray(patient.medications) && patient.medications.some((med) => (med as Row).status === "pending");
+  }
+  return false;
 }
