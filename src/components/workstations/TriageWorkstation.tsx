@@ -20,6 +20,10 @@ export function TriageWorkstation({
   const [selectedPatientId, setSelectedPatientId] = useState<string>(
     triageQueue[0]?.id || ""
   );
+  const [mobileView, setMobileView] = useState<"queue" | "form">("queue");
+  const queueScrollY = React.useRef(0);
+  const formRef = React.useRef<HTMLDivElement>(null);
+  const mobileNavigationInitialized = React.useRef(false);
 
   // Vitals State (starts blank so nothing is carried over from the previous patient)
   const [systolic, setSystolic] = useState("");
@@ -71,15 +75,31 @@ export function TriageWorkstation({
   React.useEffect(() => {
     if (selectedPatientId && !triageQueue.some((p) => p.id === selectedPatientId)) {
       setSelectedPatientId("");
+      setMobileView("queue");
       resetForm();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [triageQueue.map((p) => p.id).join("|"), selectedPatientId]);
 
   const selectPatient = (id: string) => {
+    queueScrollY.current = window.scrollY;
     if (id !== selectedPatientId) resetForm();
     setSelectedPatientId(id);
+    setMobileView("form");
   };
+
+  React.useEffect(() => {
+    if (!mobileNavigationInitialized.current) {
+      mobileNavigationInitialized.current = true;
+      return;
+    }
+    if (!window.matchMedia("(max-width: 1023px)").matches) return;
+    if (mobileView === "form") {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      window.scrollTo({ top: queueScrollY.current, behavior: "smooth" });
+    }
+  }, [mobileView, selectedPatientId]);
 
   const handleRecordVitals = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,6 +130,7 @@ export function TriageWorkstation({
     // Triage is complete: clear the form and select nobody so the next patient is chosen deliberately
     resetForm();
     setSelectedPatientId("");
+    setMobileView("queue");
   };
 
   return (
@@ -134,11 +155,22 @@ export function TriageWorkstation({
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Triage Waiting Queue */}
-        <div className="lg:col-span-4 space-y-3">
+        <div
+          className={`lg:col-span-4 space-y-3 ${mobileView === "form" ? "hidden lg:block" : ""}`}
+        >
           <div className="flex items-center justify-between border-b border-paper-border pb-1">
             <span className="font-mono text-[11px] uppercase tracking-wider text-amber-300 font-bold">
               Waiting in Triage Queue ({triageQueue.length})
             </span>
+            {selectedPatient && mobileView === "queue" && (
+              <button
+                type="button"
+                onClick={() => setMobileView("form")}
+                className="lg:hidden text-[11px] underline text-white"
+              >
+                Back to assessment
+              </button>
+            )}
           </div>
 
           {triageQueue.length === 0 ? (
@@ -200,7 +232,10 @@ export function TriageWorkstation({
         </div>
 
         {/* Right Column: Active Vitals Recording Form */}
-        <div className="lg:col-span-8">
+        <div
+          ref={formRef}
+          className={`lg:col-span-8 ${mobileView === "queue" ? "hidden lg:block" : ""}`}
+        >
           {selectedPatient ? (
             <div className="bg-white border border-paper-border p-5 sm:p-6 space-y-5">
               <div className="flex flex-wrap items-center justify-between border-b border-paper-border pb-3 gap-2">
@@ -218,7 +253,14 @@ export function TriageWorkstation({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setMobileView("queue")}
+                    className="lg:hidden px-2.5 py-1 text-xs border border-paper-border hover:border-brand bg-paper"
+                  >
+                    Change patient
+                  </button>
                   <button
                     type="button"
                     onClick={() => onOpenTransfer(selectedPatient)}
