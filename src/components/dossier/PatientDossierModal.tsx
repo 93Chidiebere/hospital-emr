@@ -364,38 +364,22 @@ export function PatientDossierModal({ patient, onClose, readOnly = false }: Pati
                           </p>
                         </div>
 
-                        <div className="p-2.5 bg-paper-warm border border-paper-border grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div>
-                            <strong className="font-mono text-[10px] uppercase text-charcoal-muted block">
-                              Provisional Diagnosis:
+                        {note.definitiveDiagnosis && (
+                          <div className="p-2.5 bg-paper-warm border border-paper-border">
+                            <strong className="font-mono text-[10px] uppercase text-brand block font-bold">
+                              Diagnosis:
                             </strong>
                             <span className="font-serif font-bold text-charcoal text-xs">
-                              {note.provisionalDiagnosis}
+                              {note.definitiveDiagnosis}
                             </span>
-                            {note.provisionalIcd10 && (
+                            {note.definitiveIcd10 && (
                               <span className="block mt-1 text-[11px] text-charcoal">
-                                <span className="font-mono font-bold text-brand mr-1.5">{note.provisionalIcd10.code}</span>
-                                {note.provisionalIcd10.description}
+                                <span className="font-mono font-bold text-brand mr-1.5">{note.definitiveIcd10.code}</span>
+                                {note.definitiveIcd10.description}
                               </span>
                             )}
                           </div>
-                          {note.definitiveDiagnosis && (
-                            <div>
-                              <strong className="font-mono text-[10px] uppercase text-brand block font-bold">
-                                Definitive Diagnosis:
-                              </strong>
-                              <span className="font-serif font-bold text-charcoal text-xs">
-                                {note.definitiveDiagnosis}
-                              </span>
-                              {note.definitiveIcd10 && (
-                                <span className="block mt-1 text-[11px] text-charcoal">
-                                  <span className="font-mono font-bold text-brand mr-1.5">{note.definitiveIcd10.code}</span>
-                                  {note.definitiveIcd10.description}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
+                        )}
 
                         <div>
                           <strong className="font-mono text-[10px] uppercase text-charcoal-muted block">

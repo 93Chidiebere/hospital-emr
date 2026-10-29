@@ -39,7 +39,7 @@ interface EMRContextType {
     radiologyOrders: Omit<RadiologyOrder, "id" | "timestampOrdered" | "doctorName" | "status">[],
     medications: Omit<MedicationAdministration, "id" | "timestampOrdered" | "doctorName" | "status">[],
     action: "save" | "route" | "complete",
-    routeToDept?: Department,
+    routeToDepts: Department[],
     routingReason?: string
   ) => Promise<void>;
   completeLabOrder: (
@@ -467,7 +467,7 @@ export function EMRProvider({ children }: { children: ReactNode }) {
     newRadiologyOrders: Omit<RadiologyOrder, "id" | "timestampOrdered" | "doctorName" | "status">[],
     newMedications: Omit<MedicationAdministration, "id" | "timestampOrdered" | "doctorName" | "status">[],
     action: "save" | "route" | "complete",
-    routeToDept?: Department,
+    routeToDepts: Department[],
     routingReason?: string
   ) => {
     const p = patients.find((pat) => pat.id === patientId);
@@ -507,21 +507,22 @@ export function EMRProvider({ children }: { children: ReactNode }) {
       status: "pending",
     }));
 
-    const target = action === "save" ? "CONSULTATION" : action === "complete" ? "DISCHARGED" : routeToDept || p.currentDepartment;
+    const target = action === "save" ? "CONSULTATION" : action === "complete" ? "DISCHARGED" : routeToDepts[0] || p.currentDepartment;
     const defReason = action === "save"
       ? "Consultation documentation saved; patient remains in the consultation queue."
       : action === "complete"
         ? "Consultation completed and closed by the physician."
         : routingReason || "Doctor consultation routed.";
 
-    const newRouting: RoutingEvent = {
-      id: `rt-${Date.now()}`,
+    const routedDepartments = action === "route" ? routeToDepts : action === "complete" ? ["DISCHARGED" as Department] : [];
+    const routingEvents: RoutingEvent[] = routedDepartments.map((department, index) => ({
+      id: `rt-${Date.now()}-${index}`,
       timestamp: new Date().toISOString(),
       fromDepartment: p.currentDepartment,
-      toDepartment: target,
+      toDepartment: department,
       authorizedBy: activeStaffName,
       reason: defReason,
-    };
+    }));
 
     const updated: Patient = {
       ...p,
@@ -533,7 +534,7 @@ export function EMRProvider({ children }: { children: ReactNode }) {
       medications: [...p.medications, ...createdMeds],
       currentDepartment: target,
       status: action === "save" ? p.status : target === "DISCHARGED" ? "Discharged" : "Active",
-      routingHistory: action === "save" ? p.routingHistory : [...p.routingHistory, newRouting],
+      routingHistory: [...p.routingHistory, ...routingEvents],
       lastUpdated: new Date().toISOString(),
     };
 

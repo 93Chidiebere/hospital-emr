@@ -42,6 +42,12 @@ const COMMON_MEDICATIONS = [
   { name: "Oral Coartem (Artemether-Lumefantrine)", dose: "80/480 mg", route: "Oral" as const, freq: "1 tablet twice daily x 3 days with fatty meal" },
 ];
 
+const SERVICE_DESTINATIONS: Array<{ department: Department; label: string; description: string }> = [
+  { department: "LABORATORY", label: "Medical Lab (MLS)", description: "Laboratory tests" },
+  { department: "RADIOLOGY", label: "Radiology", description: "Imaging studies" },
+  { department: "TREATMENT", label: "Pharmacy", description: "Medication orders" },
+];
+
 export function DoctorWorkstation({
   onOpenDossier,
   onOpenTransfer,
@@ -78,10 +84,8 @@ export function DoctorWorkstation({
   >([]);
 
   // Next Station
-  const [targetDept, setTargetDept] = useState<Department>("LABORATORY");
-  const [routingReason, setRoutingReason] = useState(
-    "Referred to Medical Laboratory for urgent diagnostic investigations."
-  );
+  const [targetDepts, setTargetDepts] = useState<Department[]>([]);
+  const [routingReason, setRoutingReason] = useState("Referred for the selected service orders.");
   const [submitting, setSubmitting] = useState(false);
 
   // Only patients still waiting for consultation can be open on this screen
@@ -101,8 +105,8 @@ export function DoctorWorkstation({
     setCustomStudy("");
     setImagingError("");
     setMedications([]);
-    setTargetDept("LABORATORY");
-    setRoutingReason("Referred to Medical Laboratory for urgent diagnostic investigations.");
+    setTargetDepts([]);
+    setRoutingReason("Referred for the selected service orders.");
   };
 
   // Once the patient leaves the consultation queue, clear the screen and the form
@@ -131,6 +135,16 @@ export function DoctorWorkstation({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPatientId]);
 
+  const toggleDestination = (department: Department) => {
+    setTargetDepts((current) => current.includes(department)
+      ? current.filter((item) => item !== department)
+      : [...current, department]);
+  };
+
+  const includeDestination = (department: Department) => {
+    setTargetDepts((current) => current.includes(department) ? current : [...current, department]);
+  };
+
   const handleAddLab = (testName: string) => {
     if (labOrders.some((l) => l.testName === testName)) return;
     setLabOrders([
@@ -141,6 +155,7 @@ export function DoctorWorkstation({
         clinicalIndication: definitiveDx || "Diagnostic workup to support clinical assessment",
       },
     ]);
+    includeDestination("LABORATORY");
   };
 
   const handleAddImaging = (rawStudy: string) => {
@@ -154,12 +169,16 @@ export function DoctorWorkstation({
           imagingIndication.trim() || definitiveDx || "Diagnostic imaging to support the clinical assessment",
       },
     ]);
+    includeDestination("RADIOLOGY");
     setImagingError("");
   };
 
   const handleRemoveImaging = (index: number) => {
     const remaining = radiologyOrders.filter((_, idx) => idx !== index);
     setRadiologyOrders(remaining);
+    if (remaining.length === 0 && !selectedPatient?.radiologyOrders.some((order) => order.status !== "completed")) {
+      setTargetDepts((current) => current.filter((department) => department !== "RADIOLOGY"));
+    }
   };
 
   const handleAddMed = (med: typeof COMMON_MEDICATIONS[0]) => {
@@ -173,6 +192,7 @@ export function DoctorWorkstation({
         instructions: "Administer as prescribed under clinical nurse supervision.",
       },
     ]);
+    includeDestination("TREATMENT");
   };
 
   const handleSubmitConsult = async (action: "save" | "route" | "complete") => {
@@ -181,6 +201,31 @@ export function DoctorWorkstation({
     const missingDefinitive = !!definitiveDx.trim() && !definitiveIcd;
     setDefinitiveIcdError(missingDefinitive ? "Select the ICD-10 code that matches the definitive diagnosis." : "");
     if (missingDefinitive) return;
+    const requestedDestinations: Department[] = [
+      ...(labOrders.length ? ["LABORATORY" as Department] : []),
+      ...(radiologyOrders.length ? ["RADIOLOGY" as Department] : []),
+      ...(medications.length ? ["TREATMENT" as Department] : []),
+    ];
+    if (requestedDestinations.some((department) => !targetDepts.includes(department))) {
+      setImagingError("Select every service that has a new order before saving or routing.");
+      return;
+    }
+    if (action === "route") {
+      if (targetDepts.length === 0) {
+        setImagingError("Select one or more service destinations before routing.");
+        return;
+      }
+      const selectedWithoutWork = targetDepts.some((department) => {
+        if (department === "LABORATORY") return !labOrders.length && !selectedPatient.labOrders.some((order) => order.status !== "completed");
+        if (department === "RADIOLOGY") return !radiologyOrders.length && !selectedPatient.radiologyOrders.some((order) => order.status !== "completed");
+        if (department === "TREATMENT") return !medications.length && !selectedPatient.medications.some((med) => med.status === "pending");
+        return true;
+      });
+      if (selectedWithoutWork) {
+        setImagingError("Add an order for each selected service destination.");
+        return;
+      }
+    }
     setImagingError("");
 
     setSubmitting(true);
@@ -198,7 +243,7 @@ export function DoctorWorkstation({
       radiologyOrders,
       medications,
       action,
-      targetDept,
+      targetDepts,
       routingReason
     );
     setSubmitting(false);
@@ -207,6 +252,7 @@ export function DoctorWorkstation({
       setLabOrders([]);
       setRadiologyOrders([]);
       setMedications([]);
+      setTargetDepts([]);
     } else {
       resetForm();
       setSelectedPatientId("");
@@ -731,35 +777,34 @@ export function DoctorWorkstation({
                   )}
                 </div>
 
-                {/* Flexible Next Destination Routing */}
+                {/* Multi-service routing */}
                 <div className="p-3.5 bg-paper border border-paper-border space-y-2">
-                  <label className="block font-mono text-[10px] uppercase text-charcoal font-semibold">
-                    Patient&apos;s Primary Next Stop (service orders also enter their own queues):
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                    {[
-                      { dept: "LABORATORY" as Department, name: "Medical Lab (MLS)", reason: "Referred for ordered diagnostic tests." },
-                      { dept: "RADIOLOGY" as Department, name: "Radiology", reason: "Referred for diagnostic imaging." },
-                      { dept: "TREATMENT" as Department, name: "Pharmacy", reason: "Referred to Pharmacy for prescribed medication / stat injection." },
-                      { dept: "WARD" as Department, name: "Inpatient Ward", reason: "Admitted to Inpatient Ward for ongoing care." },
-                      { dept: "DISCHARGED" as Department, name: "Discharge Home", reason: "Outpatient consultation concluded; discharged on oral meds." },
-                    ].map((d) => (
-                      <button
-                        key={d.dept}
-                        type="button"
-                        onClick={() => {
-                          setTargetDept(d.dept);
-                          setRoutingReason(d.reason);
-                        }}
-                        className={`p-2 text-left border text-xs ${
-                          targetDept === d.dept
-                            ? "bg-brand text-paper border-brand font-bold"
-                            : "bg-white border-paper-border hover:bg-paper-warm text-charcoal"
-                        }`}
-                      >
-                        <span className="font-serif text-xs block">{d.name}</span>
-                      </button>
-                    ))}
+                  <p className="font-mono text-[10px] uppercase text-charcoal font-semibold">
+                    Route to one or more services:
+                  </p>
+                  <div role="group" aria-label="Service destinations" className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {SERVICE_DESTINATIONS.map((destination) => {
+                      const checked = targetDepts.includes(destination.department);
+                      return (
+                        <label
+                          key={destination.department}
+                          className={`flex items-start gap-2 p-3 border cursor-pointer text-xs ${
+                            checked ? "bg-brand text-paper border-brand" : "bg-white border-paper-border hover:bg-paper-warm text-charcoal"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleDestination(destination.department)}
+                            className="mt-0.5 accent-amber-500"
+                          />
+                          <span>
+                            <span className="block font-serif font-bold">{destination.label}</span>
+                            <span className="block text-[10px] opacity-80">{destination.description}</span>
+                          </span>
+                        </label>
+                      );
+                    })}
                   </div>
 
                   <input
@@ -767,7 +812,8 @@ export function DoctorWorkstation({
                     value={routingReason}
                     onChange={(e) => setRoutingReason(e.target.value)}
                     className="w-full p-2 bg-white border border-paper-border text-xs text-charcoal font-sans"
-                    placeholder="Physician routing justification..."
+                    aria-label="Service routing note"
+                    placeholder="Service routing note..."
                   />
                 </div>
 
