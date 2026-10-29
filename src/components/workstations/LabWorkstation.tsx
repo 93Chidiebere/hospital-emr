@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { useEMR } from "@/context/EMRContext";
 import { Patient, Department, LabOrder } from "@/types/emr";
+import { PatientQueueSearch } from "@/components/workstations/PatientQueueSearch";
+import { getVisibleQueuePatients } from "@/components/workstations/queueUtils";
 import { FlaskConical, Check, ArrowRightLeft, AlertCircle } from "lucide-react";
 
 interface LabWorkstationProps {
@@ -18,12 +20,28 @@ export function LabWorkstation({
 
   // Each test is queued independently, even when the patient is also waiting at another service.
   const labQueue = patients.filter((p) => p.labOrders.some((order) => order.status !== "completed"));
+  const [queueSearch, setQueueSearch] = useState("");
+  const visibleQueue = getVisibleQueuePatients(labQueue, queueSearch);
 
   const [selectedPatientId, setSelectedPatientId] = useState<string>(
     labQueue[0]?.id || ""
   );
+  const [mobileView, setMobileView] = useState<"queue" | "form">("queue");
+  const queueScrollY = React.useRef(0);
+  const formRef = React.useRef<HTMLDivElement>(null);
+  const mobileNavigationInitialized = React.useRef(false);
   // Only patients still in the lab queue can be open on this screen
   const selectedPatient = labQueue.find((p) => p.id === selectedPatientId);
+
+  React.useEffect(() => {
+    if (!mobileNavigationInitialized.current) {
+      mobileNavigationInitialized.current = true;
+      return;
+    }
+    if (!window.matchMedia("(max-width: 1023px)").matches) return;
+    if (mobileView === "form") formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    else window.scrollTo({ top: queueScrollY.current, behavior: "smooth" });
+  }, [mobileView, selectedPatientId]);
 
   const pendingOrders = selectedPatient?.labOrders.filter((lo) => lo.status !== "completed") || [];
   const [selectedOrderId, setSelectedOrderId] = useState<string>(pendingOrders[0]?.id || "");
@@ -54,6 +72,7 @@ export function LabWorkstation({
   React.useEffect(() => {
     if (selectedPatientId && !labQueue.some((p) => p.id === selectedPatientId)) {
       setSelectedPatientId("");
+      setMobileView("queue");
       resetForm();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -105,6 +124,7 @@ export function LabWorkstation({
     // Result sent: clear the form and the screen
     resetForm();
     setSelectedPatientId("");
+    setMobileView("queue");
   };
 
   return (
@@ -129,12 +149,14 @@ export function LabWorkstation({
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Queue */}
-        <div className="lg:col-span-4 space-y-3">
+        <div className={`lg:col-span-4 space-y-3 ${mobileView === "form" ? "hidden lg:block" : ""}`}>
           <div className="flex items-center justify-between border-b border-paper-border pb-1">
             <span className="font-mono text-[11px] uppercase tracking-wider text-amber-300 font-bold">
               Laboratory Patients ({labQueue.length})
             </span>
           </div>
+
+          <PatientQueueSearch value={queueSearch} onChange={setQueueSearch} totalCount={labQueue.length} />
 
           {labQueue.length === 0 ? (
             <div className="p-8 text-center text-charcoal-muted bg-white border border-paper-border text-xs">
@@ -142,7 +164,9 @@ export function LabWorkstation({
             </div>
           ) : (
             <div className="space-y-2">
-              {labQueue.map((pat) => {
+              {visibleQueue.length === 0 ? (
+                <div className="p-5 text-center text-charcoal-muted bg-white border border-paper-border text-xs">No patients match that search.</div>
+              ) : visibleQueue.map((pat) => {
                 const isSelected = pat.id === selectedPatientId;
                 const pending = pat.labOrders.filter((lo) => lo.status !== "completed").length;
                 const completed = pat.labOrders.filter((lo) => lo.status === "completed").length;
@@ -151,8 +175,10 @@ export function LabWorkstation({
                   <div
                     key={pat.id}
                     onClick={() => {
+                      queueScrollY.current = window.scrollY;
                       if (pat.id !== selectedPatientId) resetForm();
                       setSelectedPatientId(pat.id);
+                      setMobileView("form");
                       const firstPending = pat.labOrders.find((lo) => lo.status !== "completed");
                       if (firstPending) handleSelectOrder(firstPending);
                     }}
@@ -210,9 +236,10 @@ export function LabWorkstation({
         </div>
 
         {/* Right: Active Test Processing */}
-        <div className="lg:col-span-8">
+        <div ref={formRef} className={`lg:col-span-8 ${mobileView === "queue" ? "hidden lg:block" : ""}`}>
           {selectedPatient ? (
             <div className="bg-white border border-paper-border p-5 sm:p-6 space-y-5">
+              <button type="button" onClick={() => setMobileView("queue")} className="lg:hidden px-3 py-2 border border-paper-border bg-paper text-xs font-bold">Change patient</button>
               <div className="flex flex-wrap items-start justify-between border-b border-paper-border pb-3 gap-2">
                 <div>
                   <span className="font-mono text-[10px] uppercase text-brand font-bold block">

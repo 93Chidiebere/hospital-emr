@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useEMR } from "@/context/EMRContext";
 import { Patient, DEPARTMENTS_METADATA } from "@/types/emr";
+import { getVisibleQueuePatients } from "@/components/workstations/queueUtils";
 import { FileText, UserPlus, ArrowRightLeft, Search, Clock } from "lucide-react";
 
 interface ReceptionWorkstationProps {
@@ -23,14 +24,15 @@ export function ReceptionWorkstation({
 
   // The Front Desk sees patients waiting at the Front Desk. Its returning-patient search can
   // only find patients who have already been discharged, never patients at another station.
-  const receptionPatients = patients.filter(
-    (p) =>
-      p.currentDepartment === "RECEPTION" ||
-      (searchTerm &&
+  const receptionQueue = patients.filter((p) => p.currentDepartment === "RECEPTION");
+  const visibleReceptionQueue = getVisibleQueuePatients(receptionQueue, searchTerm);
+  const matchingDischarged = searchTerm.trim()
+    ? patients.filter((p) =>
         p.currentDepartment === "DISCHARGED" &&
-        (p.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.hospitalNumber.toLowerCase().includes(searchTerm.toLowerCase())))
-  );
+        `${p.fullName} ${p.hospitalNumber}`.toLocaleLowerCase().includes(searchTerm.trim().toLocaleLowerCase())
+      )
+    : [];
+  const receptionPatients = [...visibleReceptionQueue, ...matchingDischarged];
 
   return (
     <div className="space-y-6">
@@ -67,13 +69,14 @@ export function ReceptionWorkstation({
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Find a returning patient by name or ID"
+            placeholder="Search this queue or returning patients by name or ID"
             className="w-full pl-9 pr-3 py-2 text-xs bg-paper-warm border border-paper-border focus:border-brand text-charcoal font-sans"
           />
         </div>
 
         <div className="text-xs text-charcoal-muted font-mono">
-          Showing <strong>{receptionPatients.length}</strong> patient docket(s)
+          <strong>{receptionQueue.length}</strong> patient(s) at reception
+          {searchTerm.trim() ? ` · ${receptionPatients.length} matching docket(s)` : ` · showing ${visibleReceptionQueue.length} most recent`}
         </div>
       </div>
 
@@ -81,7 +84,7 @@ export function ReceptionWorkstation({
       <div className="bg-white border border-paper-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="responsive-table w-full text-left text-xs border-collapse">
-            <caption className="sr-only">Patient dockets currently at the Front Desk</caption>
+            <caption className="sr-only">Recent patient dockets and matching returning patients</caption>
             <thead>
               <tr className="bg-paper-warm border-b border-paper-border text-charcoal font-mono uppercase tracking-wider text-[10px]">
                 <th scope="col" className="p-3.5">Hospital Record No.</th>
@@ -96,7 +99,7 @@ export function ReceptionWorkstation({
               {receptionPatients.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="p-8 text-center text-charcoal-muted">
-                    No patients currently at Front Desk. Use the button above to enroll a new intake or search the hospital registry.
+                    {searchTerm.trim() ? "No patient matches that search." : "No patients currently at Front Desk. Use the button above to enroll a new intake or search the hospital registry."}
                   </td>
                 </tr>
               ) : (

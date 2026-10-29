@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { useEMR } from "@/context/EMRContext";
+import { PatientQueueSearch } from "@/components/workstations/PatientQueueSearch";
+import { getVisibleQueuePatients } from "@/components/workstations/queueUtils";
 import { Patient, Department } from "@/types/emr";
 import { Activity, AlertTriangle, Check, ArrowRightLeft } from "lucide-react";
 
@@ -16,6 +18,8 @@ export function TriageWorkstation({
 }: TriageWorkstationProps) {
   const { patients, recordVitals, activeStaffName } = useEMR();
   const triageQueue = patients.filter((p) => p.currentDepartment === "TRIAGE" && p.status === "Active");
+  const [queueSearch, setQueueSearch] = useState("");
+  const visibleQueue = getVisibleQueuePatients(triageQueue, queueSearch);
 
   const [selectedPatientId, setSelectedPatientId] = useState<string>(
     triageQueue[0]?.id || ""
@@ -173,13 +177,17 @@ export function TriageWorkstation({
             )}
           </div>
 
+          <PatientQueueSearch value={queueSearch} onChange={setQueueSearch} totalCount={triageQueue.length} />
+
           {triageQueue.length === 0 ? (
             <div className="p-8 text-center text-charcoal-muted bg-white border border-paper-border text-xs">
               No patients currently waiting at Triage. All patients have had vitals taken or were routed elsewhere.
             </div>
           ) : (
             <div className="space-y-2">
-              {triageQueue.map((pat) => {
+              {visibleQueue.length === 0 ? (
+                <div className="p-5 text-center text-charcoal-muted bg-white border border-paper-border text-xs">No patients match that search.</div>
+              ) : visibleQueue.map((pat) => {
                 const isSelected = pat.id === selectedPatientId;
                 return (
                   <div

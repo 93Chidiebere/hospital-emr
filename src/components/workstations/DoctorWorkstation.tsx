@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { useEMR } from "@/context/EMRContext";
 import { Patient, Department, LabOrder, RadiologyOrder, MedicationAdministration, Icd10Code } from "@/types/emr";
 import { Icd10Picker } from "@/components/shared/Icd10Picker";
+import { PatientQueueSearch } from "@/components/workstations/PatientQueueSearch";
+import { getVisibleQueuePatients } from "@/components/workstations/queueUtils";
 import { Stethoscope, FlaskConical, Syringe, Check, ArrowRightLeft, Plus, Trash2 } from "lucide-react";
 
 interface DoctorWorkstationProps {
@@ -56,10 +58,16 @@ export function DoctorWorkstation({
   const consultQueue = patients.filter(
     (p) => p.currentDepartment === "CONSULTATION" && p.status === "Active"
   );
+  const [queueSearch, setQueueSearch] = useState("");
+  const visibleQueue = getVisibleQueuePatients(consultQueue, queueSearch);
 
   const [selectedPatientId, setSelectedPatientId] = useState<string>(
     consultQueue[0]?.id || ""
   );
+  const [mobileView, setMobileView] = useState<"queue" | "form">("queue");
+  const queueScrollY = React.useRef(0);
+  const formRef = React.useRef<HTMLDivElement>(null);
+  const mobileNavigationInitialized = React.useRef(false);
 
   // Form State
   const [hpi, setHpi] = useState("");
@@ -92,6 +100,16 @@ export function DoctorWorkstation({
   const selectedPatient = consultQueue.find((p) => p.id === selectedPatientId);
   const latestVitals = selectedPatient?.vitalsHistory[0];
 
+  React.useEffect(() => {
+    if (!mobileNavigationInitialized.current) {
+      mobileNavigationInitialized.current = true;
+      return;
+    }
+    if (!window.matchMedia("(max-width: 1023px)").matches) return;
+    if (mobileView === "form") formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    else window.scrollTo({ top: queueScrollY.current, behavior: "smooth" });
+  }, [mobileView, selectedPatientId]);
+
   const resetForm = () => {
     setHpi("");
     setExam("");
@@ -113,14 +131,17 @@ export function DoctorWorkstation({
   React.useEffect(() => {
     if (selectedPatientId && !consultQueue.some((p) => p.id === selectedPatientId)) {
       setSelectedPatientId("");
+      setMobileView("queue");
       resetForm();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [consultQueue.map((p) => p.id).join("|"), selectedPatientId]);
 
   const selectPatient = (id: string) => {
+    queueScrollY.current = window.scrollY;
     if (id !== selectedPatientId) resetForm();
     setSelectedPatientId(id);
+    setMobileView("form");
   };
 
   React.useEffect(() => {
@@ -256,6 +277,7 @@ export function DoctorWorkstation({
     } else {
       resetForm();
       setSelectedPatientId("");
+      setMobileView("queue");
     }
   };
 
@@ -281,12 +303,14 @@ export function DoctorWorkstation({
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Queue */}
-        <div className="lg:col-span-4 space-y-3">
+        <div className={`lg:col-span-4 space-y-3 ${mobileView === "form" ? "hidden lg:block" : ""}`}>
           <div className="flex items-center justify-between border-b border-paper-border pb-1">
             <span className="font-mono text-[11px] uppercase tracking-wider text-amber-300 font-bold">
               Waiting for Doctor ({consultQueue.length})
             </span>
           </div>
+
+          <PatientQueueSearch value={queueSearch} onChange={setQueueSearch} totalCount={consultQueue.length} />
 
           {consultQueue.length === 0 ? (
             <div className="p-8 text-center text-charcoal-muted bg-white border border-paper-border text-xs">
@@ -294,7 +318,9 @@ export function DoctorWorkstation({
             </div>
           ) : (
             <div className="space-y-2">
-              {consultQueue.map((pat) => {
+              {visibleQueue.length === 0 ? (
+                <div className="p-5 text-center text-charcoal-muted bg-white border border-paper-border text-xs">No patients match that search.</div>
+              ) : visibleQueue.map((pat) => {
                 const isSelected = pat.id === selectedPatientId;
                 const vit = pat.vitalsHistory[0];
                 const hasCompletedLabs = pat.labOrders.some((l) => l.status === "completed");
@@ -363,9 +389,10 @@ export function DoctorWorkstation({
         </div>
 
         {/* Right: Consultation Form */}
-        <div className="lg:col-span-8">
+        <div ref={formRef} className={`lg:col-span-8 ${mobileView === "queue" ? "hidden lg:block" : ""}`}>
           {selectedPatient ? (
             <div className="bg-white border border-paper-border p-5 sm:p-6 space-y-5">
+              <button type="button" onClick={() => setMobileView("queue")} className="lg:hidden px-3 py-2 border border-paper-border bg-paper text-xs font-bold">Change patient</button>
               {/* Patient Top Summary Banner */}
               <div className="flex flex-wrap items-start justify-between border-b border-paper-border pb-3 gap-2">
                 <div>
